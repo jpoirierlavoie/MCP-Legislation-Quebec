@@ -12,3 +12,10 @@ node_modules/
 .wrangler/
 # généré par `wrangler types`
 worker-configuration.d.ts
+
+# Secrets locaux — ne JAMAIS versionner (jetons, .env)
+*.token
+.secrets/
+.dev.vars
+.env
+.env.*

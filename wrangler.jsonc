@@ -17,9 +17,9 @@
     {
       "binding": "DB",
       "database_name": "qclaw",
-      // Placeholder pour le dev LOCAL uniquement (le mode local ne valide pas l'id).
-      // Remplacer par l'id réel après `wrangler d1 create qclaw` avant tout `--remote`/deploy.
-      "database_id": "local-placeholder-qclaw"
+      // Base D1 réelle (compte « Jason Poirier Lavoie », région ENAM), créée via
+      // `wrangler d1 create qclaw`. Le dev local utilise quand même un SQLite local.
+      "database_id": "b707af5a-8807-4a02-805d-13e5b0de033e"
     }
   ],
 
