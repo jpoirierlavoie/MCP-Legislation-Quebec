@@ -7,6 +7,9 @@ __pycache__/
 *.pyc
 .venv/
 
+# Artefacts générés par le pipeline (SQL de chargement, régénérables)
+pipeline/out/
+
 # Node / Worker
 node_modules/
 .wrangler/
