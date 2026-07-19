@@ -77,10 +77,12 @@ CREATE TABLE divisions (
   id         INTEGER PRIMARY KEY,
   law_id     TEXT NOT NULL REFERENCES laws(id),
   lang       TEXT NOT NULL,              -- 'fr' | 'en'
-  kind       TEXT NOT NULL,              -- 'livre','titre','chapitre','section','sous-section','disposition'
-  number     TEXT,                       -- 'TROISIÈME', 'I', '1', ...
-  heading    TEXT NOT NULL,              -- intitulé
-  path       TEXT NOT NULL,              -- chemin matérialisé, ex. '/L5/T1/C2/S1'
+  kind       TEXT NOT NULL,              -- 'livre','titre','chapitre','section','sous-section','niveau6/7/8','disposition'
+  number     TEXT,                       -- 'TROISIÈME', 'I', '§ 1', ...
+  heading    TEXT,                       -- intitulé (peut manquer : divisions abrogées)
+  history    TEXT,                       -- historique de division (89 cas), sinon NULL
+  path       TEXT NOT NULL,              -- chemin = l'id Irosoft complet, ex. 'ga:l_premier-gb:l_troisieme-gc:l_premier'
+  repealed   INTEGER NOT NULL DEFAULT 0, -- 1 si division abrogée (3 cas)
   parent_id  INTEGER REFERENCES divisions(id),
   sort_order INTEGER NOT NULL
 );
@@ -90,13 +92,14 @@ CREATE TABLE articles (
   id            INTEGER PRIMARY KEY,
   law_id        TEXT NOT NULL REFERENCES laws(id),
   lang          TEXT NOT NULL,
-  number        TEXT NOT NULL,           -- '1457', '1615.1' (chaîne, pour les décimaux)
-  sort_key      INTEGER NOT NULL,        -- clé de tri (voir note)
+  number        TEXT NOT NULL,           -- '1457', '2926.1', '132.0.1' (chaîne : décimaux à 1-2 niveaux)
+  sort_key      INTEGER NOT NULL,        -- clé 64 bits (voir note) : n×10^6 + d1×10^3 + d2
   division_id   INTEGER REFERENCES divisions(id),
-  division_path TEXT NOT NULL,           -- dénormalisé pour filtrer vite
-  text          TEXT NOT NULL,           -- texte brut, verbatim
-  html          TEXT,                    -- HTML source (mise en forme, alinéas)
+  division_path TEXT NOT NULL,           -- id Irosoft de la division feuille (dénormalisé)
+  text          TEXT NOT NULL,           -- verbatim (numéro, historique et notes A.M. EXCLUS)
+  html          TEXT,                    -- HTML nettoyé (integrity:* retirés, liens en absolu)
   history       TEXT,                    -- ligne d'historique : '1991, c. 64, a. 1457; ...'
+  repealed      INTEGER NOT NULL DEFAULT 0, -- 1 si '(Abrogé).' (68 cas)
   consol_date   TEXT
 );
 
@@ -114,10 +117,12 @@ CREATE VIRTUAL TABLE articles_fts USING fts5(
 );
 ```
 
-**Note sur `sort_key`.** Les numéros comme `1615.1` doivent s'ordonner
-correctement. Calculer une clé entière = `partie_entière * 1000 + partie_décimale`
-(p. ex. `1615.1` → `1615001`, `1616` → `1616000`), ou une clé chaîne à
-rembourrage fixe. À figer dans le pipeline.
+**Note sur `sort_key` (révisée en phase 0).** Le corpus contient des décimaux à
+**deux** niveaux (p. ex. `132.0.1`), donc une clé à 2 composantes est insuffisante.
+Formule retenue : `n×10^6 + d1×10^3 + d2` (ex. `1457` → 1 457 000 000 ;
+`2926.1` → 2 926 001 000 ; `132.0.1` → 132 000 001). Entier **64 bits** (le maximum
+~3,17×10⁹ dépasse int32) — `INTEGER` SQLite/D1 le gère nativement. Préserve l'ordre
+au passage d'un Livre à l'autre (898 < 898.1 < 899).
 
 ---
 
@@ -168,7 +173,7 @@ this.server.registerTool(
       "Exemple : law='ccq', article='1457', lang='fr'.",
     inputSchema: {
       law: z.string().describe("Identifiant de la loi, ex. 'ccq', 'cpc'"),
-      article: z.string().describe("Numéro d'article, ex. '1457' ou '1615.1'"),
+      article: z.string().describe("Numéro d'article, ex. '1457', '2926.1' ; ou 'préliminaire'/'finales' pour les dispositions"),
       lang: z.enum(["fr", "en"]).default("fr"),
     },
     annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
@@ -236,7 +241,8 @@ navigation), `lxml` ou `BeautifulSoup` (parcours XHTML). Étapes :
 > vrai EPUB** avant d'écrire le parseur. Ne présumez pas des sélecteurs. Voir la
 > phase 0 du §10.
 
-**Particularités à gérer :** décimaux du C.c.Q. (`1615.1`); **recodification 2016
+**Particularités à gérer :** décimaux du C.c.Q. (`2926.1`, et à deux niveaux
+`132.0.1`); **recodification 2016
 du C.p.c.** (la nouvelle numérotation ne correspond pas à l'ancienne — décider si
 l'on couvre l'ancien C.p.c. et stocker le schéma de numérotation); dispositions
 préliminaires et transitoires.
@@ -344,10 +350,10 @@ Ajouter une loi = ajouter une entrée et relancer le pipeline. `laws.config.json
       "name_en": "Civil Code of Québec",
       "rlrq_cite": "RLRQ, c. CCQ-1991",
       "epub": {
-        "fr": "https://www.legisquebec.gouv.qc.ca/.../ccq-1991-fr.epub",  // URL réelle à confirmer
-        "en": "https://www.legisquebec.gouv.qc.ca/.../ccq-1991-en.epub"
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/CCQ-1991.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/CCQ-1991.epub"
       },
-      "numbering": "decimal"     // gère '1615.1'
+      "numbering": "decimal"     // gère '2926.1', '132.0.1'
     },
     {
       "id": "cpc",
@@ -362,9 +368,12 @@ Ajouter une loi = ajouter une entrée et relancer le pipeline. `laws.config.json
 }
 ```
 
-> Les **URL exactes d'EPUB** ne sont pas figées ici : à récupérer sur les pages
-> LégisQuébec de chaque loi (bouton de téléchargement EPUB) et à inscrire dans ce
-> fichier lors de la phase 0.
+> **Confirmé en phase 0 :** l'URL EPUB suit le patron
+> `https://www.legisquebec.gouv.qc.ca/{fr|en}/epub/cs/{ID}.epub` (C.c.Q. FR et EN
+> validés, HTTP 200). Le **fichier réel doit être du JSON strict** (aucun commentaire
+> `//` — l'exemple ci-dessus est illustratif). Un **User-Agent navigateur** est
+> requis (le serveur renvoie 403 aux clients de centre de données), et la date
+> « à jour au » **n'est pas dans l'EPUB** : la récupérer sur la page HTML de la loi.
 
 ---
 
@@ -423,7 +432,7 @@ l'aveugle — surtout pas le parseur avant l'inspection d'un vrai EPUB.
 - Ouvrez Claude Code dans ce dépôt.
 
 **Phase 0 — Reconnaissance (bloquante).**
-> Prompt : « Télécharge l'EPUB français du Code civil du Québec depuis https://www.legisquebec.gouv.qc.ca/fr/epub/cs/CCQ-1991.epub,
+> Prompt : « Télécharge l'EPUB français du Code civil du Québec depuis [URL],
 > dézippe-le et rapporte sa structure interne : le `container.xml`, le fichier
 > `.opf` (spine + métadonnées), le document de navigation, et **les motifs de
 > balisage XHTML** qui marquent (a) les intitulés de Livre/Titre/Chapitre/Section
@@ -478,31 +487,68 @@ avant d'aller plus loin.)*
 ## 11. Tests et évaluation
 
 - **MCP Inspector** pour valider manuellement chaque outil.
-- **Invariants du corpus** comme tests automatiques : nombre d'articles attendu
-  par loi, absence de lacunes, verbatim d'articles témoins (p. ex. la disposition
-  préliminaire, l'art. 1457, l'art. 1457 en anglais).
-- **Jeu d'évaluations** (bonne pratique MCP) : rédiger ~10 questions réalistes que
-  seul l'accès au serveur permet de résoudre (« Quel est le texte exact de
-  l'art. X ? », « Quels articles composent le chapitre Y ? », « Quelle est la
-  date de consolidation courante du C.p.c. ? »), avec réponses vérifiables.
+- **Invariants du corpus C.c.Q. FR** (constatés en phase 0 — tests de
+  non-régression du parseur) : **3 523 articles** au total ; entiers **1 à 3168
+  complets** (zéro lacune, zéro doublon) ; **800 divisions** réparties
+  10/45/160/270/213/86/13/3 (livre/titre/chapitre/section/sous-section/niv.6/7/8) ;
+  **68 articles abrogés** ; bornes par Livre conformes à la cartographie du rapport
+  de phase 0 ; **3 614** blocs `class="ligne"` ; **0** caractère de texte résiduel
+  hors modèle sur les pages 1–10 ; verbatim exact des témoins (disposition
+  préliminaire, art. 1, 1457, 2926.1, 106).
+- **Jeu d'évaluations** (bonne pratique MCP) : ~10 questions réalistes que seul
+  l'accès au serveur permet de résoudre (« Quel est le texte exact de l'art. X ? »,
+  « Quels articles composent le chapitre Y ? », « Quelle est la date de
+  consolidation courante ? »), avec réponses vérifiables.
 
 ---
 
-## 12. À confirmer pendant la réalisation (liste honnête)
+## 12. Résolutions de la phase 0 et points encore ouverts
 
-1. **Structure XHTML réelle des EPUB LégisQuébec** — calibrer le parseur (phase 0).
-2. **Support de FTS5 dans D1** — à vérifier tôt; repli documenté : recherche `LIKE`
-   ou table d'index inversé pré-calculée (le corpus est assez petit pour que ce
-   soit acceptable).
-3. **URL exactes de téléchargement des EPUB** (FR/EN) sur LégisQuébec — à inscrire
-   dans `laws.config.json`.
-4. **Numérotation du C.p.c.** (recodification 2016) — couvre-t-on l'ancien code ?
-5. **Profondeur de versionnement** — remplace-t-on à chaque consolidation, ou
-   garde-t-on l'historique des versions ?
-6. **Choix d'accès** — Cloudflare Access vs jeton porteur.
-7. **Droit d'auteur** — usage interne = voie normale et défendable; toute
-   rediffusion/produit exigerait une licence de reproduction de Publications du
-   Québec. (Non un avis juridique ferme; à valider selon l'usage exact.)
+Voir le rapport détaillé `docs/phase0-structure-epub.md` (constats exhaustifs +
+stratégie de parseur, §8 du rapport). La structure XHTML réelle est établie : les
+EPUB sont du **EPUB 2.0 Irosoft CYBERLEX** dont les `id` encodent le chemin
+hiérarchique complet.
+
+**Décisions arrêtées (à appliquer en phases 1–2) :**
+
+- **`sort_key`** : formule à 3 composantes `n×10^6 + d1×10^3 + d2`, entier 64 bits
+  (remplace la note initiale du §2).
+- **`path` des divisions** : on retient **l'`id` Irosoft complet** comme chemin
+  canonique (p. ex. `ga:l_premier-gb:l_troisieme-gc:l_premier`), et non un schéma
+  numérique `/L5/T1/…`. L'id est déjà unique, stable et autoporteur, et survit aux
+  cas durs (ordinaux à trait d'union, `s_898_1`, `s_1119`) où une conversion
+  ordinal→nombre échouerait. L'affichage humain passe par les intitulés.
+- **Disposition préliminaire / dispositions finales** : servies comme
+  **pseudo-articles** (`number='préliminaire'`/`'finales'`, division
+  `kind='disposition'`), joignables par `qclaw_get_article` et `qclaw_get_structure`.
+  Justifié : la disposition préliminaire est interprétativement centrale et
+  abondamment citée.
+- **Historique de division** (89 cas) : colonne `history` ajoutée à `divisions`.
+- **Notes ministérielles « Voir A.M./Décret »** (5 art.) : **exclues du `text`**
+  (verbatim de la loi seulement), conservées dans `html`.
+- **Abrogés** : colonne `repealed` (68 articles ; 3 divisions), le verbatim
+  « (Abrogé). » restant intact.
+- **`laws.config.json`** : **JSON strict** (aucun commentaire).
+- **Nettoyage obligatoire du parseur** (rapport §7) : retirer les sous-arbres cachés
+  (`class` contenant `Hidden` **ou** style `display:none`) avant toute extraction ;
+  retirer les attributs `integrity:*` du HTML stocké ; réécrire les liens en absolu.
+  User-Agent navigateur au téléchargement ; date « à jour au » prise sur la page HTML.
+
+**Points encore ouverts :**
+
+1. **Support de FTS5 dans D1** — à vérifier tôt (phase 4) ; repli documenté :
+   recherche `LIKE` ou index inversé pré-calculé (corpus assez petit).
+2. **Version EN** — URL validée, mais **symétrie de structure à confirmer sur le
+   fichier réel** et **capture de la date « à jour au » EN à corriger** (la page EN
+   ne matche pas encore le motif). Avant la phase 4.
+3. **C.p.c.** — reconnaissance dédiée avant ingestion (présence d'**annexes**,
+   numérotation **recodifiée 2016**) : refaire une mini-phase 0.
+4. **Profondeur de versionnement** — remplacer à chaque consolidation, ou conserver
+   l'historique des versions ?
+5. **Choix d'accès** — Cloudflare Access vs jeton porteur.
+6. **Droit d'auteur** — usage interne = voie normale et défendable ; toute
+   rediffusion/produit exigerait une licence de Publications du Québec. (Non un avis
+   juridique ferme ; à valider selon l'usage exact.)
 
 ---
 
