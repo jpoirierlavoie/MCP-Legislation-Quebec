@@ -1,0 +1,44 @@
+{
+  "laws": [
+    {
+      "id": "ccq",
+      "name_fr": "Code civil du Québec",
+      "name_en": "Civil Code of Québec",
+      "rlrq_cite": "RLRQ, c. CCQ-1991",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/CCQ-1991.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/CCQ-1991.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": null
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/lc/CCQ-1991",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/lc/CCQ-1991"
+      },
+      "numbering": "decimal",
+      "phase0_verification": {
+        "checked_on": "2026-07-19",
+        "fr": { "http_status": 200, "content_length": 1058652, "last_modified": "2026-07-16" },
+        "en": { "http_status": 200, "content_length": 1046233 },
+        "note": "La date « à jour au » n'est pas dans l'EPUB : la capturer sur la page HTML de la loi au téléchargement (User-Agent navigateur requis). Voir docs/phase0-structure-epub.md."
+      }
+    },
+    {
+      "id": "cpc",
+      "name_fr": "Code de procédure civile",
+      "name_en": "Code of Civil Procedure",
+      "rlrq_cite": "RLRQ, c. C-25.01",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-25.01.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-25.01.epub"
+      },
+      "consolidation": {
+        "fr": null,
+        "en": null
+      },
+      "numbering": "recodified-2016"
+    }
+  ]
+}

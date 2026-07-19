@@ -1,0 +1,12 @@
+# EPUB sources téléchargés (≈1 Mo chacun, régénérés semestriellement par LégisQuébec).
+# Non versionnés : l'archivage de provenance est prévu dans R2 (PLAN.md §1).
+pipeline/samples/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node / Worker (phases ultérieures)
+node_modules/
+.wrangler/
