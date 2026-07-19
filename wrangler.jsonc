@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "qclaw-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // McpAgent est un Durable Object : le binding + la migration new_sqlite_classes
+  // sont obligatoires. Le nom de classe doit être identique à l'export de src/index.ts.
+  "durable_objects": {
+    "bindings": [{ "name": "MCP_OBJECT", "class_name": "QclawMCP" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["QclawMCP"] }],
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "qclaw",
+      // Placeholder pour le dev LOCAL uniquement (le mode local ne valide pas l'id).
+      // Remplacer par l'id réel après `wrangler d1 create qclaw` avant tout `--remote`/deploy.
+      "database_id": "local-placeholder-qclaw"
+    }
+  ],
+
+  // Rafraîchissement semestriel (PLAN §5) : 5 janvier et 5 juillet, 09:00 UTC.
+  "triggers": { "crons": ["0 9 5 1,7 *"] }
+}

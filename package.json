@@ -1,0 +1,23 @@
+{
+  "name": "qclaw-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Serveur MCP « Lois du Québec » — Worker Cloudflare (lecture seule sur D1).",
+  "scripts": {
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "cf-typegen": "wrangler types",
+    "type-check": "tsc --noEmit",
+    "db:schema:local": "wrangler d1 execute qclaw --local --file=./schema.sql",
+    "db:schema:remote": "wrangler d1 execute qclaw --remote --file=./schema.sql"
+  },
+  "dependencies": {
+    "agents": "^0.17.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "wrangler": "^4.112.0"
+  }
+}
