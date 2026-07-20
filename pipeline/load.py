@@ -49,6 +49,8 @@ _DIV_COLS = ["id", "law_id", "lang", "kind", "number", "heading", "history", "pa
 _ART_COLS = ["id", "law_id", "lang", "number", "sort_key", "division_id", "division_path", "text", "html", "history", "repealed", "consol_date"]
 # name_norm est recalculé ici ; fonction/forum/scope_fr/parent_law_id restent préservés par l'UPSERT.
 _LAW_COLS = ["id", "name_fr", "name_en", "rlrq_cite", "consol_date_fr", "consol_date_en", "name_norm"]
+# langue « opposée », pour préserver ses colonnes lors d'un chargement monolingue
+_OTHER = {"fr": "en", "en": "fr"}
 
 
 # D1 refuse toute instruction > 100 Ko (SQLITE_TOOBIG). On plafonne en OCTETS UTF-8 (le
@@ -158,8 +160,15 @@ def to_sql(law: Law, divisions: list[Division], articles: list[Article], lang: s
         f"DELETE FROM divisions WHERE law_id = {_q(law.id)} AND lang = {_q(lang)};",
         # UPSERT : met à jour les colonnes de base sans écraser fonction/forum/name_norm/
         # parent_law_id (posées par la couche découverte, phase A).
+        #
+        # ⚠️ Et SANS toucher aux colonnes de L'AUTRE langue : on ne charge qu'une langue à la
+        # fois, et le name_en d'une exécution FR n'est qu'un repli (= name_fr) faute d'OPF
+        # anglais sous la main. Le mettre à jour ferait perdre le vrai titre anglais capté
+        # lors du chargement EN — une réingestion FR seule francisait silencieusement le nom
+        # anglais de la loi.
         f"INSERT INTO laws ({', '.join(_LAW_COLS)}) VALUES ({law_vals}) ON CONFLICT(id) DO UPDATE SET "
-        + ", ".join(f"{c}=excluded.{c}" for c in _LAW_COLS if c != "id") + ";",
+        + ", ".join(f"{c}=excluded.{c}" for c in _LAW_COLS
+                    if c not in {"id", f"name_{_OTHER[lang]}", f"consol_date_{_OTHER[lang]}"}) + ";",
         "INSERT INTO divisions SELECT * FROM _stg_divisions;",
         "INSERT INTO articles  SELECT * FROM _stg_articles;",
         "DROP TABLE _stg_divisions;",
