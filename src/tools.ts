@@ -497,7 +497,10 @@ export function registerTools(server: McpServer, env: Env): void {
       description:
         "Recherche plein texte (FTS5) dans le texte des articles. Retourne les correspondances " +
         "classées par pertinence avec un extrait surligné. Ex. : query='prescription action', " +
-        "law='ccq' (défaut : toutes les lois)." + DEUX_TEMPS,
+        "law='ccq' (défaut : toutes les lois)." + DEUX_TEMPS +
+        // +1 phrase (plan v2, 1.1 — delta consigné au rapport de phase)
+        " Omettre `law` sauf raison précise de restreindre ; une recherche restreinte sans " +
+        "résultat est automatiquement élargie au corpus.",
       inputSchema: {
         query: z.string().describe("Termes à rechercher, ex. 'responsabilité préjudice'."),
         law: z.string().optional().describe("Restreindre à une loi (défaut : toutes)."),
@@ -517,15 +520,34 @@ export function registerTools(server: McpServer, env: Env): void {
         await logSearch(db, { tool: "search_text", query, law, lang, result_count: 0 });
         return err(`Recherche invalide. Essayez des mots simples. (${(e as Error).message})`);
       }
+      const fallbackLog = res.fallback === null
+        ? null
+        : typeof res.fallback === "object" ? `loo:${res.fallback.loo}` : res.fallback;
       await logSearch(db, {
         tool: "search_text", query, law, lang, result_count: res.hits.length,
+        fallback: fallbackLog,
       });
       if (res.hits.length === 0) return err(`Aucun résultat pour « ${query} » (${lang}).`);
-      const body = res.hits.map(
-        (h) => `${h.law_id} art. ${h.number} — ${h.snippet}  [${h.division_path}]`,
-      ).join("\n");
-      return ok(`${res.total} résultat(s) pour « ${query} » :\n${body}`, {
+
+      const line = (h: typeof res.hits[number]) =>
+        `${h.law_id} art. ${h.number} — ${h.snippet}  [${h.division_path}]`;
+      const body = res.hits.map(line).join("\n");
+      // En-tête étiqueté selon le chemin qui a produit les résultats (R7 : fail open, dit)
+      const header = res.fallback === "widened"
+        ? `Aucun résultat dans ${law} ; ${res.total} résultat(s) ailleurs dans le corpus :`
+        : `${res.total} résultat(s) pour « ${query} » :`;
+      // Recherche restreinte avec résultats : signaler ce que la restriction cache (post-mortem)
+      const elsewhere = res.elsewhere
+        ? `\n\nAilleurs au corpus (${res.elsewhere.total} résultat(s) hors ${law}) — aperçu :\n` +
+          res.elsewhere.hits.map(line).join("\n") +
+          "\nRelancer sans `law` pour la vue complète."
+        : "";
+      return ok(`${header}\n${body}${elsewhere}`, {
         query, lang, law: law ?? null, total: res.total,
+        fallback: fallbackLog,
+        elsewhere: res.elsewhere
+          ? { total: res.elsewhere.total, results: res.elsewhere.hits }
+          : null,
         pagination: { limit: page.limit, offset: page.offset },
         results: res.hits,
       });

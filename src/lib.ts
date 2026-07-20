@@ -777,35 +777,93 @@ export interface SearchHit {
   number: string;
   division_path: string;
   snippet: string;
+  /** Score bm25 (négatif : plus bas = plus pertinent). Présent sur les chemins relaxés. */
+  score?: number;
 }
+
+/** Tokens FTS d'une requête (même découpage que toFtsQuery — un seul point de vérité). */
+export function ftsTokens(query: string): string[] {
+  return query.match(/[\p{L}\p{N}][\p{L}\p{N}'’.-]*/gu) ?? [];
+}
+
+const quoteTok = (t: string) => `"${t.replace(/"/g, '""')}"`;
 
 /** Tokenise en requête FTS5 sûre : chaque mot en littéral quoté, combinés en ET. */
 export function toFtsQuery(query: string): string {
-  const tokens = query.match(/[\p{L}\p{N}][\p{L}\p{N}'’.-]*/gu) ?? [];
-  return tokens.map((t) => `"${t.replace(/"/g, '""')}"`).join(" ");
+  return ftsTokens(query).map(quoteTok).join(" ");
+}
+
+/**
+ * Issue d'une recherche : les résultats + le CHEMIN qui les a produits (plan v2, R7 :
+ * fail open, toujours étiqueté). `elsewhere` couvre le cas du post-mortem que le seul
+ * élargissement sur zéro ne couvre pas : une recherche RESTREINTE qui a des résultats
+ * (« extranéité » sur ccq -> 3111) cachait ceux des autres lois (cpc 490).
+ */
+export interface SearchOutcome {
+  hits: SearchHit[];
+  total: number;
+  /** null = exact dans la portée demandée. */
+  fallback: null | "widened" | { loo: string } | "or_relax";
+  /** Aperçu hors portée quand la recherche restreinte a des résultats ET que d'autres lois en ont. */
+  elsewhere: { total: number; hits: SearchHit[] } | null;
+}
+
+interface MatchScope {
+  law?: string;
+  notLaw?: string;
+}
+
+async function runMatch(
+  db: D1Database, match: string, lang: Lang, scope: MatchScope, page: Page,
+  withScore = false,
+): Promise<{ hits: SearchHit[]; total: number }> {
+  const clauses: string[] = [];
+  const binds: unknown[] = [match, lang];
+  if (scope.law) { clauses.push("AND articles_fts.law_id = ?"); binds.push(scope.law); }
+  if (scope.notLaw) { clauses.push("AND articles_fts.law_id <> ?"); binds.push(scope.notLaw); }
+  const where = `articles_fts MATCH ? AND articles_fts.lang = ? ${clauses.join(" ")}`;
+  const totalRow = await db
+    .prepare(`SELECT COUNT(*) AS n FROM articles_fts WHERE ${where}`)
+    .bind(...binds)
+    .first<{ n: number }>();
+  const scoreCol = withScore ? ", bm25(articles_fts) AS score" : "";
+  const hits = (await db
+    .prepare(
+      `SELECT a.law_id, a.number, a.division_path,
+              snippet(articles_fts, 0, '[', ']', '…', 12) AS snippet${scoreCol}
+       FROM articles_fts JOIN articles a ON a.id = articles_fts.rowid
+       WHERE ${where}
+       ORDER BY rank LIMIT ? OFFSET ?`,
+    )
+    .bind(...binds, page.limit, page.offset)
+    .all<SearchHit>()).results;
+  return { hits, total: totalRow?.n ?? 0 };
 }
 
 export async function searchText(
   db: D1Database, query: string, lang: Lang, lawId: string | undefined, page: Page,
-): Promise<{ hits: SearchHit[]; total: number }> {
+): Promise<SearchOutcome> {
   const match = toFtsQuery(query);
-  if (!match) return { hits: [], total: 0 };
-  const lawFilter = lawId ? "AND articles_fts.law_id = ?" : "";
-  const totalRow = await db
-    .prepare(`SELECT COUNT(*) AS n FROM articles_fts WHERE articles_fts MATCH ? AND articles_fts.lang = ? ${lawFilter}`)
-    .bind(...(lawId ? [match, lang, lawId] : [match, lang]))
-    .first<{ n: number }>();
-  const hits = (await db
-    .prepare(
-      `SELECT a.law_id, a.number, a.division_path,
-              snippet(articles_fts, 0, '[', ']', '…', 12) AS snippet
-       FROM articles_fts JOIN articles a ON a.id = articles_fts.rowid
-       WHERE articles_fts MATCH ? AND articles_fts.lang = ? ${lawFilter}
-       ORDER BY rank LIMIT ? OFFSET ?`,
-    )
-    .bind(...(lawId
-      ? [match, lang, lawId, page.limit, page.offset]
-      : [match, lang, page.limit, page.offset]))
-    .all<SearchHit>()).results;
-  return { hits, total: totalRow?.n ?? 0 };
+  if (!match) return { hits: [], total: 0, fallback: null, elsewhere: null };
+
+  // 1) requête exacte, portée demandée
+  const exact = await runMatch(db, match, lang, lawId ? { law: lawId } : {}, page);
+  if (exact.total > 0) {
+    // Recherche restreinte AVEC résultats : sonder le reste du corpus (1 requête) et
+    // signaler les correspondances d'autres lois — sans toucher aux résultats demandés.
+    let elsewhere: SearchOutcome["elsewhere"] = null;
+    if (lawId) {
+      const others = await runMatch(db, match, lang, { notLaw: lawId }, { limit: 3, offset: 0 });
+      if (others.total > 0) elsewhere = { total: others.total, hits: others.hits };
+    }
+    return { ...exact, fallback: null, elsewhere };
+  }
+
+  // 2) élargissement automatique au corpus (plan v2, 1.1)
+  if (lawId) {
+    const wide = await runMatch(db, match, lang, {}, page);
+    if (wide.total > 0) return { ...wide, fallback: "widened", elsewhere: null };
+  }
+
+  return { hits: [], total: 0, fallback: null, elsewhere: null };
 }
