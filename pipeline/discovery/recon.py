@@ -26,6 +26,13 @@ REPORT = config.REPO_ROOT / "docs" / "reconnaissance-36.md"
 # ids connus (hors motif de division/article) — le reste est une anomalie à signaler.
 _KNOWN_HEAD = re.compile(r"^(?:se|sc|page\d+|d\d+e\d+|header|HFContainer)$")
 _MARKERS = ("h1", "t1", "nb", "ss", "p1", "p2")
+# Intitulé de bloc structurel (annexe/formulaire), à ne compter que HORS d'un article se:.
+# NB : pas de « FORM » seul (capterait l'abréviation « form. VI » des références en table).
+_STRUCT_HEAD = re.compile(r"^\s*(?:ANNEXE|SCHEDULE|FORMULAIRE|FORMULES)\b", re.I)
+
+
+def _ws(s: str) -> str:
+    return re.sub(r"\s+", " ", s).strip()
 
 
 def download(url: str) -> bytes | None:
@@ -47,8 +54,8 @@ def scan(data: bytes) -> dict:
     art_ids: list[str] = []
     kinds: Counter = Counter()
     unknown: Counter = Counter()
-    tables = art_with_table = 0
-    annexe = formulaire = scnb = 0
+    tables = art_with_table = struct = scnb = 0
+    sc_heading: str | None = None
     prelim = finales = False
     htmls: list[str] = []
 
@@ -76,11 +83,17 @@ def scan(data: bytes) -> dict:
             tables += 1
             if t.find_parent(id=_ART_ID):
                 art_with_table += 1
-        # intitulés (mot en tête d'élément), insensible à la casse : capte « Annexe »/« ANNEXE »
-        annexe += len(re.findall(r">\s*(?:ANNEXE|SCHEDULE)\b", html, re.I))
-        formulaire += len(re.findall(r">\s*FORMULAIRE\b", html, re.I))
-        if "sc-nb:1" in html:
+        # intitulés STRUCTURELS annexe/formulaire/formules, HORS article se: (vrais blocs —
+        # pas les références « Annexe I : … » à l'intérieur du texte d'un article)
+        for el in soup.find_all(string=_STRUCT_HEAD):
+            if el.parent is not None and el.parent.find_parent(id=_ART_ID) is None:
+                struct += 1
+        sc = soup.find(id="sc-nb:1")
+        if sc is not None:
             scnb += 1
+            hd = sc.find(id=re.compile(r"^d\d+e"))
+            if hd is not None and sc_heading is None:
+                sc_heading = _ws(hd.get_text())[:40]
         if re.search(r"DISPOSITION\s+PR[ÉE]LIMINAIRE|PRELIMINARY\s+PROVISION", html, re.I):
             prelim = True
         if re.search(r"DISPOSITIONS?\s+FINALES|FINAL\s+PROVISION", html, re.I):
@@ -94,7 +107,7 @@ def scan(data: bytes) -> dict:
         "distinct_ints": len(set(ints)), "decimals": len(decimals),
         "kinds": dict(sorted(kinds.items())), "divisions": sum(kinds.values()),
         "tables": tables, "articles_with_table": art_with_table,
-        "annexe_words": annexe, "formulaire_words": formulaire, "sc_nb": scnb,
+        "struct_blocks": struct, "sc_nb": scnb, "sc_heading": sc_heading,
         "preliminary": prelim, "finales": finales, "unknown_ids": dict(unknown.most_common()),
         "renvois": harvest_renvois(htmls), "opf": opf_metadata(zf),
     }
@@ -107,10 +120,12 @@ def parse_test(data: bytes, law_id: str, name_fr: str, rlrq: str, lang: str) -> 
             f.write(data)
         law = Law(id=law_id, name_fr=name_fr, name_en=name_fr, rlrq_cite=rlrq)
         divs, arts = parse_epub(f.name, law, lang)
-        disp = [a.number for a in arts if a.number in ("préliminaire", "finales", "annexe")]
-        empties = sum(1 for a in arts if not a.text)
+        disp_nums = ("préliminaire", "finales", "annexe")
+        disp = [a.number for a in arts if a.number in disp_nums]
+        empty_real = [a.number for a in arts if not a.text and a.number not in disp_nums]
+        empty_disp = [a.number for a in arts if not a.text and a.number in disp_nums]
         return {"ok": True, "divisions": len(divs), "articles": len(arts),
-                "dispositions": disp, "empty_text": empties}
+                "dispositions": disp, "empty_real": empty_real, "empty_disp": empty_disp}
     except Exception as e:  # noqa: BLE001 — on rapporte l'anomalie, on ne devine pas
         return {"ok": False, "error": f"{type(e).__name__}: {e}"}
 
@@ -126,25 +141,22 @@ def anomalies(law: dict, s: dict, pt: dict, name_en: str | None) -> list[str]:
         a.append("aucun article `se:` (texte non standard : tarif/tableaux ?)")
     if s["distinct_ints"] and s["articles"] != s["distinct_ints"] + s["decimals"]:
         a.append(f"numérotation atypique : {s['articles']} se: mais {s['distinct_ints']} entiers "
-                 f"distincts + {s['decimals']} décimaux (renumérotation par partie ?)")
+                 f"distincts + {s['decimals']} décimaux (article « 0 » / renumérotation par partie ?)")
     if s["tables"]:
         loc = f", dont {s['articles_with_table']} dans un article" if s["articles_with_table"] else ""
-        a.append(f"{s['tables']} tableau(x){loc} — rendu texte à confirmer (tarif)"
-                 if law.get("fonction") == "tarif" or s["tables"] >= 4 else
-                 f"{s['tables']} tableau(x){loc}")
-    if s["annexe_words"] and s["sc_nb"] == 0:
-        a.append(f"ANNEXE/SCHEDULE détecté ({s['annexe_words']} occ.) hors bloc sc-nb:1 — "
-                 f"le parseur ne le capture PAS actuellement (à traiter en phase C)")
-    if s["formulaire_words"]:
-        a.append(f"formulaire(s) détecté(s) ({s['formulaire_words']} occ.) — extraction dédiée à prévoir")
+        a.append(f"{s['tables']} tableau(x) de contenu{loc} — rendu texte lisible à faire (tarif)")
+    if s["struct_blocks"]:
+        a.append(f"{s['struct_blocks']} intitulé(s) structurel(s) annexe/formulaire HORS article — "
+                 f"extraction dédiée à prévoir (non capturée par le parseur actuel)")
     if s["unknown_ids"]:
         a.append(f"ids de motif inconnu : {s['unknown_ids']}")
-    if pt["ok"] and pt["articles"] and s["articles"] and pt["articles"] - len(pt["dispositions"]) != s["articles"]:
-        a.append(f"écart parse/scan : parseur {pt['articles']} articles (dont {pt['dispositions']}) "
-                 f"vs scan {s['articles']} se:")
-    if pt["ok"] and pt.get("empty_text"):
-        a.append(f"{pt['empty_text']} article(s) au texte vide après parse")
-    if not pt["ok"]:
+    if pt["ok"]:
+        if pt["empty_real"]:
+            a.append(f"article(s) réel(s) au texte vide : {pt['empty_real']}")
+        if pt["empty_disp"]:
+            a.append(f"bloc sc-nb:1 « {s['sc_heading'] or '?'} » non extrait "
+                     f"(pseudo-article {pt['empty_disp']} vide — p. ex. section FORMULES)")
+    else:
         a.append(f"PARSE ÉCHOUÉ — {pt['error']}")
     if name_en is None:
         a.append("EN indisponible (404) — charger FR seul en phase C")
@@ -172,8 +184,10 @@ def build_report(results: list[dict]) -> str:
     all_en = [r["law"]["id"] for r in ok if "en" not in r["langs"]]
     parse_fail = [r["law"]["id"] for r in ok if not r["parse"]["ok"]]
     tarifs = [r["law"]["id"] for r in ok if r["scan"]["tables"]]
-    annexe_unc = [r["law"]["id"] for r in ok if r["scan"]["annexe_words"] and r["scan"]["sc_nb"] == 0]
-    forms = [r["law"]["id"] for r in ok if r["scan"]["formulaire_words"]]
+    struct = [r["law"]["id"] for r in ok if r["scan"]["struct_blocks"]]
+    empty_disp = {r["law"]["id"]: r["scan"]["sc_heading"]
+                  for r in ok if r["parse"]["ok"] and r["parse"]["empty_disp"]}
+    empty_real = [r["law"]["id"] for r in ok if r["parse"]["ok"] and r["parse"]["empty_real"]]
     notes = [r["law"]["id"] for r in ok if "Note" in r["scan"]["unknown_ids"]]
     L = ["# Reconnaissance des 36 textes additionnels (dry-run, phase B)",
          "",
@@ -189,13 +203,17 @@ def build_report(results: list[dict]) -> str:
          + (f" ; échecs : {parse_fail}" if parse_fail else " (extraction des articles OK partout).")
          + " Le décompte parseur = scan + 1 (pseudo-article « préliminaire »).",
          "- **À traiter en phase C (motifs non standard) :**",
-         f"  - **Tableaux de contenu** (tarifs surtout) : {tarifs or '—'}. "
-         "Rendre les tables lisiblement dans `text`, conserver le HTML dans `html`.",
-         f"  - **Annexes/formulaires hors `sc-nb:1`** (règlements de cour) — non capturés "
-         f"actuellement : annexes {annexe_unc or '—'} ; formulaires {forms or '—'}.",
+         f"  - **Tableaux de contenu** : {tarifs or '—'}. Rendre les tables lisiblement dans "
+         "`text`, conserver le HTML dans `html`. (NB : les tarifs `j-3-r.3.2` et `t-15.01-r.6` "
+         "ont leurs frais en TEXTE, pas en `<table>` — déjà pris par le parseur.)",
+         f"  - **Annexes/formulaires structurels** (intitulés hors article `se:`) — non capturés : "
+         f"{struct or '—'}.",
+         f"  - **Blocs `sc-nb:1` non extraits** (le parseur les étiquette « finales » mais le texte "
+         "est vide — p. ex. section FORMULES) : "
+         + (", ".join(f"{k} « {v} »" for k, v in empty_disp.items()) if empty_disp else "—") + ".",
          f"  - **id `Note`** (note éditoriale, à exclure du `text` comme les notes A.M.) : {notes or '—'}.",
+         f"  - **Articles réels au texte vide** : {empty_real or '—'}.",
          "  - **p-44.1** : numérotation atypique (article « 0 » / renumérotation par partie).",
-         "  - **b-9** : 1 article au texte vide (à inspecter).",
          "- Format Irosoft confirmé pour les 36 (ids `se:`/`ga:`…). name_en lisible depuis "
          "l'OPF anglais ; parent_law_id dérivable via rlrq_cite (voir détail).",
          "",
@@ -209,7 +227,7 @@ def build_report(results: list[dict]) -> str:
             continue
         s, p = r["scan"], r["parse"]
         rng = f"{s['int_min']}..{s['int_max']}" + (f" +{s['decimals']}déc" if s["decimals"] else "")
-        af = f"A{s['annexe_words']}/F{s['formulaire_words']}" if (s["annexe_words"] or s["formulaire_words"]) else "—"
+        af = f"{s['struct_blocks']} bloc(s)" if s["struct_blocks"] else "—"
         parse = f"✓ {p['articles']}a/{p['divisions']}d" if p["ok"] else "❌"
         L.append(f"| {law['id']} | {law.get('fonction','?')} | {'+'.join(r['langs'])} | "
                  f"{s['articles']} | {rng} | {s['divisions']} | "
@@ -230,12 +248,15 @@ def build_report(results: list[dict]) -> str:
         L.append(f"- **Articles** : {s['articles']} (entiers {s['int_min']}..{s['int_max']}, "
                  f"{s['distinct_ints']} distincts, {s['decimals']} décimaux)")
         L.append(f"- **Divisions** : {s['divisions']} {s['kinds'] or ''}")
-        L.append(f"- **Tableaux** : {s['tables']} (dont {s['articles_with_table']} dans un article) · "
-                 f"ANNEXE/SCHEDULE : {s['annexe_words']} · FORMULAIRE : {s['formulaire_words']} · "
-                 f"sc-nb:1 : {s['sc_nb']} · préliminaire : {s['preliminary']} · finales : {s['finales']}")
+        L.append(f"- **Tableaux (contenu)** : {s['tables']} (dont {s['articles_with_table']} dans un article) · "
+                 f"intitulés annexe/formulaire hors article : {s['struct_blocks']} · "
+                 f"sc-nb:1 : {s['sc_nb']}" + (f" (« {s['sc_heading']} »)" if s['sc_heading'] else "")
+                 + f" · préliminaire : {s['preliminary']} · finales : {s['finales']}")
         if p["ok"]:
             L.append(f"- **parse_epub** : {p['articles']} articles, {p['divisions']} divisions, "
-                     f"dispositions={p['dispositions'] or '—'}, texte vide={p['empty_text']}")
+                     f"dispositions={p['dispositions'] or '—'}"
+                     + (f", **vide réel**={p['empty_real']}" if p['empty_real'] else "")
+                     + (f", disposition vide={p['empty_disp']}" if p['empty_disp'] else ""))
         else:
             L.append(f"- **parse_epub** : ❌ {p['error']}")
         rv = r["scan"]["renvois"]
