@@ -6,8 +6,9 @@ import {
   ArticleJoined, ArticleRow, Lang, LawSummary, StructureNode,
   articlesByNumbers, articlesByRange, articlesInDivision, childDivisions,
   citationOf, consolOf, getArticle, getDivision, getLaw, getStructure,
-  boundKey, breadcrumbChains, lawNames, listLaws, listSubjects, loadRelevanceData,
-  logSearch, nearestArticles, paginate, parseCitation, relatedLaws, searchText, sortKeyOf,
+  boundKey, breadcrumbChains, lawNames, lawOutlines, listLaws, listSubjects,
+  loadRelevanceData, logSearch, nearestArticles, paginate, parseCitation, relatedLaws,
+  searchText, sortKeyOf,
 } from "./lib";
 import { WEIGHTS, rank, tokenize } from "./relevance";
 
@@ -74,7 +75,26 @@ export function registerTools(server: McpServer, env: Env): void {
   const db = env.DB;
 
   // 1) qclaw_list_laws ---------------------------------------------------------
-  const renderLaw = (l: LawSummary): string => {
+  //
+  // Écart au plan v2 (1.4), consigné au rapport : le critère « toute loi dont les
+  // divisions comportent le kind livre » rate sa cible — le parseur classe
+  // POSITIONNELLEMENT (ga: = livre), donc 36 lois sur 38 ont des « livres », et le plan
+  // complet pèserait ~22 K tokens par appel. Le budget annoncé (+1,2–1,5 K) correspond
+  // exactement à ccq + cpc (93 nœuds) : c'est l'intention. Liste extensible au besoin.
+  const OUTLINE_LAWS = ["ccq", "cpc"];
+
+  const renderOutline = (nodes: import("./lib").OutlineNode[], lang: Lang): string =>
+    nodes.map((n) => {
+      const lab = (KIND_LABEL[lang] ?? KIND_LABEL.fr)[n.kind] ?? n.kind;
+      const head = `    ▸ ${lab}${n.number ? ` ${n.number}` : ""}${n.heading ? ` — ${n.heading}` : ""} [${n.path}]`;
+      const kids = n.children.map((c) => {
+        const cl = (KIND_LABEL[lang] ?? KIND_LABEL.fr)[c.kind] ?? c.kind;
+        return `      · ${cl}${c.number ? ` ${c.number}` : ""}${c.heading ? ` — ${c.heading}` : ""} [${c.path}]`;
+      });
+      return [head, ...kids].join("\n");
+    }).join("\n");
+
+  const renderLaw = (l: LawSummary, outline?: import("./lib").OutlineNode[], lang: Lang = "fr"): string => {
     const attrs = [
       l.fonction ? `fonction: ${l.fonction}` : null,
       l.forum ? `forum: ${l.forum}` : null,
@@ -94,7 +114,8 @@ export function registerTools(server: McpServer, env: Env): void {
         .map((d) => `    ◦ ${d.heading ?? d.division_path} [${d.division_path}] — ${d.subject}`)
         .join("\n")
       : "";
-    return `${head}${attrs ? `\n    ${attrs}` : ""}${scope}${divs}`;
+    const plan = outline?.length ? `\n${renderOutline(outline, lang)}` : "";
+    return `${head}${attrs ? `\n    ${attrs}` : ""}${scope}${divs}${plan}`;
   };
 
   server.registerTool(
@@ -113,12 +134,20 @@ export function registerTools(server: McpServer, env: Env): void {
           .describe("Filtrer par forum, ex. 'Tribunal administratif du logement', 'Cour d'appel'."),
         subject: z.string().optional()
           .describe("Filtrer par identifiant de matière, ex. 'louage-residentiel' (cf. qclaw_list_subjects)."),
+        structure: z.boolean().default(true)
+          .describe("Inclure le plan profondeur 2 (Livres et leurs Titres) des grands codes (défaut true)."),
         lang: LANG.optional(),
       },
       annotations: READONLY,
     },
-    async ({ fonction, forum, subject, lang }) => {
+    async ({ fonction, forum, subject, structure, lang }) => {
       const laws = await listLaws(db, { fonction, forum, subject }, lang as Lang);
+      // 1.4 : le signal de repérage est souvent au Titre, pas au Livre (post-mortem :
+      // Livre V C.p.c. muet, Titre IV parlant) — plan profondeur 2 des lois à Livres.
+      const outlines = structure === false
+        ? new Map<string, import("./lib").OutlineNode[]>()
+        : await lawOutlines(db, (lang ?? "fr") as Lang,
+            laws.map((l) => l.id).filter((id) => OUTLINE_LAWS.includes(id)));
       if (laws.length === 0) {
         const applied = [
           fonction ? `fonction='${fonction}'` : null,
@@ -133,7 +162,10 @@ export function registerTools(server: McpServer, env: Env): void {
         );
       }
       const header = `${laws.length} loi(s) au corpus :`;
-      return ok(`${header}\n${laws.map(renderLaw).join("\n")}`, {
+      const body = laws
+        .map((l) => renderLaw(l, outlines.get(l.id), (lang ?? "fr") as Lang))
+        .join("\n");
+      return ok(`${header}\n${body}`, {
         filters: { fonction: fonction ?? null, forum: forum ?? null, subject: subject ?? null },
         count: laws.length,
         laws: laws.map((l) => ({
@@ -143,6 +175,7 @@ export function registerTools(server: McpServer, env: Env): void {
           fonction: l.fonction, forum: l.forum,
           scope: l.scope_fr ?? l.name_fr, parent_law_id: l.parent_law_id,
           subjects: l.subjects, mapped_divisions: l.mapped_divisions,
+          structure: outlines.get(l.id) ?? null,
         })),
       });
     },

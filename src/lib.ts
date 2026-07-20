@@ -285,6 +285,66 @@ export async function translatePaths(
   return out;
 }
 
+// --- plan profondeur 2 des grands codes (plan v2, 1.4) ------------------------
+
+export interface OutlineNode {
+  kind: string;
+  number: string | null;
+  heading: string | null;
+  path: string;
+  children: Omit<OutlineNode, "children">[];
+}
+
+/**
+ * Plan profondeur 2 (Livres + leurs enfants directs) des lois qui ont des Livres.
+ * Justification (post-mortem) : l'intitulé du Livre V C.p.c. ne porte aucun signal
+ * (« LES RÈGLES APPLICABLES À CERTAINES MATIÈRES CIVILES ») — le signal est au Titre
+ * (« LES DEMANDES INTÉRESSANT LE DROIT INTERNATIONAL PRIVÉ »). Les lois plates ne sont
+ * pas concernées.
+ */
+export async function lawOutlines(
+  db: D1Database, lang: Lang, lawIds: string[],
+): Promise<Map<string, OutlineNode[]>> {
+  if (!lawIds.length) return new Map();
+  const livres = (await db
+    .prepare(
+      `SELECT id, law_id, path, kind, number, heading FROM divisions
+       WHERE lang = ? AND kind = 'livre' AND law_id IN (${lawIds.map(() => "?").join(",")})
+       ORDER BY law_id, sort_order`,
+    )
+    .bind(lang, ...lawIds)
+    .all<DivisionRow>()).results;
+  const out = new Map<string, OutlineNode[]>();
+  if (!livres.length) return out;
+
+  const byParent = new Map<number, Omit<OutlineNode, "children">[]>();
+  const ids = livres.map((l) => l.id);
+  for (let i = 0; i < ids.length; i += 90) {
+    const chunk = ids.slice(i, i + 90);
+    const rows = (await db
+      .prepare(
+        `SELECT parent_id, path, kind, number, heading FROM divisions
+         WHERE parent_id IN (${chunk.map(() => "?").join(",")}) ORDER BY sort_order`,
+      )
+      .bind(...chunk)
+      .all<DivisionRow>()).results;
+    for (const r of rows) {
+      const arr = byParent.get(r.parent_id!);
+      const node = { kind: r.kind, number: r.number, heading: r.heading, path: r.path };
+      if (arr) arr.push(node); else byParent.set(r.parent_id!, [node]);
+    }
+  }
+  for (const l of livres) {
+    const node: OutlineNode = {
+      kind: l.kind, number: l.number, heading: l.heading, path: l.path,
+      children: byParent.get(l.id) ?? [],
+    };
+    const arr = out.get(l.law_id);
+    if (arr) arr.push(node); else out.set(l.law_id, [node]);
+  }
+  return out;
+}
+
 // --- taxonomie & graphe -------------------------------------------------------
 
 export interface SubjectSummary {
