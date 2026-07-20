@@ -228,9 +228,26 @@ async function smokeTests() {
     .filter((s) => !s.label_en || !s.description_en).map((s) => s.id);
   add("list_subjects (lang=en) : les 28 matières traduites", sansEn.length === 0,
     sansEn.length ? `sans traduction : ${sansEn.slice(0, 5).join(", ")}…` : "");
+  // Contrôler les ENTRÉES, pas seulement les en-têtes de groupe : une première version
+  // traduisait « Private law (C.C.Q.) » tout en listant « biens — Biens » et sa description
+  // française, et l'éval passait quand même.
   const texteEn = subsEn.content?.[0]?.text ?? "";
-  add("list_subjects (lang=en) : rendu réellement en anglais",
+  // Marqueurs choisis parmi les libellés qui DIFFÈRENT réellement d'une langue à l'autre :
+  // « Successions » et « Prescription » s'écrivent pareil en anglais et donneraient un faux positif.
+  const ligneFr = texteEn.split("\n").find((l) =>
+    /^\s+•/.test(l) && /— (Biens|Personnes|Famille|Preuve|Assurances)\b/.test(l));
+  add("list_subjects (lang=en) : les ENTRÉES rendues en anglais",
+    !ligneFr && /— Property\b/.test(texteEn) && /law\(s\)|law\(s\)/.test(texteEn.replace(/ law\(s\)/g, " law(s)")),
+    ligneFr ? `entrée restée en français : ${ligneFr.trim().slice(0, 60)}` : "");
+  add("list_subjects (lang=en) : descriptions rendues en anglais",
+    /Ownership, co-ownership/.test(texteEn) && !/Propriété, copropriété/.test(texteEn));
+  add("list_subjects (lang=en) : en-têtes de groupe en anglais",
     /Private law|Specialized areas/.test(texteEn) && !/Matières spécialisées/.test(texteEn));
+
+  // Non-régression FR : la version française ne doit pas avoir basculé en anglais.
+  const texteFr = subs.content?.[0]?.text ?? "";
+  add("list_subjects (lang=fr) : rendu toujours en français",
+    /— Biens\b/.test(texteFr) && /Matières spécialisées/.test(texteFr) && !/— Property\b/.test(texteFr));
 
   // 6 règlements de cour sous le chapitre C-25.01 (sur les 13 arêtes 'reglement-de' du corpus)
   const rel = await callTool("qclaw_related_laws", { law: "cpc", rel_type: "reglement-de" });

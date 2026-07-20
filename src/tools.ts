@@ -175,9 +175,9 @@ export function registerTools(server: McpServer, env: Env): void {
       }
       const body = [...groups.entries()].map(([kind, items]) =>
         `\n${KIND[kind] ?? kind} :\n` + items.map((s) =>
-          `  • ${s.id} — ${s.label_fr} (${s.laws_count} loi(s)` +
+          `  • ${s.id} — ${libelle(s)} (${s.laws_count} ${en ? "law(s)" : "loi(s)"}` +
           `${s.divisions_count ? `, ${s.divisions_count} division(s)` : ""})` +
-          `${s.description_fr ? `\n      ${s.description_fr}` : ""}`,
+          `${descr(s) ? `\n      ${descr(s)}` : ""}`,
         ).join("\n"),
       ).join("\n");
       return ok(`${subs.length} ${en ? "subject areas" : "matières"} :${body}`, {
