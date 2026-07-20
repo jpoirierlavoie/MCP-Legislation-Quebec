@@ -1,6 +1,7 @@
 // Helpers et requêtes D1 (lecture seule) pour le serveur MCP « Lois du Québec ».
 // Le schéma est décrit dans schema.sql / PLAN.md §2 et schema-decouverte.sql.
 
+import { normalize } from "./relevance";
 import type {
   DivisionLite, LawLite, RelationLite, SubjectLite, SubjectMapLite,
 } from "./relevance";
@@ -203,8 +204,9 @@ export async function listLaws(
     return {
       ...law,
       langs: mine.map((r) => r.lang).sort(),
-      // par langue (fr et en ont le même décompte) — pas la somme des langues
-      article_count: Math.max(0, ...mine.map((r) => r.n)),
+      // décompte de la LANGUE DEMANDÉE (jamais la somme, ni le maximum des deux : quelques
+      // textes ont une division de plus d'un côté, ce qui surévaluait l'autre langue).
+      article_count: mine.find((r) => r.lang === lang)?.n ?? Math.max(0, ...mine.map((r) => r.n)),
       subjects: [...new Set(mapped.map((m) => m.label_fr))],
       mapped_divisions: mapped
         .filter((m) => m.division_path)
@@ -554,10 +556,37 @@ export interface ParsedCitation {
   article: string | null;
   /** Comment la loi a été reconnue, pour l'expliquer dans la réponse. */
   law_source: "chapitre" | "abreviation" | "defaut" | null;
+  /** Chapitre RLRQ cité explicitement mais absent du corpus (pour un refus circonstancié). */
+  chapitre_inconnu: string | null;
 }
 
-/** Clé de comparaison d'un chapitre RLRQ : sans espaces ni ponctuation faible. */
-const chapterKey = (s: string) => s.toLowerCase().replace(/[\s.]/g, "");
+/**
+ * Motif reconnaissant un chapitre RLRQ comme UNE UNITÉ COMPLÈTE dans une citation.
+ *
+ * Un simple `includes` est faux et dangereux : « B-1 » est contenu dans « B-1.1 », si bien
+ * qu'une citation de la Loi sur le bâtiment (c. B-1.1, hors corpus) se résolvait
+ * silencieusement en Loi sur le Barreau (c. B-1). D'où les garde-fous :
+ *  - rien qui prolonge le chapitre avant ni après (lettre, chiffre, trait d'union) ;
+ *  - ni un « . » SUIVI D'UN CHIFFRE après (c'est ce qui distingue B-1.1 de « c. B-1. ») ;
+ *  - espaces libres à l'intérieur, pour accepter « C-25.01, r. 9 » comme « C-25.01,r.9 ».
+ */
+function chapterRegex(chapter: string): RegExp {
+  const esc = [...chapter]
+    .filter((c) => !/\s/.test(c))
+    .map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("\\s*");
+  return new RegExp(`(?<![A-Za-z0-9-])${esc}(?![A-Za-z0-9-])(?!\\.\\d)`, "i");
+}
+
+/** Mention explicite de chapitre (« c. B-1.1 », « chapitre T-16 »), pour refuser en le nommant. */
+const CHAPITRE_EXPLICITE = /\b(?:c\.|chapitres?|chapters?)\s*([A-Za-z]{1,6}-[0-9][0-9.]*(?:\s*,\s*r\.\s*[0-9][0-9.]*)?)/i;
+
+/**
+ * Numéro d'article, introduit par un marqueur. « a. » est la forme courante au Québec, et
+ « s. » la forme anglaise — leur absence faisait reprendre le NUMÉRO DU CHAPITRE comme
+ * numéro d'article (« (chapitre T-16), a. 12 » rendait l'article 16).
+ */
+const MARQUEUR_ARTICLE = /(?:\barticles?\b|\barts?\.|\ba\.|\bs\.)\s*(\d+(?:\.\d+)*)/i;
 
 /**
  * Analyse « art. 1457 C.c.Q. », « RLRQ, c. T-16, art. 12 », « article 25 C.p.c. »…
@@ -569,38 +598,40 @@ const chapterKey = (s: string) => s.toLowerCase().replace(/[\s.]/g, "");
  *  2. toute citation non reconnue retombait sur le C.c.Q. : on préfère ne rien affirmer.
  */
 export function parseCitation(citation: string, laws: { id: string; rlrq_cite: string }[]): ParsedCitation {
-  const key = chapterKey(citation);
-  // chapitre RLRQ le PLUS LONG qui apparaît dans la citation (« C-25.01, r. 9 » avant « C-25.01 »)
+  // chapitre RLRQ le PLUS LONG présent comme unité complète (« C-25.01, r. 9 » avant « C-25.01 »)
   let law: string | null = null;
   let lawSource: ParsedCitation["law_source"] = null;
   let bestLen = 0;
-  let matchedCite = "";
+  let motif: RegExp | null = null;
   for (const l of laws) {
-    const chap = l.rlrq_cite.replace(/^RLRQ,\s*c\.\s*/i, "");
-    const ck = chapterKey(chap);
-    if (ck && key.includes(ck) && ck.length > bestLen) {
-      bestLen = ck.length;
+    const chap = l.rlrq_cite.replace(/^RLRQ,\s*c\.\s*/i, "").trim();
+    if (!chap || chap.length <= bestLen) continue;
+    const re = chapterRegex(chap);
+    if (re.test(citation)) {
+      bestLen = chap.length;
       law = l.id;
       lawSource = "chapitre";
-      matchedCite = chap;
+      motif = re;
     }
   }
+  // abréviations usuelles, seulement si aucun chapitre du corpus n'a été reconnu
   if (!law) {
     if (/c\.?\s*p\.?\s*c\.?|cpc/i.test(citation)) { law = "cpc"; lawSource = "abreviation"; }
     else if (/c\.?\s*c\.?\s*q\.?|ccq/i.test(citation)) { law = "ccq"; lawSource = "abreviation"; }
   }
 
-  // on retire le chapitre reconnu avant de chercher le numéro d'article (« T-16 » ≠ art. 16)
-  let rest = citation;
-  if (matchedCite) {
-    const esc = matchedCite.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*");
-    rest = rest.replace(new RegExp(`c\\.?\\s*${esc}`, "i"), " ");
-  }
-  const withMarker = rest.match(/\bart(?:icle)?s?\.?\s*(\d+(?:\.\d+)*)/i);
-  const anyNumber = rest.match(/(\d+(?:\.\d+)*)/);
-  const article = withMarker?.[1] ?? anyNumber?.[1] ?? null;
+  // On retire le chapitre reconnu AVANT de chercher le numéro d'article : sans quoi les
+  // chiffres du chapitre (« T-16 ») sont pris pour l'article.
+  const rest = motif ? citation.replace(motif, " ") : citation;
+  const article = rest.match(MARQUEUR_ARTICLE)?.[1]
+    ?? rest.match(/(\d+(?:\.\d+)*)/)?.[1]
+    ?? null;
 
-  return { law, article, law_source: law ? lawSource : null };
+  // Chapitre explicitement cité mais inconnu du corpus : on le NOMME au lieu de retomber
+  // sur une loi voisine (« c. B-1.1 » n'est pas « c. B-1 »).
+  const explicite = law ? null : citation.match(CHAPITRE_EXPLICITE)?.[1]?.trim() ?? null;
+
+  return { law, article, law_source: law ? lawSource : null, chapitre_inconnu: explicite };
 }
 
 // --- données de pertinence (qclaw_find_relevant) ------------------------------
@@ -629,7 +660,8 @@ export async function loadRelevanceData(
   const [subjects, subjectMap, laws, relations] = await Promise.all([
     db.prepare("SELECT id, label_fr, label_norm, description_fr FROM subjects").all<SubjectLite>(),
     db.prepare("SELECT subject_id, law_id, division_path FROM subject_map").all<SubjectMapLite>(),
-    db.prepare("SELECT id, name_fr, name_norm FROM laws").all<LawLite>(),
+    db.prepare("SELECT id, name_fr, name_en, name_norm FROM laws")
+      .all<{ id: string; name_fr: string; name_en: string; name_norm: string | null }>(),
     db.prepare(
       "SELECT from_law_id, to_law_id, rel_type, source, in_corpus, note FROM law_relations " +
       "WHERE source = 'cure' OR rel_type = 'reglement-de'",
@@ -678,10 +710,18 @@ export async function loadRelevanceData(
     }
   }
 
+  // En anglais, on apparie le NOM ANGLAIS (présent en base pour les 38) : sinon le signal S3
+  // était muet dès qu'une requête anglaise nommait la loi en anglais.
+  const lawsLite: LawLite[] = laws.results.map((l) => ({
+    id: l.id,
+    name_fr: lang === "en" ? (l.name_en || l.name_fr) : l.name_fr,
+    name_norm: lang === "en" ? normalize(l.name_en || l.name_fr) : l.name_norm,
+  }));
+
   return {
     subjects: subjects.results,
     subjectMap: subjectMap.results,
-    laws: laws.results,
+    laws: lawsLite,
     divisions,
     relations: relations.results,
     mappedHeadings,

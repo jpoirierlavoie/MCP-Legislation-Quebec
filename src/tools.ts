@@ -540,9 +540,13 @@ export function registerTools(server: McpServer, env: Env): void {
       if (!parsed.article) return err(`Aucun numéro d'article détecté dans « ${citation} ».`);
       if (!parsed.law) {
         return err(
-          `Loi non reconnue dans « ${citation} ». Précisez le chapitre RLRQ (ex. « RLRQ, c. T-16 ») ` +
-          "ou une abréviation connue (C.c.Q., C.p.c.), ou utilisez qclaw_get_article avec law=… " +
-          `(voir qclaw_list_laws). Article détecté : ${parsed.article}.`,
+          parsed.chapitre_inconnu
+            ? `Le chapitre « ${parsed.chapitre_inconnu} » n'est pas au corpus — aucune loi n'a été ` +
+              "résolue (il n'est PAS rabattu sur un chapitre voisin). Voir les 38 textes " +
+              `disponibles avec qclaw_list_laws. Article détecté : ${parsed.article ?? "aucun"}.`
+            : `Loi non reconnue dans « ${citation} ». Précisez le chapitre RLRQ (ex. « RLRQ, c. T-16 ») ` +
+              "ou une abréviation connue (C.c.Q., C.p.c.), ou utilisez qclaw_get_article avec law=… " +
+              `(voir qclaw_list_laws). Article détecté : ${parsed.article ?? "aucun"}.`,
         );
       }
       const law = parsed.law;

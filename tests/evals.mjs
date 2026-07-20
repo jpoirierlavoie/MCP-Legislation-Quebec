@@ -256,6 +256,22 @@ async function smokeTests() {
     ouvrable.isError !== true && !!premier?.heading,
     premier ? `${premier.division_path} / ${premier.heading}` : "aucune division mappée");
 
+  // Un chapitre HORS corpus dont un chapitre du corpus est préfixe ne doit pas être avalé :
+  // « c. B-1.1 » (Loi sur le bâtiment) rendait du b-1 (Loi sur le Barreau), en silence.
+  const horsCorpus = await callTool("qclaw_resolve_reference", { citation: "RLRQ, c. B-1.1, art. 5" });
+  add("resolve_reference : chapitre hors corpus refusé, pas rabattu sur un voisin",
+    horsCorpus.isError === true,
+    horsCorpus.isError ? "" : `résolu à tort en ${horsCorpus.structuredContent?.resolved?.law}`);
+
+  // Marqueur « a. » (forme québécoise usuelle) : sans lui, le numéro du CHAPITRE était pris
+  // pour l'article — « (chapitre T-16), a. 12 » rendait l'article 16.
+  const marqueurA = await callTool("qclaw_resolve_reference",
+    { citation: "Loi sur les tribunaux judiciaires (chapitre T-16), a. 12" });
+  add("resolve_reference : marqueur « a. » et chapitre non confondu avec l'article",
+    marqueurA.structuredContent?.resolved?.law === "t-16" &&
+    marqueurA.structuredContent?.resolved?.number === "12",
+    `obtenu ${marqueurA.structuredContent?.resolved?.law}/${marqueurA.structuredContent?.resolved?.number}`);
+
   const frEn = await callTool("qclaw_find_relevant", { query: "residential lease", lang: "en" });
   const s1 = (frEn.structuredContent?.candidates ?? []).find((c) => c.division_path);
   add("find_relevant (lang=en) : pas de chemin français dans une réponse anglaise",
