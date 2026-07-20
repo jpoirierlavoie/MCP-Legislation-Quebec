@@ -48,21 +48,26 @@ class Article:
     division_id: int | None = None
 
 
-def sort_key(number: str) -> int:
-    """Clé de tri 64 bits (PLAN §12) : n*10^6 + d1*10^3 + d2.
+# Clé de tri des pseudo-articles de disposition : APRÈS tout le corpus. Le max d'un article
+# réel = ~3168 * 1000^4 ≈ 3.17e15 (< 2^53), donc une base à 9e15 les place tous après.
+DISPOSITION_SORT_BASE = 9_000_000_000_000_000
 
-    Gère les décimaux à 1-2 niveaux ('2926.1', '132.0.1') et préserve l'ordre au
-    passage d'un Livre à l'autre (898 < 898.1 < 899). Les pseudo-articles de
-    disposition encadrent le corpus.
+
+def sort_key(number: str) -> int:
+    """Clé de tri 64 bits : packing en base 1000 de l'entier + jusqu'à 4 niveaux décimaux,
+    normalisé à 5 composantes pour un ordre correct (132 < 132.0.1 < 133 ; gère aussi
+    350.52.0.1). Les pseudo-articles de disposition (préliminaire=0, autres via le parseur)
+    encadrent le corpus.
     """
     if number == "préliminaire":
         return 0
-    if number == "finales":
-        return 9_000_000_000
-    if number == "annexe":
-        return 9_500_000_000
     parts = number.split(".")
-    n = int(parts[0])
-    d1 = int(parts[1]) if len(parts) > 1 else 0
-    d2 = int(parts[2]) if len(parts) > 2 else 0
-    return n * 1_000_000 + d1 * 1_000 + d2
+    if not parts[0].isdigit():
+        return DISPOSITION_SORT_BASE  # pseudo-article non numérique (le parseur fixe l'ordre)
+    comps = parts[:5]  # entier + jusqu'à 4 niveaux décimaux
+    key = 0
+    for p in comps:
+        key = key * 1000 + (int(p) if p.isdigit() else 0)
+    for _ in range(5 - len(comps)):
+        key *= 1000  # normaliser la longueur (padding)
+    return key

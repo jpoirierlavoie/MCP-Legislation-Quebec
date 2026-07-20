@@ -40,11 +40,15 @@ class CorpusTest(unittest.TestCase):
                 self.assertTrue(rep.ok, f"{law_id}/{lang}\n" + "\n".join(rep.lines))
 
     def test_fr_en_symmetry(self):
-        # FR et EN d'une même loi ont les mêmes numéros d'articles (même loi, traduite)
+        # FR et EN d'une même loi ont les mêmes numéros d'articles RÉELS (même loi, traduite).
+        # Les pseudo-articles de disposition peuvent différer (intitulés propres à la langue).
+        from pipeline.validate import is_disposition
         for law_id in ("ccq", "cpc"):
             *_, fr = corpus(law_id, "fr")
             *_, en = corpus(law_id, "en")
-            self.assertEqual(set(fr), set(en), f"{law_id}: numéros FR ≠ EN")
+            real_fr = {n for n in fr if not is_disposition(n)}
+            real_en = {n for n in en if not is_disposition(n)}
+            self.assertEqual(real_fr, real_en, f"{law_id}: numéros d'articles réels FR ≠ EN")
 
     def test_ccq_en_witnesses(self):
         _, _, _, by = corpus("ccq", "en")
@@ -64,15 +68,16 @@ class CorpusTest(unittest.TestCase):
         self.assertTrue(by["1"].text.startswith("To prevent a potential dispute"))
 
     def test_cpc_annexe(self):
-        # l'annexe (convention de La Haye) est un pseudo-article, dans les 2 langues
+        # l'annexe (convention de La Haye) est un pseudo-article 'annexe-i' dans les 2 langues
+        # (label canonique : SCHEDULE I -> annexe-i comme ANNEXE I).
         for lang, marker in (("fr", "annexe"), ("en", "Schedule")):
             _, _, _, by = corpus("cpc", lang)
-            self.assertIn("annexe", by)
-            self.assertIn(marker, by["annexe"].history or "")
-        # le C.c.Q. n'a PAS d'annexe (son bloc sc-nb:1 = dispositions finales)
+            self.assertIn("annexe-i", by)
+            self.assertIn(marker, by["annexe-i"].history or "")
+        # le C.c.Q. a des dispositions finales (pas d'annexe)
         _, _, _, ccq = corpus("ccq", "fr")
-        self.assertNotIn("annexe", ccq)
         self.assertIn("finales", ccq)
+        self.assertNotIn("annexe-i", ccq)
 
     def test_globally_unique_ids(self):
         # les id de divisions/articles ne doivent pas entrer en collision entre combos

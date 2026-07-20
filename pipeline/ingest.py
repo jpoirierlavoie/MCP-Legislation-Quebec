@@ -19,7 +19,7 @@ from bs4 import BeautifulSoup
 
 from . import config, load, validate
 from .model import Law
-from .parser import parse_epub
+from .parser import opf_metadata, parse_epub
 
 _FR_MONTHS = {
     "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
@@ -41,7 +41,7 @@ _LANGS = ("fr", "en")
 
 
 def _id_base(law_id: str, lang: str) -> int:
-    law_ids = [law["id"] for law in config.load_config()["laws"]]
+    law_ids = [law["id"] for law in config.load_all_laws()]
     combo = law_ids.index(law_id) * len(_LANGS) + _LANGS.index(lang)
     return combo * 10_000_000
 
@@ -57,7 +57,10 @@ def _download(url: str, dest: Path) -> Path:
 def _law_from_config(cfg_law: dict) -> Law:
     consol = cfg_law.get("consolidation", {})
     return Law(
-        id=cfg_law["id"], name_fr=cfg_law["name_fr"], name_en=cfg_law["name_en"],
+        # name_en peut être null dans les additions (§5) : repli temporaire sur name_fr
+        # (name_en NOT NULL) ; le vrai name_en est posé au chargement EN depuis l'OPF.
+        id=cfg_law["id"], name_fr=cfg_law["name_fr"],
+        name_en=cfg_law.get("name_en") or cfg_law["name_fr"],
         rlrq_cite=cfg_law["rlrq_cite"],
         consol_date_fr=consol.get("fr"), consol_date_en=consol.get("en"),
     )
@@ -82,13 +85,27 @@ def fetch_consolidation(url: str) -> str | None:
 
 def run(law_id: str, lang: str, download: bool, apply_local: bool, apply_remote: bool,
         show: list[str], strict: bool, refresh_dates: bool = False) -> int:
-    cfg_law = config.get_law(law_id)
+    cfg_law = config.get_law_any(law_id)
     law = _law_from_config(cfg_law)
     epub = _sample_path(law_id, lang)
     if download or not epub.exists():
         url = cfg_law["epub"][lang]
         print(f"Téléchargement {url} -> {epub}")
-        _download(url, epub)
+        try:
+            _download(url, epub)
+        except Exception as e:  # tolérance EN manquant (§5) : on saute cette langue, sans échec
+            if lang == "en":
+                print(f"EN indisponible pour {law_id} ({e}) — langue ignorée.")
+                return 0
+            raise
+
+    if lang == "en":
+        # vrai name_en depuis l'OPF anglais (les additions le livrent à null — §5)
+        import zipfile
+        with zipfile.ZipFile(epub) as zf:
+            title = opf_metadata(zf)["title"]
+        if title:
+            law.name_en = title
 
     if refresh_dates:
         src = cfg_law.get("consolidation_source", {}).get(lang)
@@ -104,6 +121,18 @@ def run(law_id: str, lang: str, download: bool, apply_local: bool, apply_remote:
     load.prepare(law, divisions, articles, id_base=_id_base(law_id, lang))
 
     rep = validate.validate(law_id, lang, divisions, articles)
+    # Invariant phase B (§9 C) : les articles réels (se:) doivent égaler le décompte de scan.
+    import re as _re
+    import zipfile as _zip
+    se_ids: set[str] = set()
+    with _zip.ZipFile(epub) as zf:
+        for n in zf.namelist():
+            if _re.search(r"page\d+\.xhtml$", n):
+                se_ids |= set(_re.findall(r'id="(se:\d+(?:_\d+)*)"', zf.read(n).decode("utf-8", "replace")))
+    real = [a for a in articles if not validate.is_disposition(a.number)]
+    if len(real) != len(se_ids):
+        rep.ok = False
+        rep.lines.append(f"  ✗ comptes phase B : {len(real)} articles réels vs {len(se_ids)} se: (scan)")
     print("\n".join(rep.lines))
     print(f"\nRésultat des invariants : {'OK ✅' if rep.ok else 'ÉCHEC ❌'}")
 
@@ -146,7 +175,8 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Pipeline d'ingestion Lois du Québec (EPUB -> D1).")
     p.add_argument("--law", default="ccq")
     p.add_argument("--lang", default="fr", choices=["fr", "en"])
-    p.add_argument("--all", action="store_true", help="Traiter toutes les lois × langues (config).")
+    p.add_argument("--all", action="store_true", help="Traiter toutes les lois × langues (base + additions).")
+    p.add_argument("--additions", action="store_true", help="Traiter les 36 textes additionnels × langues.")
     p.add_argument("--download", action="store_true", help="Retélécharger l'EPUB depuis LégisQuébec.")
     p.add_argument("--refresh-dates", action="store_true",
                    help="Capter la date de consolidation live sur la page de la loi.")
@@ -157,8 +187,10 @@ def main(argv: list[str] | None = None) -> int:
                    help="Générer/appliquer même si des invariants échouent.")
     a = p.parse_args(argv)
 
-    if a.all:
-        combos = [(law["id"], lang) for law in config.load_config()["laws"] for lang in _LANGS]
+    if a.additions:
+        combos = [(law["id"], lang) for law in config.load_additions() for lang in _LANGS]
+    elif a.all:
+        combos = [(law["id"], lang) for law in config.load_all_laws() for lang in _LANGS]
     else:
         combos = [(a.law, a.lang)]
 

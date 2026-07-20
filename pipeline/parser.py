@@ -27,7 +27,8 @@ from pathlib import Path
 from bs4 import BeautifulSoup, Tag
 from bs4 import XMLParsedAsHTMLWarning
 
-from .model import Article, Division, Law
+from .model import Article, Division, Law, DISPOSITION_SORT_BASE
+from .norm import normalize
 
 # On parse tout (contenu XHTML et OPF/container XML) avec html.parser à dessein
 # (préserve les attributs à namespace comme integrity:*), d'où ce filtre.
@@ -64,7 +65,7 @@ _MARKER = re.compile(r"-(?:h1|t1|nb|ss|p\d)(?::|-|$)")
 # Découpe un id de division en segments : sur '-' précédant un préfixe de niveau connu.
 # (Robuste aux valeurs contenant un trait d'union, ex. gc:l_dix-septieme.)
 _SEG_SPLIT = re.compile(r"-(?=(?:ga|gb|gc|gd|ge|gf|gg|gh|gi):)")
-_ART_ID = re.compile(r"^se:\d+(?:_\d+){0,2}$")
+_ART_ID = re.compile(r"^se:\d+(?:_\d+)*$")  # décimaux à N niveaux (132.0.1, 350.52.0.1…)
 
 _LINK_SCHEME = re.compile(r"^[a-z]+:", re.I)
 
@@ -142,6 +143,27 @@ def _add_paragraph_breaks(scope: Tag) -> None:
 
 
 _MARKER_P = re.compile(r"-p[12]:")
+_NOTE_ID = re.compile(r"^(?:d\d+e|Note)")
+
+
+def _strip_notes(scope: Tag) -> None:
+    """Retire les notes éditoriales (divs d36e*/Note, spans class noteInTable) — hors du texte
+    normatif, comme les notes A.M. du C.c.Q. (rapport §7)."""
+    for n in scope.find_all(id=_NOTE_ID):
+        n.decompose()
+    for n in scope.find_all(class_="noteInTable"):
+        n.decompose()
+
+
+def _render_tables(scope: Tag) -> None:
+    """Rend les tableaux lisiblement dans le texte : « cellule : cellule » par ligne (tarifs)."""
+    for t in scope.find_all("table"):
+        rows = []
+        for tr in t.find_all("tr"):
+            cells = [c for c in (_norm(td.get_text()) for td in tr.find_all(["td", "th"])) if c]
+            if cells:
+                rows.append(" : ".join(cells))
+        t.replace_with("\n" + "\n".join(rows) + "\n" if rows else "")
 
 
 def extract_article_body(container: Tag, number: str) -> tuple[str, str | None, str | None, int]:
@@ -163,9 +185,11 @@ def extract_article_body(container: Tag, number: str) -> tuple[str, str | None, 
     if hb:
         hb.decompose()
 
-    # --- texte : uniquement les alinéas (les notes A.M. d36e* en sont naturellement exclues) ---
+    # --- texte : uniquement les alinéas (notes exclues, tableaux rendus lisiblement) ---
     ss_re = re.compile(re.escape(eid) + r"-ss:\d+$")
     text_source = _soup(str(root)).find(id=eid)  # copie dédiée au texte (on va y insérer des \n)
+    _strip_notes(text_source)
+    _render_tables(text_source)
     text_ss = [d for d in text_source.find_all("div", id=True) if ss_re.fullmatch(d.get("id"))]
 
     def _strip_leading_number(s: str) -> str:
@@ -183,9 +207,6 @@ def extract_article_body(container: Tag, number: str) -> tuple[str, str | None, 
     else:
         # ~34 articles (souvent abrogés) portent le texte directement dans le conteneur
         _add_paragraph_breaks(text_source)
-        # retirer les notes A.M. pour le texte
-        for note in text_source.find_all(id=re.compile(r"^d36e")):
-            note.decompose()
         t = _strip_leading_number(_norm(text_source.get_text()))
         if t:
             parts.append(t)
@@ -305,19 +326,40 @@ def _parse_preliminary(soup: BeautifulSoup, marker: str) -> tuple[Division, Arti
     return None
 
 
-def _parse_sc_block(soup: BeautifulSoup, cfg: dict) -> tuple[Division, Article] | None:
-    """Le bloc `sc-nb:1` est soit les DISPOSITIONS FINALES (C.c.Q.), soit une ANNEXE (C.p.c.).
-    On classe sur l'INTITULÉ du bloc (div d'en-tête d36e), pas sur son contenu : l'historique
-    des finales du C.c.Q. contient « annexe » sans être une annexe."""
-    cont = soup.find(id="sc-nb:1")
-    if cont is None:
-        return None
-    head_el = cont.find(id=re.compile(r"^d36e"))
-    heading = _norm(head_el.get_text()).split("\n")[0][:40] if head_el else ""
-    if _ANNEXE_RE.search(heading):
-        return _extract_disposition(cont, "annexe", heading or "Annexe", "annexe", "annexe")
-    heading = heading or cfg["finales"]
-    return _extract_disposition(cont, "finales", heading, "disposition-finales", "disposition")
+_DISP_CANON = {"schedule": "annexe", "form": "formulaire"}
+
+
+def _disposition_number(heading: str) -> tuple[str, str]:
+    """(numéro-slug, kind) d'un bloc `sc-nb:N` d'après son intitulé : DISPOSITIONS FINALES ->
+    ('finales','disposition') ; ANNEXE 1 -> ('annexe-1','annexe') ; FORMULAIRE VI ->
+    ('formulaire-vi','annexe') ; FORMULES -> ('formules','annexe')."""
+    h = normalize(heading or "") or ""
+    if "final" in h:
+        return "finales", "disposition"
+    # label + son 1er repère (romain/chiffre, ou mot comme « abrogative ») — l'en-tête d36e
+    # peut contenir un sous-titre après (ex. « ANNEXE I TARIF DES DROITS… »), qu'on écarte.
+    m = re.match(r"(annexe|formulaire|formules|schedule|form)\.?\s*([ivxlcdm\d][ivxlcdm\d.]*|[a-z]+)?", h)
+    if m:
+        # label canonique (FR) pour que l'annexe ait le MÊME numéro en FR et EN
+        # (schedule->annexe, form->formulaire) : symétrie inter-langues.
+        label = _DISP_CANON.get(m.group(1), m.group(1))
+        tokens = [label] + ([m.group(2)] if m.group(2) else [])
+        return re.sub(r"[^a-z0-9]+", "-", "-".join(tokens)).strip("-"), "annexe"
+    slug = re.sub(r"[^a-z0-9]+", "-", h).strip("-")[:24]
+    # un numéro de disposition ne doit JAMAIS être numérique (sinon confusion avec un article
+    # réel) : certaines annexes n'ont qu'un numéro en intitulé (c-19 : « 2 »…« 36 »).
+    if not slug or re.fullmatch(r"[\d-]+", slug):
+        slug = f"annexe-{slug}" if slug else "annexe"
+    return slug, "annexe"
+
+
+def _parse_sc_block_el(cont: Tag, cfg: dict) -> tuple[Division, Article]:
+    """Extrait UN bloc `sc-nb:N` (dispositions finales OU annexe/formulaire). Classé et numéroté
+    sur l'INTITULÉ (div d'en-tête d36e) — un même EPUB peut avoir sc-nb:1..N (une annexe chacun)."""
+    head_el = cont.find(id=re.compile(r"^d\d+e"))
+    heading = _norm(head_el.get_text()).split("\n")[0][:50] if head_el else cfg["finales"]
+    number, kind = _disposition_number(heading)
+    return _extract_disposition(cont, number, heading, number, kind)
 
 
 # --- pilote OPF / spine ------------------------------------------------------
@@ -377,15 +419,26 @@ def parse_epub(epub_path: str | Path, law: Law, lang: str) -> tuple[list[Divisio
     articles: list[Article] = []
     sort_order = 0
 
+    disp_idx = 0
+
     def add_special(res):
-        nonlocal sort_order
+        nonlocal sort_order, disp_idx
         if not res:
             return
         div, art = res
+        if not art.text and art.number not in ("préliminaire",):
+            return  # bloc de disposition sans contenu (en-tête de section, ex. « FORMULES »)
         div.law_id = art.law_id = law.id
         div.lang = art.lang = lang
         div.sort_order = sort_order
         art.consol_date = consol
+        # sort_key des pseudo-articles : préliminaire avant tout, finales/annexes après le
+        # corpus, dans l'ordre du document (le parseur le fixe ; load.prepare le respecte).
+        if art.number == "préliminaire":
+            art.sort_key = 0
+        else:
+            art.sort_key = DISPOSITION_SORT_BASE + disp_idx * 1_000_000
+            disp_idx += 1
         sort_order += 1
         divisions.append(div)
         articles.append(art)
@@ -415,10 +468,11 @@ def parse_epub(epub_path: str | Path, law: Law, lang: str) -> tuple[list[Divisio
                         division_path=current_div_path or "", consol_date=consol,
                     ))
 
-            # 2) blocs spéciaux (disposition préliminaire ; bloc sc-nb:1 = finales OU annexe)
+            # 2) blocs spéciaux : disposition préliminaire, puis TOUS les blocs sc-nb:N
+            # (dispositions finales et/ou annexes/formulaires — un par bloc).
             if cfg["preliminary"] in html:
                 add_special(_parse_preliminary(soup, cfg["preliminary"]))
-            if "sc-nb:1" in html:
-                add_special(_parse_sc_block(soup, cfg))
+            for sc in soup.find_all(id=re.compile(r"^sc-nb:\d+$")):
+                add_special(_parse_sc_block_el(sc, cfg))
 
     return divisions, articles

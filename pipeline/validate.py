@@ -6,10 +6,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+import re
+
 from .model import Article, Division
 
-# Pseudo-articles hors numérotation ordinaire (dispositions, annexes).
-DISPOSITION_NUMBERS = {"préliminaire", "finales", "annexe"}
+# Un article « réel » a un numéro numérique (1457, 2926.1). Les pseudo-articles de disposition
+# (préliminaire, finales, annexe-1, formulaire-vi, formules…) ne le sont pas.
+_NUMERIC = re.compile(r"\d+(?:\.\d+)*$")
+
+
+def is_disposition(number: str) -> bool:
+    return _NUMERIC.fullmatch(number) is None
 
 # Invariants attendus, par (law_id, lang). FR et EN d'une même loi partagent les mêmes
 # décomptes (même loi, traduite) — seul le texte diffère.
@@ -59,8 +66,8 @@ class Report:
 
 def validate(law_id: str, lang: str, divisions: list[Division], articles: list[Article]) -> Report:
     r = Report()
-    real = [a for a in articles if a.number not in DISPOSITION_NUMBERS]
-    disp = [a for a in articles if a.number in DISPOSITION_NUMBERS]
+    real = [a for a in articles if not is_disposition(a.number)]
+    disp = [a for a in articles if is_disposition(a.number)]
     ints = sorted({int(a.number) for a in real if "." not in a.number})
     decimals = [a for a in real if "." in a.number]
     div_no_disp = [d for d in divisions if d.kind not in ("disposition", "annexe")]
@@ -109,7 +116,12 @@ def validate(law_id: str, lang: str, divisions: list[Division], articles: list[A
     r.check("lacunes dans la plage entière", gaps if gaps else "aucune", "aucune")
     r.check("doublons d'entiers", dups if dups else "aucun", "aucun")
     no_div = [a.number for a in real if not a.division_path]
-    r.check("articles sans division", no_div if no_div else "aucun", "aucun")
+    if not div_no_disp:
+        r.check("articles sans division", "n/a (texte plat, 0 division)")
+    elif no_div:  # quelques articles avant la 1re division : signalé, non bloquant
+        r.lines.append(f"  · {len(no_div)} article(s) hors division (avant la 1re division) : {no_div[:8]}")
+    else:
+        r.check("articles sans division", "aucun", "aucun")
     empty = [a.number for a in articles if not a.text]
     r.check("articles au texte vide", empty if empty else "aucun", "aucun")
     return r
