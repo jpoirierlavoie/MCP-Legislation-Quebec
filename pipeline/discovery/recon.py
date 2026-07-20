@@ -270,7 +270,7 @@ def build_report(results: list[dict]) -> str:
 
 
 def main() -> int:
-    laws = config.load_additions()
+    laws = [l for l in config.load_all_laws() if l["id"] not in ("ccq", "cpc")]
     # carte chapitre -> id des lois habilitantes (non-règlements) pour parent_law_id (§3.3)
     parents = {base_chapter(l["rlrq_cite"]): l["id"]
                for l in config.load_all_laws() if ", r." not in l["rlrq_cite"]}

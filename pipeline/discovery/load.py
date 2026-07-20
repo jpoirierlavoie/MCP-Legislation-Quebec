@@ -37,18 +37,23 @@ def _insert_rows(db, table: str, cols: list[str], rows: list[list], or_ignore: b
     db.run(f"{verb} {table} ({', '.join(cols)}) VALUES {values}")
 
 
-def seed_laws(db, additions: dict) -> int:
-    """Enregistre les lois additionnelles (métadonnées), puis pose les attributs de découverte
-    sur TOUTES les lois de la configuration — additions ET codes de base (ccq/cpc). Sans quoi
-    ccq/cpc restaient sans `fonction` et échappaient au filtre correspondant."""
-    laws = additions["laws"]
+def seed_laws(db) -> int:
+    """Enregistre les lois de la configuration (métadonnées) et pose les attributs de
+    découverte sur TOUTES — pas seulement sur les 36 ajouts, sans quoi ccq/cpc restaient
+    sans `fonction` et échappaient au filtre correspondant."""
+    laws = config.load_all_laws()
     rows = [[l["id"], l["name_fr"], l.get("name_en") or l["name_fr"], l["rlrq_cite"]]
             for l in laws]
     _insert_rows(db, "laws", ["id", "name_fr", "name_en", "rlrq_cite"], rows, or_ignore=True)
-    for l in config.load_all_laws():
+    for l in laws:
         forum = " ; ".join(l.get("forum") or []) or None
+        consol = l.get("consolidation") or {}
+        # Les métadonnées de loi issues de la CONFIG sont synchronisées ici : c'est bien
+        # moins coûteux que de réingérer les 76 combinaisons pour deux colonnes de date.
+        # (name_en n'y figure PAS : il vient de l'OPF anglais, pas de la config — §5.)
         db.run(f"UPDATE laws SET fonction = {q(l.get('fonction'))}, forum = {q(forum)}, "
-               f"name_fr = {q(l['name_fr'])}, name_norm = {q(normalize(l['name_fr']))} "
+               f"name_fr = {q(l['name_fr'])}, name_norm = {q(normalize(l['name_fr']))}, "
+               f"consol_date_fr = {q(consol.get('fr'))}, consol_date_en = {q(consol.get('en'))} "
                f"WHERE id = {q(l['id'])}")
     return len(laws)
 
@@ -117,10 +122,9 @@ def main(argv: list[str] | None = None) -> int:
 
     taxonomy = _read("taxonomy.json")
     relations = _read("relations.json")
-    additions = _read("laws.config.additions.json")
 
-    n_seed = seed_laws(db, additions)
-    print(f"[{db.name}] lois additionnelles enregistrées (métadonnées) : {n_seed}")
+    n_seed = seed_laws(db)
+    print(f"[{db.name}] lois enregistrées / attributs posés : {n_seed}")
 
     violations = validate(db, taxonomy, relations)
     if violations:

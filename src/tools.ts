@@ -117,8 +117,8 @@ export function registerTools(server: McpServer, env: Env): void {
       },
       annotations: READONLY,
     },
-    async ({ fonction, forum, subject }) => {
-      const laws = await listLaws(db, { fonction, forum, subject });
+    async ({ fonction, forum, subject, lang }) => {
+      const laws = await listLaws(db, { fonction, forum, subject }, lang as Lang);
       if (laws.length === 0) {
         const applied = [
           fonction ? `fonction='${fonction}'` : null,
@@ -201,7 +201,7 @@ export function registerTools(server: McpServer, env: Env): void {
           .describe("Filtrer par type : 'reglement-de', 'renvoie-a', 'met-en-oeuvre', 'applique', 'complete', 'encadre-par', 'connexe'."),
         direction: z.enum(["out", "in", "both"]).default("both")
           .describe("'out' : depuis la loi ; 'in' : vers la loi ; 'both' (défaut)."),
-        limit: z.number().int().optional().describe("Max d'arêtes (défaut 50, max 200)."),
+        limit: z.number().int().min(1).max(200).optional().describe("Max d'arêtes (défaut 50, max 200)."),
         lang: LANG.optional(),
       },
       annotations: READONLY,
@@ -256,7 +256,7 @@ export function registerTools(server: McpServer, env: Env): void {
         "'congédiement', 'bail commercial'. Enchaîner ensuite avec get_structure / get_division.",
       inputSchema: {
         query: z.string().describe("Thème ou description libre du problème, ex. « bail de logement »."),
-        limit: z.number().int().optional().describe("Nombre de candidats (défaut 8, max 50)."),
+        limit: z.number().int().min(1).max(50).optional().describe("Nombre de candidats (défaut 8, max 50)."),
         lang: LANG,
       },
       annotations: READONLY,
@@ -356,8 +356,8 @@ export function registerTools(server: McpServer, env: Env): void {
         to: z.coerce.string().optional().describe("Borne haute d'une plage, ex. '1460'."),
         numbers: z.array(z.coerce.string()).optional().describe("Liste de numéros, ex. ['1457','1590']."),
         lang: LANG,
-        limit: z.number().int().optional().describe("Max d'articles (défaut 50, max 200)."),
-        offset: z.number().int().optional().describe("Décalage de pagination."),
+        limit: z.number().int().min(1).max(200).optional().describe("Max d'articles (défaut 50, max 200)."),
+        offset: z.number().int().min(0).optional().describe("Décalage de pagination (≥ 0)."),
       },
       annotations: READONLY,
     },
@@ -442,8 +442,8 @@ export function registerTools(server: McpServer, env: Env): void {
         division_id: z.number().int().optional().describe("Identifiant numérique de la division."),
         lang: LANG,
         include_text: z.boolean().default(true).describe("Inclure le texte des articles (défaut true)."),
-        limit: z.number().int().optional().describe("Max d'articles (défaut 50, max 200)."),
-        offset: z.number().int().optional().describe("Décalage de pagination."),
+        limit: z.number().int().min(1).max(200).optional().describe("Max d'articles (défaut 50, max 200)."),
+        offset: z.number().int().min(0).optional().describe("Décalage de pagination (≥ 0)."),
       },
       annotations: READONLY,
     },
@@ -494,8 +494,8 @@ export function registerTools(server: McpServer, env: Env): void {
         query: z.string().describe("Termes à rechercher, ex. 'responsabilité préjudice'."),
         law: z.string().optional().describe("Restreindre à une loi (défaut : toutes)."),
         lang: LANG,
-        limit: z.number().int().optional().describe("Max de résultats (défaut 10, max 50)."),
-        offset: z.number().int().optional().describe("Décalage de pagination."),
+        limit: z.number().int().min(1).max(50).optional().describe("Max de résultats (défaut 10, max 50)."),
+        offset: z.number().int().min(0).optional().describe("Décalage de pagination (≥ 0)."),
       },
       annotations: READONLY,
     },

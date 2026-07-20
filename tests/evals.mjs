@@ -238,6 +238,30 @@ async function smokeTests() {
     ccqRef.structuredContent?.resolved?.number === "1457",
     `obtenu ${ccqRef.structuredContent?.resolved?.law}/${ccqRef.structuredContent?.resolved?.number}`);
 
+  // Une source juridique sans date de consolidation n'est pas citable : les 38 doivent l'avoir.
+  const sansDate = toutes.filter((l) => !l.consol_date_fr).map((l) => l.id);
+  add("list_laws : date de consolidation sur les 38 lois", sansDate.length === 0,
+    sansDate.length ? `manquante sur ${sansDate.length} : ${sansDate.slice(0, 5).join(", ")}…` : "");
+
+  // Les identifiants Irosoft sont propres à la langue : une piste rendue en anglais doit
+  // porter un chemin ANGLAIS, sinon get_division(lang='en') la refuse.
+  const enLaws = await callTool("qclaw_list_laws", { lang: "en" });
+  const ccqEn = enLaws.structuredContent?.laws?.find((l) => l.id === "ccq");
+  const premier = ccqEn?.mapped_divisions?.[0];
+  const ouvrable = premier
+    ? await callTool("qclaw_get_division",
+        { law: "ccq", lang: "en", path: premier.division_path, include_text: false })
+    : { isError: true };
+  add("list_laws (lang=en) : chemins de divisions ouvrables en anglais",
+    ouvrable.isError !== true && !!premier?.heading,
+    premier ? `${premier.division_path} / ${premier.heading}` : "aucune division mappée");
+
+  const frEn = await callTool("qclaw_find_relevant", { query: "residential lease", lang: "en" });
+  const s1 = (frEn.structuredContent?.candidates ?? []).find((c) => c.division_path);
+  add("find_relevant (lang=en) : pas de chemin français dans une réponse anglaise",
+    !s1 || !/l_(premier|deuxieme|troisieme|quatrieme|cinquieme|sixieme)/.test(s1.division_path),
+    s1 ? s1.division_path : "aucun candidat de division");
+
   return checks;
 }
 

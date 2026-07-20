@@ -152,7 +152,9 @@ export interface LawFilters {
  * Carte du corpus (§4.1) : lois enrichies (fonction, forum, sujets, portée, loi habilitante).
  * Trois requêtes agrégées au total — pas de N+1.
  */
-export async function listLaws(db: D1Database, filters: LawFilters = {}): Promise<LawSummary[]> {
+export async function listLaws(
+  db: D1Database, filters: LawFilters = {}, lang: Lang = "fr",
+): Promise<LawSummary[]> {
   const where: string[] = [];
   const binds: unknown[] = [];
   if (filters.fonction) {
@@ -185,6 +187,16 @@ export async function listLaws(db: D1Database, filters: LawFilters = {}): Promis
     )
     .all<{ law_id: string; division_path: string; label_fr: string; heading: string | null }>()).results;
 
+  // subject_map ne contient que des chemins FR : on les traduit si une autre langue est demandée
+  const traduits = new Map<string, Map<string, TranslatedPath>>();
+  if (lang !== "fr") {
+    for (const law of laws) {
+      const paths = maps.filter((m) => m.law_id === law.id && m.division_path)
+        .map((m) => m.division_path);
+      if (paths.length) traduits.set(law.id, await translatePaths(db, law.id, lang, paths));
+    }
+  }
+
   return laws.map((law) => {
     const mine = counts.filter((c) => c.law_id === law.id);
     const mapped = maps.filter((m) => m.law_id === law.id);
@@ -196,9 +208,79 @@ export async function listLaws(db: D1Database, filters: LawFilters = {}): Promis
       subjects: [...new Set(mapped.map((m) => m.label_fr))],
       mapped_divisions: mapped
         .filter((m) => m.division_path)
-        .map((m) => ({ division_path: m.division_path, heading: m.heading, subject: m.label_fr })),
+        .map((m) => {
+          const t = traduits.get(law.id)?.get(m.division_path);
+          return {
+            division_path: t?.path ?? m.division_path,
+            heading: t ? t.heading : m.heading,
+            subject: m.label_fr,
+          };
+        }),
     };
   });
+}
+
+// --- pont entre les chemins de divisions FR et EN -----------------------------
+
+/** Profondeur d'un chemin Irosoft (`ga:l_cinquieme-gb:l_deuxieme` -> 2). */
+const depthOf = (path: string) => path.split("-").length;
+const truncate = (path: string, d: number) => path.split("-").slice(0, d).join("-");
+
+export interface TranslatedPath {
+  path: string;
+  heading: string | null;
+}
+
+/**
+ * Traduit des chemins de divisions FRANÇAIS vers la langue demandée.
+ *
+ * Les identifiants Irosoft sont PROPRES À LA LANGUE (`ga:l_cinquieme` / `ga:l_five`), or
+ * `subject_map` ne stocke que des chemins français. Sans traduction, une réponse en anglais
+ * renvoie des chemins que get_division(lang='en') refuse — la piste est alors inexploitable.
+ *
+ * Le pont se fait par les NUMÉROS D'ARTICLES, invariants d'une langue à l'autre : on relie
+ * les divisions par un article qu'elles partagent, puis on tronque le chemin cible à la même
+ * profondeur (un Livre est à la profondeur 1, un Titre à 2, etc.).
+ */
+export async function translatePaths(
+  db: D1Database, lawId: string, lang: Lang, frPaths: string[],
+): Promise<Map<string, TranslatedPath>> {
+  const out = new Map<string, TranslatedPath>();
+  if (lang === "fr" || frPaths.length === 0) return out;
+
+  const pairs = (await db
+    .prepare(
+      `SELECT afr.division_path AS fr_path, MIN(aen.division_path) AS other_path
+       FROM articles afr
+       JOIN articles aen ON aen.law_id = afr.law_id AND aen.number = afr.number AND aen.lang = ?
+       WHERE afr.law_id = ? AND afr.lang = 'fr'
+       GROUP BY afr.division_path`,
+    )
+    .bind(lang, lawId)
+    .all<{ fr_path: string; other_path: string }>()).results;
+
+  const wanted = new Map<string, string>(); // chemin traduit -> chemin FR d'origine
+  for (const p of frPaths) {
+    const hit = pairs.find((x) => x.fr_path === p || x.fr_path.startsWith(`${p}-`));
+    if (!hit?.other_path) continue;
+    const translated = truncate(hit.other_path, depthOf(p));
+    if (translated) wanted.set(translated, p);
+  }
+  if (wanted.size === 0) return out;
+
+  const keys = [...wanted.keys()];
+  const rows = (await db
+    .prepare(
+      `SELECT path, heading FROM divisions
+       WHERE law_id = ? AND lang = ? AND path IN (${keys.map(() => "?").join(",")})`,
+    )
+    .bind(lawId, lang, ...keys)
+    .all<{ path: string; heading: string | null }>()).results;
+  for (const r of rows) {
+    const fr = wanted.get(r.path);
+    if (fr) out.set(fr, { path: r.path, heading: r.heading });
+  }
+  return out;
 }
 
 // --- taxonomie & graphe -------------------------------------------------------
@@ -532,7 +614,8 @@ export interface RelevanceData {
   laws: LawLite[];
   divisions: DivisionLite[];
   relations: RelationLite[];
-  mappedHeadings: Map<string, string | null>;
+  /** Clé `law_id|path_FR` -> cible (chemin + intitulé) dans la langue demandée. */
+  mappedHeadings: Map<string, { path: string; heading: string | null }>;
 }
 
 /**
@@ -565,18 +648,34 @@ export async function loadRelevanceData(
       .all<DivisionLite>()).results;
   }
 
-  // intitulés des divisions citées par subject_map (pour nommer les candidats S1)
-  const paths = [...new Set(subjectMap.results.filter((m) => m.division_path).map((m) => m.division_path))];
-  const mappedHeadings = new Map<string, string | null>();
-  if (paths.length) {
-    const rows = (await db
-      .prepare(
-        `SELECT law_id, path, heading FROM divisions
-         WHERE lang = ? AND path IN (${paths.map(() => "?").join(",")})`,
-      )
-      .bind(lang, ...paths)
-      .all<{ law_id: string; path: string; heading: string | null }>()).results;
-    for (const r of rows) mappedHeadings.set(`${r.law_id}|${r.path}`, r.heading);
+  // Cibles des divisions citées par subject_map (pour nommer et ADRESSER les candidats S1).
+  // Les chemins de subject_map sont français ; en anglais il faut les traduire, sinon la
+  // piste renvoyée n'est pas ouvrable avec get_division(lang='en').
+  const mappedHeadings = new Map<string, { path: string; heading: string | null }>();
+  const parLoi = new Map<string, string[]>();
+  for (const m of subjectMap.results) {
+    if (!m.division_path) continue;
+    const arr = parLoi.get(m.law_id);
+    if (arr) { if (!arr.includes(m.division_path)) arr.push(m.division_path); }
+    else parLoi.set(m.law_id, [m.division_path]);
+  }
+  if (lang === "fr") {
+    const paths = [...new Set([...parLoi.values()].flat())];
+    if (paths.length) {
+      const rows = (await db
+        .prepare(
+          `SELECT law_id, path, heading FROM divisions
+           WHERE lang = 'fr' AND path IN (${paths.map(() => "?").join(",")})`,
+        )
+        .bind(...paths)
+        .all<{ law_id: string; path: string; heading: string | null }>()).results;
+      for (const r of rows) mappedHeadings.set(`${r.law_id}|${r.path}`, { path: r.path, heading: r.heading });
+    }
+  } else {
+    for (const [lawId, paths] of parLoi) {
+      const t = await translatePaths(db, lawId, lang, paths);
+      for (const [fr, cible] of t) mappedHeadings.set(`${lawId}|${fr}`, cible);
+    }
   }
 
   return {

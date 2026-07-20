@@ -126,8 +126,12 @@ export interface RelevanceInput {
   /** Divisions DÉJÀ préfiltrées en SQL (sous-chaîne) ; on affine ici au début de mot. */
   divisions: DivisionLite[];
   relations: RelationLite[];
-  /** Intitulés des divisions citées par subject_map, clé `law_id|path`. */
-  mappedHeadings: Map<string, string | null>;
+  /**
+   * Divisions citées par subject_map, clé `law_id|path_FR` -> cible dans la langue demandée.
+   * subject_map ne stocke que des chemins FR, or les identifiants Irosoft sont propres à la
+   * langue : sans cette table, une réponse EN renverrait des chemins inexploitables.
+   */
+  mappedHeadings: Map<string, { path: string; heading: string | null }>;
 }
 
 export interface Candidate {
@@ -176,10 +180,11 @@ export function rank(input: RelevanceInput, limit: number): Candidate[] {
     for (const t of tokens) {
       if (!wordMatch(hay, t)) continue;
       for (const m of bySubject.get(s.id) ?? []) {
-        const heading = m.division_path
-          ? input.mappedHeadings.get(keyOf(m.law_id, m.division_path)) ?? null
-          : null;
-        hit(t, m.law_id, m.division_path, heading, WEIGHTS.S1_SUBJECT, `matière : ${s.label_fr}`);
+        const cible = m.division_path
+          ? input.mappedHeadings.get(keyOf(m.law_id, m.division_path))
+          : undefined;
+        hit(t, m.law_id, cible?.path ?? m.division_path, cible?.heading ?? null,
+          WEIGHTS.S1_SUBJECT, `matière : ${s.label_fr}`);
       }
     }
   }

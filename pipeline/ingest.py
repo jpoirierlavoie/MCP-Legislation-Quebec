@@ -57,7 +57,7 @@ def _download(url: str, dest: Path) -> Path:
 def _law_from_config(cfg_law: dict) -> Law:
     consol = cfg_law.get("consolidation", {})
     return Law(
-        # name_en peut être null dans les additions (§5) : repli temporaire sur name_fr
+        # name_en est livré à null (§5) : repli temporaire sur name_fr
         # (name_en NOT NULL) ; le vrai name_en est posé au chargement EN depuis l'OPF.
         id=cfg_law["id"], name_fr=cfg_law["name_fr"],
         name_en=cfg_law.get("name_en") or cfg_law["name_fr"],
@@ -100,7 +100,7 @@ def run(law_id: str, lang: str, download: bool, apply_local: bool, apply_remote:
             raise
 
     if lang == "en":
-        # vrai name_en depuis l'OPF anglais (les additions le livrent à null — §5)
+        # vrai name_en depuis l'OPF anglais (la config le livre à null — §5)
         import zipfile
         with zipfile.ZipFile(epub) as zf:
             title = opf_metadata(zf)["title"]
@@ -175,8 +175,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Pipeline d'ingestion Lois du Québec (EPUB -> D1).")
     p.add_argument("--law", default="ccq")
     p.add_argument("--lang", default="fr", choices=["fr", "en"])
-    p.add_argument("--all", action="store_true", help="Traiter toutes les lois × langues (base + additions).")
-    p.add_argument("--additions", action="store_true", help="Traiter les 36 textes additionnels × langues.")
+    p.add_argument("--all", action="store_true", help="Traiter les 38 lois × langues.")
     p.add_argument("--download", action="store_true", help="Retélécharger l'EPUB depuis LégisQuébec.")
     p.add_argument("--refresh-dates", action="store_true",
                    help="Capter la date de consolidation live sur la page de la loi.")
@@ -187,9 +186,7 @@ def main(argv: list[str] | None = None) -> int:
                    help="Générer/appliquer même si des invariants échouent.")
     a = p.parse_args(argv)
 
-    if a.additions:
-        combos = [(law["id"], lang) for law in config.load_additions() for lang in _LANGS]
-    elif a.all:
+    if a.all:
         combos = [(law["id"], lang) for law in config.load_all_laws() for lang in _LANGS]
     else:
         combos = [(a.law, a.lang)]
