@@ -740,6 +740,78 @@ export async function loadRelevanceData(
   };
 }
 
+// --- fils d'Ariane (plan v2, 1.3) ---------------------------------------------
+
+/**
+ * Frontières de segments d'un chemin Irosoft : on ne coupe qu'AVANT un marqueur `gX:`.
+ * (Un simple split('-') casserait les chemins spéciaux comme 'disposition-preliminaire'.)
+ */
+const PATH_SEG = /-(?=g[a-z]:)/;
+
+export interface CrumbNode {
+  path: string;
+  kind: string;
+  number: string | null;
+  heading: string | null;
+}
+
+/**
+ * Chaînes d'ancêtres (racine -> feuille) pour un lot de (law_id, division_path) —
+ * pour rendre les résultats de recherche AUTO-EXPLICATIFS (cause n° 3 du post-mortem :
+ * un chemin opaque n'apprend rien ; « Livre V, Titre IV : … droit international privé »
+ * permet de RECONNAÎTRE la pertinence). Une requête IN par loi représentée.
+ */
+export async function breadcrumbChains(
+  db: D1Database, lang: Lang, refs: { law_id: string; division_path: string }[],
+): Promise<Map<string, CrumbNode[]>> {
+  const byLaw = new Map<string, Set<string>>();
+  for (const r of refs) {
+    if (!r.division_path) continue;
+    const segs = r.division_path.split(PATH_SEG);
+    let set = byLaw.get(r.law_id);
+    if (!set) { set = new Set(); byLaw.set(r.law_id, set); }
+    for (let i = 1; i <= segs.length; i++) set.add(segs.slice(0, i).join("-"));
+  }
+  const nodes = new Map<string, CrumbNode>();
+  for (const [law, paths] of byLaw) {
+    const list = [...paths];
+    for (let i = 0; i < list.length; i += 90) {
+      const chunk = list.slice(i, i + 90);
+      const rows = (await db
+        .prepare(
+          `SELECT path, kind, number, heading FROM divisions
+           WHERE law_id = ? AND lang = ? AND path IN (${chunk.map(() => "?").join(",")})`,
+        )
+        .bind(law, lang, ...chunk)
+        .all<CrumbNode>()).results;
+      for (const r of rows) nodes.set(`${law}|${r.path}`, r);
+    }
+  }
+  const out = new Map<string, CrumbNode[]>();
+  for (const r of refs) {
+    const segs = (r.division_path ?? "").split(PATH_SEG);
+    const chain: CrumbNode[] = [];
+    for (let i = 1; i <= segs.length; i++) {
+      const n = nodes.get(`${r.law_id}|${segs.slice(0, i).join("-")}`);
+      if (n) chain.push(n);
+    }
+    out.set(`${r.law_id}|${r.division_path}`, chain);
+  }
+  return out;
+}
+
+/** Noms des lois pour les en-têtes de groupes de résultats. */
+export async function lawNames(
+  db: D1Database, ids: string[],
+): Promise<Map<string, { name_fr: string; name_en: string }>> {
+  if (!ids.length) return new Map();
+  const rows = (await db
+    .prepare(`SELECT id, name_fr, name_en FROM laws WHERE id IN (${ids.map(() => "?").join(",")})`)
+    .bind(...ids)
+    .all<{ id: string; name_fr: string; name_en: string }>()).results;
+  return new Map(rows.map((r) => [r.id, { name_fr: r.name_fr, name_en: r.name_en }]));
+}
+
 // --- journal des recherches (plan v2, 1.6) ------------------------------------
 
 export interface SearchLogEntry {
@@ -830,7 +902,7 @@ async function runMatch(
   const hits = (await db
     .prepare(
       `SELECT a.law_id, a.number, a.division_path,
-              snippet(articles_fts, 0, '[', ']', '…', 12) AS snippet${scoreCol}
+              snippet(articles_fts, 0, '[', ']', '…', 30) AS snippet${scoreCol}
        FROM articles_fts JOIN articles a ON a.id = articles_fts.rowid
        WHERE ${where}
        ORDER BY rank LIMIT ? OFFSET ?`,

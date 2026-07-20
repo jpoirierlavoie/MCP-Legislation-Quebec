@@ -6,8 +6,8 @@ import {
   ArticleJoined, ArticleRow, Lang, LawSummary, StructureNode,
   articlesByNumbers, articlesByRange, articlesInDivision, childDivisions,
   citationOf, consolOf, getArticle, getDivision, getLaw, getStructure,
-  boundKey, listLaws, listSubjects, loadRelevanceData, logSearch, nearestArticles,
-  paginate, parseCitation, relatedLaws, searchText, sortKeyOf,
+  boundKey, breadcrumbChains, lawNames, listLaws, listSubjects, loadRelevanceData,
+  logSearch, nearestArticles, paginate, parseCitation, relatedLaws, searchText, sortKeyOf,
 } from "./lib";
 import { WEIGHTS, rank, tokenize } from "./relevance";
 
@@ -512,12 +512,28 @@ export function registerTools(server: McpServer, env: Env): void {
     },
     async ({ query, law, lang, limit, offset }) => {
       if (law && !(await getLaw(db, law))) return err(`Loi '${law}' inconnue.`);
-      const page = paginate(limit, offset, 10, 50);
+      // Recherche corpus : viser 12-15 résultats (1.3) ; restreinte : 10 comme avant.
+      const page = paginate(limit, offset, law ? 10 : 14, 50);
       let res;
       try {
+        // Recherche corpus : sur-échantillonner (3×) pour pouvoir plafonner à 6 résultats
+        // par loi sans se retrouver avec la seule loi dominante au classement bm25.
+        const fetchPage = law ? page : { limit: Math.min(45, page.limit * 3), offset: page.offset };
         // RELAX_SEARCH (R8) : échelle de relaxation débrayable sans redéploiement
-        res = await searchText(db, query, lang as Lang, law, page,
+        res = await searchText(db, query, lang as Lang, law, fetchPage,
           { relax: (env as { RELAX_SEARCH?: string }).RELAX_SEARCH !== "0" });
+        if (!law) {
+          const perLaw = new Map<string, number>();
+          const picked: typeof res.hits = [];
+          for (const h of res.hits) {
+            const n = perLaw.get(h.law_id) ?? 0;
+            if (n >= 6) continue;
+            perLaw.set(h.law_id, n + 1);
+            picked.push(h);
+            if (picked.length >= page.limit) break;
+          }
+          res = { ...res, hits: picked };
+        }
       } catch (e) {
         await logSearch(db, { tool: "search_text", query, law, lang, result_count: 0 });
         return err(`Recherche invalide. Essayez des mots simples. (${(e as Error).message})`);
@@ -531,9 +547,47 @@ export function registerTools(server: McpServer, env: Env): void {
       });
       if (res.hits.length === 0) return err(`Aucun résultat pour « ${query} » (${lang}).`);
 
-      const line = (h: typeof res.hits[number]) =>
-        `${h.law_id} art. ${h.number} — ${h.snippet}  [${h.division_path}]`;
-      const body = res.hits.map(line).join("\n");
+      // 1.3 : fils d'Ariane (résultats auto-explicatifs) + regroupement par loi.
+      const allRefs = [...res.hits, ...(res.elsewhere?.hits ?? [])];
+      const chains = await breadcrumbChains(db, lang as Lang, allRefs);
+      const names = await lawNames(db, [...new Set(allRefs.map((h) => h.law_id))]);
+      const ABBREV: Record<string, string> = { ccq: "C.c.Q.", cpc: "C.p.c." };
+      const crumbOf = (h: typeof res.hits[number]): string => {
+        const chain = chains.get(`${h.law_id}|${h.division_path}`) ?? [];
+        // seuls les nœuds AVEC ordinal portent un repère utile (« Livre V, Titre IV ») ;
+        // les autres produiraient des « Livre, Titre, » vides.
+        const kinds = chain
+          .filter((n) => n.number)
+          .map((n) => `${(KIND_LABEL[lang as Lang] ?? KIND_LABEL.fr)[n.kind] ?? n.kind} ${n.number}`)
+          .join(", ");
+        const titled = [...chain].reverse().find((n) => n.heading);
+        if (!kinds) return titled?.heading ?? "";
+        return `${kinds}${titled ? ` : ${titled.heading}` : ""}`;
+      };
+      const line = (h: typeof res.hits[number]) => {
+        const crumb = crumbOf(h);
+        return `${ABBREV[h.law_id] ?? h.law_id}${crumb ? ` — ${crumb}` : ""} › art. ${h.number}  [${h.division_path}]\n` +
+          `   « ${h.snippet} »`;
+      };
+      // corps : groupé par loi dès que les résultats en couvrent plusieurs (max 6 par loi)
+      const lawsInHits = [...new Set(res.hits.map((h) => h.law_id))];
+      let body: string;
+      if (lawsInHits.length > 1) {
+        const byLaw = new Map<string, typeof res.hits>();
+        for (const h of res.hits) {
+          const arr = byLaw.get(h.law_id);
+          if (arr) arr.push(h); else byLaw.set(h.law_id, [h]);
+        }
+        body = [...byLaw.entries()].map(([id, hs]) => {
+          const nm = names.get(id);
+          const title = nm ? (lang === "en" ? nm.name_en : nm.name_fr) : id;
+          const shown = hs.slice(0, 6);
+          return `— ${title} (${shown.length}${hs.length > shown.length ? ` / ${hs.length}` : ""} affiché(s)) —\n` +
+            shown.map(line).join("\n");
+        }).join("\n\n");
+      } else {
+        body = res.hits.map(line).join("\n");
+      }
       // En-tête étiqueté selon le chemin qui a produit les résultats (R7 : fail open, dit)
       const nTerms = query.trim().split(/\s+/).length;
       const header =
@@ -550,14 +604,15 @@ export function registerTools(server: McpServer, env: Env): void {
           res.elsewhere.hits.map(line).join("\n") +
           "\nRelancer sans `law` pour la vue complète."
         : "";
+      const enrich = (h: typeof res.hits[number]) => ({ ...h, breadcrumb: crumbOf(h) });
       return ok(`${header}\n${body}${elsewhere}`, {
         query, lang, law: law ?? null, total: res.total,
         fallback: fallbackLog,
         elsewhere: res.elsewhere
-          ? { total: res.elsewhere.total, results: res.elsewhere.hits }
+          ? { total: res.elsewhere.total, results: res.elsewhere.hits.map(enrich) }
           : null,
         pagination: { limit: page.limit, offset: page.offset },
-        results: res.hits,
+        results: res.hits.map(enrich),
       });
     },
   );
