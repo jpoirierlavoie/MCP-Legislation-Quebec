@@ -83,6 +83,12 @@ def validate(db, taxonomy: dict, relations: dict) -> list[str]:
             elif law not in div_laws:
                 v.append(f"division_path '{path}' fourni mais aucune division pour '{law}' (sujet '{subj}')")
 
+    for s_ in taxonomy["subjects"]:
+        for champ in ("label_en", "description_en"):
+            if not s_.get(champ):
+                v.append(f"matière '{s_['id']}' : '{champ}' manquant "
+                         f"(le routeur serait muet en anglais sur cette matière)")
+
     for rel in relations["relations"]:
         if rel["from"] not in law_ids:
             v.append(f"relation 'from' absente de `laws` : '{rel['from']}' -> '{rel['to']}'")
@@ -95,9 +101,11 @@ def load(db, taxonomy: dict, relations: dict) -> dict:
     db.run("DELETE FROM subject_map")
     db.run("DELETE FROM subjects")
     _insert_rows(db, "subjects",
-                 ["id", "label_fr", "label_en", "label_norm", "kind", "description_fr"],
+                 ["id", "label_fr", "label_en", "label_norm", "kind",
+                  "description_fr", "description_en"],
                  [[s["id"], s["label_fr"], s.get("label_en"), normalize(s["label_fr"]),
-                   s["kind"], s.get("description_fr")] for s in taxonomy["subjects"]])
+                   s["kind"], s.get("description_fr"), s.get("description_en")]
+                  for s in taxonomy["subjects"]])
     _insert_rows(db, "subject_map", ["subject_id", "law_id", "division_path"],
                  [[m["subject"], m["law"], m.get("division_path", "") or ""] for m in taxonomy["mappings"]])
 

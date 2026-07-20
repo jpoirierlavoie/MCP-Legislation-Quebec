@@ -126,6 +126,34 @@ const EVALS = [
     attendu: "b-1-r.3.1 (Code de déontologie) + droit professionnel",
     present: [{ law: "b-1-r.3.1" }],
   },
+  // Miroirs ANGLAIS des évals françaises : le signal S1 (matière, +3) doit se déclencher
+  // aussi en anglais. Sans label_en/description_en, il restait muet et le routeur anglais
+  // perdait sa couche la plus utile — celle qui réunit un chapitre du C.c.Q. et les lois
+  // spécialisées d'une même matière.
+  {
+    query: "residential lease",
+    lang: "en",
+    attendu: "miroir de « bail de logement » : bloc TAL + chapitre LEASE du C.c.Q.",
+    present: [
+      { law: "ccq", pathPrefix: "ga:l_five-gb:l_two-gc:l_iv" },
+      { law: "t-15.01" },
+    ],
+  },
+  {
+    query: "latent defect",
+    lang: "en",
+    attendu: "miroir de « vice caché » : ccq / OBLIGATIONS (Book Five) en tête",
+    top: { law: "ccq", pathPrefix: "ga:l_five" },
+  },
+  {
+    query: "unfair dismissal",
+    lang: "en",
+    attendu: "miroir de « congédiement » : n-1.1 + contract of employment du C.c.Q.",
+    present: [
+      { law: "n-1.1" },
+      { law: "ccq", pathPrefix: "ga:l_five-gb:l_two-gc:l_vii" },
+    ],
+  },
   {
     query: "zzzzq wxyv",
     attendu: "aucun rapprochement, message d'aide",
@@ -140,7 +168,8 @@ const matches = (cand, exp) =>
 const fmt = (c) => `${c.law}${c.division_path ? `›${c.division_path}` : ""}(${c.score})`;
 
 async function runEval(e) {
-  const res = await callTool("qclaw_find_relevant", { query: e.query });
+  const res = await callTool("qclaw_find_relevant",
+    e.lang ? { query: e.query, lang: e.lang } : { query: e.query });
   const cands = res.structuredContent?.candidates ?? [];
   const failures = [];
 
@@ -191,6 +220,17 @@ async function smokeTests() {
   const subs = await callTool("qclaw_list_subjects", {});
   add("list_subjects : 28 matières", subs.structuredContent?.count === 28,
     `count=${subs.structuredContent?.count}`);
+
+  // Les 28 matières doivent être traduites : c'est la surface d'appariement du signal S1,
+  // sans quoi le routeur reste muet en anglais.
+  const subsEn = await callTool("qclaw_list_subjects", { lang: "en" });
+  const sansEn = (subsEn.structuredContent?.subjects ?? [])
+    .filter((s) => !s.label_en || !s.description_en).map((s) => s.id);
+  add("list_subjects (lang=en) : les 28 matières traduites", sansEn.length === 0,
+    sansEn.length ? `sans traduction : ${sansEn.slice(0, 5).join(", ")}…` : "");
+  const texteEn = subsEn.content?.[0]?.text ?? "";
+  add("list_subjects (lang=en) : rendu réellement en anglais",
+    /Private law|Specialized areas/.test(texteEn) && !/Matières spécialisées/.test(texteEn));
 
   // 6 règlements de cour sous le chapitre C-25.01 (sur les 13 arêtes 'reglement-de' du corpus)
   const rel = await callTool("qclaw_related_laws", { law: "cpc", rel_type: "reglement-de" });

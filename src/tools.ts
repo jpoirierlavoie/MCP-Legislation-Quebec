@@ -159,12 +159,15 @@ export function registerTools(server: McpServer, env: Env): void {
       inputSchema: { lang: LANG.optional() },
       annotations: READONLY,
     },
-    async () => {
+    async ({ lang }) => {
+      const en = lang === "en";
       const subs = await listSubjects(db);
       if (subs.length === 0) return err("Aucune matière chargée (taxonomie absente).");
-      const KIND: Record<string, string> = {
-        "prive-ccq": "Droit privé (C.c.Q.)", specialise: "Matières spécialisées",
-      };
+      const KIND: Record<string, string> = en
+        ? { "prive-ccq": "Private law (C.C.Q.)", specialise: "Specialized areas" }
+        : { "prive-ccq": "Droit privé (C.c.Q.)", specialise: "Matières spécialisées" };
+      const libelle = (s: typeof subs[number]) => (en ? s.label_en || s.label_fr : s.label_fr);
+      const descr = (s: typeof subs[number]) => (en ? s.description_en || s.description_fr : s.description_fr);
       const groups = new Map<string, typeof subs>();
       for (const s of subs) {
         const g = groups.get(s.kind);
@@ -177,11 +180,13 @@ export function registerTools(server: McpServer, env: Env): void {
           `${s.description_fr ? `\n      ${s.description_fr}` : ""}`,
         ).join("\n"),
       ).join("\n");
-      return ok(`${subs.length} matières :${body}`, {
+      return ok(`${subs.length} ${en ? "subject areas" : "matières"} :${body}`, {
         count: subs.length,
         subjects: subs.map((s) => ({
           id: s.id, label_fr: s.label_fr, label_en: s.label_en, kind: s.kind,
-          description: s.description_fr, laws_count: s.laws_count, divisions_count: s.divisions_count,
+          label: libelle(s), description: descr(s),
+          description_fr: s.description_fr, description_en: s.description_en,
+          laws_count: s.laws_count, divisions_count: s.divisions_count,
         })),
       });
     },

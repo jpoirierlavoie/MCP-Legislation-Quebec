@@ -40,6 +40,10 @@ CREATE TABLE IF NOT EXISTS law_relations (
 CREATE INDEX IF NOT EXISTS idx_rel_from ON law_relations(from_law_id);
 CREATE INDEX IF NOT EXISTS idx_rel_to   ON law_relations(to_law_id);
 
+-- 3bis. Description anglaise des matières. La description est la SURFACE D'APPARIEMENT du
+-- signal S1 de qclaw_find_relevant : sans version anglaise, le routeur est muet en anglais.
+ALTER TABLE subjects ADD COLUMN description_en TEXT;
+
 -- 4. Extensions de la table laws (exécuter une seule fois)
 ALTER TABLE laws ADD COLUMN fonction      TEXT;   -- 'loi' | 'regles-procedure' | 'tarif' | 'reglement'
 ALTER TABLE laws ADD COLUMN forum         TEXT;   -- multi-valeurs jointes par ' ; ' ; NULL = sans dimension de forum

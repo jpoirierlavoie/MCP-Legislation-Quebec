@@ -293,6 +293,7 @@ export interface SubjectSummary {
   label_en: string | null;
   kind: string;
   description_fr: string | null;
+  description_en: string | null;
   laws_count: number;
   divisions_count: number;
 }
@@ -300,12 +301,12 @@ export interface SubjectSummary {
 export async function listSubjects(db: D1Database): Promise<SubjectSummary[]> {
   return (await db
     .prepare(
-      `SELECT s.id, s.label_fr, s.label_en, s.kind, s.description_fr,
+      `SELECT s.id, s.label_fr, s.label_en, s.kind, s.description_fr, s.description_en,
               COUNT(DISTINCT sm.law_id) AS laws_count,
               COALESCE(SUM(CASE WHEN sm.division_path <> '' THEN 1 ELSE 0 END), 0) AS divisions_count
        FROM subjects s
        LEFT JOIN subject_map sm ON sm.subject_id = s.id
-       GROUP BY s.id, s.label_fr, s.label_en, s.kind, s.description_fr
+       GROUP BY s.id, s.label_fr, s.label_en, s.kind, s.description_fr, s.description_en
        ORDER BY s.kind, s.id`,
     )
     .all<SubjectSummary>()).results;
@@ -658,7 +659,9 @@ export async function loadRelevanceData(
   db: D1Database, tokens: string[], lang: Lang,
 ): Promise<RelevanceData> {
   const [subjects, subjectMap, laws, relations] = await Promise.all([
-    db.prepare("SELECT id, label_fr, label_norm, description_fr FROM subjects").all<SubjectLite>(),
+    db.prepare("SELECT id, label_fr, label_en, label_norm, description_fr, description_en FROM subjects")
+      .all<{ id: string; label_fr: string; label_en: string | null; label_norm: string;
+             description_fr: string | null; description_en: string | null }>(),
     db.prepare("SELECT subject_id, law_id, division_path FROM subject_map").all<SubjectMapLite>(),
     db.prepare("SELECT id, name_fr, name_en, name_norm FROM laws")
       .all<{ id: string; name_fr: string; name_en: string; name_norm: string | null }>(),
@@ -718,8 +721,17 @@ export async function loadRelevanceData(
     name_norm: lang === "en" ? normalize(l.name_en || l.name_fr) : l.name_norm,
   }));
 
+  // S1 apparie le libellé ET la description : sans leur version anglaise, le signal le plus
+  // lourd du routeur (+3) ne se déclenchait jamais sur une requête anglaise.
+  const subjectsLite: SubjectLite[] = subjects.results.map((s) => ({
+    id: s.id,
+    label_fr: lang === "en" ? (s.label_en || s.label_fr) : s.label_fr,
+    label_norm: lang === "en" ? normalize(s.label_en || s.label_fr) : s.label_norm,
+    description_fr: lang === "en" ? (s.description_en || s.description_fr) : s.description_fr,
+  }));
+
   return {
-    subjects: subjects.results,
+    subjects: subjectsLite,
     subjectMap: subjectMap.results,
     laws: lawsLite,
     divisions,
