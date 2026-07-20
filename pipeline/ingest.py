@@ -75,7 +75,9 @@ def run(law_id: str, lang: str, download: bool, apply_local: bool, apply_remote:
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     sql_path = OUT_DIR / f"{law_id}-{lang}.sql"
-    sql_path.write_text(load.to_sql(law, divisions, articles), encoding="utf-8")
+    # newline="\n" : NE PAS traduire les \n en \r\n sous Windows, sinon les \n\n entre
+    # alinéas seraient stockés en \r\n\r\n dans le texte des articles.
+    sql_path.write_text(load.to_sql(law, divisions, articles), encoding="utf-8", newline="\n")
     print(f"\nSQL écrit : {sql_path}  ({sql_path.stat().st_size // 1024} Ko, "
           f"{len(divisions)} divisions, {len(articles)} articles)")
 

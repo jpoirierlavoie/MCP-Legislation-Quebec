@@ -1,19 +1,19 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { McpAgent } from "agents/mcp";
 
+import { registerTools } from "./tools";
+
 /**
  * Serveur MCP « Lois du Québec » (qclaw-mcp).
  *
- * Phase 1 — échafaudage : aucun outil n'est encore enregistré. Le squelette prouve
- * seulement que le transport HTTP streamable et le handshake MCP fonctionnent.
- * Les outils qclaw_* (PLAN §3) et les requêtes D1 arrivent en phase 3.
+ * Expose les outils qclaw_* (PLAN §3), en lecture seule sur D1. Transport HTTP
+ * streamable sur POST /mcp.
  */
 export class QclawMCP extends McpAgent {
   server = new McpServer({ name: "qclaw-mcp", version: "0.1.0" });
 
   async init() {
-    // Aucun outil en phase 1.
-    // `this.env.DB` (binding D1) est disponible ici pour les futurs handlers.
+    registerTools(this.server, this.env);
   }
 }
 
