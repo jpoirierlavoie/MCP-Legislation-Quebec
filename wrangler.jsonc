@@ -6,6 +6,10 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
 
+  // Domaine personnalisé (zone poirierlavoie.ca) : Cloudflare gère DNS + certificat.
+  // Le Worker reste aussi joignable sur son URL *.workers.dev.
+  "routes": [{ "pattern": "legislation.poirierlavoie.ca", "custom_domain": true }],
+
   // McpAgent est un Durable Object : le binding + la migration new_sqlite_classes
   // sont obligatoires. Le nom de classe doit être identique à l'export de src/index.ts.
   "durable_objects": {
