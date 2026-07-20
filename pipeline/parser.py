@@ -336,6 +336,34 @@ def _spine_documents(zf: zipfile.ZipFile) -> list[str]:
     return docs
 
 
+def opf_metadata(zf: zipfile.ZipFile) -> dict:
+    """Métadonnées Dublin Core de l'OPF (title, language, date). Sert à remplir name_en
+    depuis l'OPF anglais (§5) et à vérifier langue/date."""
+    container = _soup(zf.read("META-INF/container.xml").decode("utf-8"))
+    opf = _soup(zf.read(container.find("rootfile")["full-path"]).decode("utf-8"))
+
+    def g(tag: str) -> str | None:
+        el = opf.find(tag)
+        return _norm(el.get_text()) if el else None
+
+    return {"title": g("dc:title"), "language": g("dc:language"), "date": g("dc:date")}
+
+
+_HREF_CHAPTER = re.compile(r"showDoc/(?:cs|cr)/([^?\"&/#]+)", re.I)
+
+
+def harvest_renvois(htmls) -> dict[str, int]:
+    """Compte les renvois <a href> vers d'autres chapitres RLRQ, par code de chapitre
+    (ex. 'C-11'), agrégés (§3.3 'renvoie-a'). Les liens ont déjà été réécrits en absolu."""
+    import urllib.parse
+    from collections import Counter
+    counts: Counter = Counter()
+    for html in htmls:
+        for m in _HREF_CHAPTER.finditer(html or ""):
+            counts[urllib.parse.unquote(m.group(1)).strip()] += 1
+    return dict(counts)
+
+
 def parse_epub(epub_path: str | Path, law: Law, lang: str) -> tuple[list[Division], list[Article]]:
     """Parse un EPUB LégisQuébec et retourne (divisions, articles) normalisés.
 
