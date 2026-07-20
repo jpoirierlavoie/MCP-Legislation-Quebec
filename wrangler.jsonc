@@ -27,6 +27,10 @@
     }
   ],
 
+  // Chemins de récupération réversibles (plan v2, R8) : rollback = flip de variable.
+  // RELAX_SEARCH : échelle de relaxation de qclaw_search_text (1.2). "0" pour désactiver.
+  "vars": { "RELAX_SEARCH": "1" },
+
   // Rafraîchissement semestriel (PLAN §5) : 5 janvier et 5 juillet, 09:00 UTC.
   "triggers": { "crons": ["0 9 5 1,7 *"] }
 }

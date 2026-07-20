@@ -840,14 +840,20 @@ async function runMatch(
   return { hits, total: totalRow?.n ?? 0 };
 }
 
+/** Bornes de l'échelle de relaxation (plan v2, 1.2). */
+const RELAX_MIN_TERMS = 2;
+const RELAX_MAX_LOO_TERMS = 6; // au-delà : sauter le leave-one-out, aller à l'étape OU
+
 export async function searchText(
   db: D1Database, query: string, lang: Lang, lawId: string | undefined, page: Page,
+  opts: { relax?: boolean } = {},
 ): Promise<SearchOutcome> {
   const match = toFtsQuery(query);
   if (!match) return { hits: [], total: 0, fallback: null, elsewhere: null };
+  const scope: MatchScope = lawId ? { law: lawId } : {};
 
   // 1) requête exacte, portée demandée
-  const exact = await runMatch(db, match, lang, lawId ? { law: lawId } : {}, page);
+  const exact = await runMatch(db, match, lang, scope, page);
   if (exact.total > 0) {
     // Recherche restreinte AVEC résultats : sonder le reste du corpus (1 requête) et
     // signaler les correspondances d'autres lois — sans toucher aux résultats demandés.
@@ -863,6 +869,42 @@ export async function searchText(
   if (lawId) {
     const wide = await runMatch(db, match, lang, {}, page);
     if (wide.total > 0) return { ...wide, fallback: "widened", elsewhere: null };
+  }
+
+  // --- Échelle de relaxation (plan v2, 1.2) — requêtes multi-termes seulement ---
+  const tokens = ftsTokens(query);
+  if (!opts.relax || tokens.length < RELAX_MIN_TERMS) {
+    return { hits: [], total: 0, fallback: null, elsewhere: null };
+  }
+
+  // 3) leave-one-out : omettre chaque terme à tour de rôle (≤ 6 SELECT), dans la portée
+  //    demandée ; retenir le meilleur ensemble non vide (somme bm25 — négatif, min = mieux).
+  if (tokens.length <= RELAX_MAX_LOO_TERMS) {
+    let best: { hits: SearchHit[]; total: number; omitted: string; sum: number } | null = null;
+    for (let i = 0; i < tokens.length; i++) {
+      const partial = tokens.filter((_, j) => j !== i).map(quoteTok).join(" ");
+      const r = await runMatch(db, partial, lang, scope, page, true);
+      if (r.total === 0) continue;
+      const sum = r.hits.reduce((acc, h) => acc + (h.score ?? 0), 0);
+      if (!best || sum < best.sum) best = { ...r, omitted: tokens[i], sum };
+    }
+    if (best) {
+      return { hits: best.hits, total: best.total, fallback: { loo: best.omitted }, elsewhere: null };
+    }
+  }
+
+  // 4) OU + bm25 : tous les termes en OR, classés par pertinence. Les termes composés
+  //    sont aussi éclatés (« non-concurrence » -> non, concurrence) : en mode phrase le
+  //    tiret exige la séquence exacte, ce qui rate « faire concurrence ».
+  const orTerms = [...new Set(tokens.flatMap((t) => t.split(/[-.'’]/)).filter((t) => t.length >= 2))];
+  if (orTerms.length) {
+    const matchOr = orTerms.map(quoteTok).join(" OR ");
+    const scoped = await runMatch(db, matchOr, lang, scope, page, true);
+    if (scoped.total > 0) return { ...scoped, fallback: "or_relax", elsewhere: null };
+    if (lawId) {
+      const wide = await runMatch(db, matchOr, lang, {}, page, true);
+      if (wide.total > 0) return { ...wide, fallback: "or_relax", elsewhere: null };
+    }
   }
 
   return { hits: [], total: 0, fallback: null, elsewhere: null };

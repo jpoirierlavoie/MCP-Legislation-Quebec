@@ -515,7 +515,9 @@ export function registerTools(server: McpServer, env: Env): void {
       const page = paginate(limit, offset, 10, 50);
       let res;
       try {
-        res = await searchText(db, query, lang as Lang, law, page);
+        // RELAX_SEARCH (R8) : échelle de relaxation débrayable sans redéploiement
+        res = await searchText(db, query, lang as Lang, law, page,
+          { relax: (env as { RELAX_SEARCH?: string }).RELAX_SEARCH !== "0" });
       } catch (e) {
         await logSearch(db, { tool: "search_text", query, law, lang, result_count: 0 });
         return err(`Recherche invalide. Essayez des mots simples. (${(e as Error).message})`);
@@ -533,9 +535,15 @@ export function registerTools(server: McpServer, env: Env): void {
         `${h.law_id} art. ${h.number} — ${h.snippet}  [${h.division_path}]`;
       const body = res.hits.map(line).join("\n");
       // En-tête étiqueté selon le chemin qui a produit les résultats (R7 : fail open, dit)
-      const header = res.fallback === "widened"
-        ? `Aucun résultat dans ${law} ; ${res.total} résultat(s) ailleurs dans le corpus :`
-        : `${res.total} résultat(s) pour « ${query} » :`;
+      const nTerms = query.trim().split(/\s+/).length;
+      const header =
+        res.fallback === "widened"
+          ? `Aucun résultat dans ${law} ; ${res.total} résultat(s) ailleurs dans le corpus :`
+          : res.fallback !== null && typeof res.fallback === "object"
+            ? `Correspondance exacte introuvable ; résultats approchés (terme ignoré : « ${res.fallback.loo} ») :`
+            : res.fallback === "or_relax"
+              ? `Résultats partiels (au moins un terme sur ${nTerms}) :`
+              : `${res.total} résultat(s) pour « ${query} » :`;
       // Recherche restreinte avec résultats : signaler ce que la restriction cache (post-mortem)
       const elsewhere = res.elsewhere
         ? `\n\nAilleurs au corpus (${res.elsewhere.total} résultat(s) hors ${law}) — aperçu :\n` +
