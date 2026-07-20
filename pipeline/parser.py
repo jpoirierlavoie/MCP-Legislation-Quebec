@@ -40,7 +40,24 @@ _KIND_BY_PREFIX = {
     "ga": "livre", "gb": "titre", "gc": "chapitre", "gd": "section",
     "ge": "sous-section", "gf": "niveau6", "gg": "niveau7", "gi": "niveau8",
 }
-_LABEL_WORD = {"livre": "LIVRE", "titre": "TITRE", "chapitre": "CHAPITRE", "section": "SECTION"}
+# Configuration par langue : mots de niveau (pour extraire le numéro depuis l'intitulé) et
+# intitulés des dispositions. NB : l'anglais nomme « DIVISION » le niveau que le français
+# nomme « SECTION » (le `kind` interne reste 'section' dans les deux langues).
+_LANG = {
+    "fr": {
+        "labels": {"livre": "LIVRE", "titre": "TITRE", "chapitre": "CHAPITRE", "section": "SECTION"},
+        "preliminary": "DISPOSITION PRÉLIMINAIRE",
+        "finales": "DISPOSITIONS FINALES",
+    },
+    "en": {
+        "labels": {"livre": "BOOK", "titre": "TITLE", "chapitre": "CHAPTER", "section": "DIVISION"},
+        "preliminary": "PRELIMINARY PROVISION",
+        "finales": "FINAL PROVISIONS",
+    },
+}
+_ANNEXE_RE = re.compile(r"\b(?:ANNEXE|SCHEDULE)\b", re.I)
+# Abrogation, FR « (Abrogé) » et EN « (Repealed) ».
+_REPEALED_RE = re.compile(r"\(?(?:Abrog|Repea)")
 
 # Un id de sous-élément contient un de ces marqueurs ; un id de division n'en contient aucun.
 _MARKER = re.compile(r"-(?:h1|t1|nb|ss|p\d)(?::|-|$)")
@@ -173,7 +190,7 @@ def extract_article_body(container: Tag, number: str) -> tuple[str, str | None, 
         if t:
             parts.append(t)
     text = "\n\n".join(parts)
-    repealed = 1 if re.match(r"^\(Abrog", text) else 0
+    repealed = 1 if re.match(r"^\((?:Abrog|Repea)", text) else 0
 
     # --- html : corps nettoyé, historique retiré, notes conservées ---
     _clean_attrs(root)
@@ -187,7 +204,7 @@ def extract_article_body(container: Tag, number: str) -> tuple[str, str | None, 
 
 # --- extraction de divisions -------------------------------------------------
 
-def extract_division(el: Tag, law_id: str, lang: str, sort_order: int) -> Division:
+def extract_division(el: Tag, law_id: str, lang: str, sort_order: int, labels: dict[str, str]) -> Division:
     eid = el.get("id")
     prefix = _segments(eid)[-1].split(":")[0]
     kind = _KIND_BY_PREFIX[prefix]
@@ -213,9 +230,9 @@ def extract_division(el: Tag, law_id: str, lang: str, sort_order: int) -> Divisi
             label = full[: full.rfind(heading)].strip()
         else:
             label = full
-        repealed = 1 if re.search(r"\(?Abrog", full) else 0
+        repealed = 1 if _REPEALED_RE.search(full) else 0
 
-        word = _LABEL_WORD.get(kind)
+        word = labels.get(kind)
         if seg_value.startswith("s_"):
             # « DISPOSITION GÉNÉRALE » (s_898_1, s_1119) : pas d'ordinal
             number = None
@@ -237,7 +254,7 @@ def extract_division(el: Tag, law_id: str, lang: str, sort_order: int) -> Divisi
                 heading = _norm(it.get_text()) if it else None
 
         if repealed and number:
-            number = re.split(r"\s*\(?Abrog", number)[0].strip() or None
+            number = _REPEALED_RE.split(number)[0].strip() or None
         if number:
             number = number.rstrip(". ").strip() or None
         if repealed:
@@ -252,7 +269,7 @@ def extract_division(el: Tag, law_id: str, lang: str, sort_order: int) -> Divisi
 
 # --- dispositions préliminaire / finales (pseudo-articles) -------------------
 
-def _extract_disposition(block: Tag, number: str, heading: str) -> tuple[Division, Article]:
+def _extract_disposition(block: Tag, number: str, heading: str, path: str, kind: str) -> tuple[Division, Article]:
     work = _soup(str(block))
     root = work.find(True)
     _strip_hidden(root)
@@ -264,12 +281,10 @@ def _extract_disposition(block: Tag, number: str, heading: str) -> tuple[Divisio
     for d in root.find_all("div"):
         d.insert_before("\n\n")
     full = _norm(root.get_text())
-    # retirer un éventuel titre en tête (« DISPOSITION PRÉLIMINAIRE / DISPOSITIONS FINALES »)
     full = re.sub(r"^\s*" + re.escape(heading) + r"\s*", "", full, flags=re.S).strip()
     _clean_attrs(root)
     html = str(root)
-    path = "disposition-" + ("preliminaire" if number == "préliminaire" else "finales")
-    div = Division(law_id="", lang="", kind="disposition", path=path,
+    div = Division(law_id="", lang="", kind=kind, path=path,
                    number=None, heading=heading, history=None, repealed=0,
                    parent_path=None, sort_order=0)
     art = Article(law_id="", lang="", number=number, text=full, division_path=path,
@@ -286,19 +301,23 @@ def _parse_preliminary(soup: BeautifulSoup, marker: str) -> tuple[Division, Arti
     while node is not None and node.parent is not None:
         node = node.parent
         if marker in node.get_text():
-            return _extract_disposition(node, "préliminaire", "DISPOSITION PRÉLIMINAIRE")
+            return _extract_disposition(node, "préliminaire", marker, "disposition-preliminaire", "disposition")
     return None
 
 
-def _parse_finales(soup: BeautifulSoup) -> tuple[Division, Article] | None:
+def _parse_sc_block(soup: BeautifulSoup, cfg: dict) -> tuple[Division, Article] | None:
+    """Le bloc `sc-nb:1` est soit les DISPOSITIONS FINALES (C.c.Q.), soit une ANNEXE (C.p.c.).
+    On classe sur l'INTITULÉ du bloc (div d'en-tête d36e), pas sur son contenu : l'historique
+    des finales du C.c.Q. contient « annexe » sans être une annexe."""
     cont = soup.find(id="sc-nb:1")
     if cont is None:
         return None
-    heading_el = cont.find(string=re.compile(r"DISPOSITIONS?\s+FINALES", re.I))
-    heading = _norm(heading_el) if heading_el else "DISPOSITIONS FINALES"
-    div, art = _extract_disposition(cont, "finales", heading)
-    art.text = re.sub(r"^\s*" + re.escape(heading) + r"\s*", "", art.text, flags=re.S).strip()
-    return div, art
+    head_el = cont.find(id=re.compile(r"^d36e"))
+    heading = _norm(head_el.get_text()).split("\n")[0][:40] if head_el else ""
+    if _ANNEXE_RE.search(heading):
+        return _extract_disposition(cont, "annexe", heading or "Annexe", "annexe", "annexe")
+    heading = heading or cfg["finales"]
+    return _extract_disposition(cont, "finales", heading, "disposition-finales", "disposition")
 
 
 # --- pilote OPF / spine ------------------------------------------------------
@@ -317,16 +336,31 @@ def _spine_documents(zf: zipfile.ZipFile) -> list[str]:
     return docs
 
 
-def parse_epub(epub_path: str | Path, law: Law, lang: str,
-               preliminary_marker: str = "DISPOSITION PRÉLIMINAIRE") -> tuple[list[Division], list[Article]]:
+def parse_epub(epub_path: str | Path, law: Law, lang: str) -> tuple[list[Division], list[Article]]:
     """Parse un EPUB LégisQuébec et retourne (divisions, articles) normalisés.
 
     L'ordre du document fixe `sort_order` des divisions ; la division feuille d'un article
     est la dernière division rencontrée dans le flux (rapport §8, imbrication vérifiée §C4).
+    Bilingue : `lang` sélectionne les mots de niveau et les intitulés de disposition.
     """
+    cfg = _LANG.get(lang, _LANG["fr"])
+    consol = law.consol_date_fr if lang == "fr" else law.consol_date_en
     divisions: list[Division] = []
     articles: list[Article] = []
     sort_order = 0
+
+    def add_special(res):
+        nonlocal sort_order
+        if not res:
+            return
+        div, art = res
+        div.law_id = art.law_id = law.id
+        div.lang = art.lang = lang
+        div.sort_order = sort_order
+        art.consol_date = consol
+        sort_order += 1
+        divisions.append(div)
+        articles.append(art)
 
     with zipfile.ZipFile(epub_path) as zf:
         for doc in _spine_documents(zf):
@@ -338,49 +372,25 @@ def parse_epub(epub_path: str | Path, law: Law, lang: str,
 
             # 1) divisions + articles ordinaires (dans l'ordre du document)
             current_div_path: str | None = None
-            has_ordinary = False
             for el in soup.find_all(id=True):
                 eid = el.get("id")
                 if is_division_id(eid):
-                    div = extract_division(el, law.id, lang, sort_order)
+                    div = extract_division(el, law.id, lang, sort_order, cfg["labels"])
                     sort_order += 1
                     divisions.append(div)
                     current_div_path = eid
-                    has_ordinary = True
                 elif _ART_ID.fullmatch(eid):
                     text, art_html, history, repealed = extract_article_body(el, number_from_article_id(eid))
                     articles.append(Article(
                         law_id=law.id, lang=lang, number=number_from_article_id(eid),
                         text=text, html=art_html, history=history, repealed=repealed,
-                        division_path=current_div_path or "",
-                        consol_date=law.consol_date_fr if lang == "fr" else law.consol_date_en,
+                        division_path=current_div_path or "", consol_date=consol,
                     ))
-                    has_ordinary = True
 
-            # 2) dispositions spéciales (documents sans article ordinaire)
-            if not has_ordinary or preliminary_marker in html or "sc-nb:1" in html:
-                consol = law.consol_date_fr if lang == "fr" else law.consol_date_en
-                if preliminary_marker in html:
-                    res = _parse_preliminary(soup, preliminary_marker)
-                    if res:
-                        div, art = res
-                        div.law_id = art.law_id = law.id
-                        div.lang = art.lang = lang
-                        div.sort_order = sort_order
-                        art.consol_date = consol
-                        sort_order += 1
-                        divisions.append(div)
-                        articles.append(art)
-                if "sc-nb:1" in html:
-                    res = _parse_finales(soup)
-                    if res:
-                        div, art = res
-                        div.law_id = art.law_id = law.id
-                        div.lang = art.lang = lang
-                        div.sort_order = sort_order
-                        art.consol_date = consol
-                        sort_order += 1
-                        divisions.append(div)
-                        articles.append(art)
+            # 2) blocs spéciaux (disposition préliminaire ; bloc sc-nb:1 = finales OU annexe)
+            if cfg["preliminary"] in html:
+                add_special(_parse_preliminary(soup, cfg["preliminary"]))
+            if "sc-nb:1" in html:
+                add_special(_parse_sc_block(soup, cfg))
 
     return divisions, articles

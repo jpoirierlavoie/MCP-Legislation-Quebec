@@ -9,16 +9,20 @@ from __future__ import annotations
 from .model import Article, Division, Law, sort_key
 
 
-def prepare(law: Law, divisions: list[Division], articles: list[Article]) -> None:
-    """Attribue id (divisions, articles), parent_id, division_id et sort_key, en place."""
+def prepare(law: Law, divisions: list[Division], articles: list[Article], id_base: int = 0) -> None:
+    """Attribue id (divisions, articles), parent_id, division_id et sort_key, en place.
+
+    `id_base` décale les id pour qu'ils soient GLOBALEMENT uniques : les tables divisions et
+    articles ont une clé primaire partagée par toutes les lois/langues, mais on charge une
+    combinaison à la fois. ingest passe un base distinct par (loi, langue)."""
     by_path: dict[str, Division] = {}
     for i, d in enumerate(divisions, start=1):
-        d.id = i
+        d.id = id_base + i
         by_path[d.path] = d
     for d in divisions:
         d.parent_id = by_path[d.parent_path].id if d.parent_path and d.parent_path in by_path else None
     for j, a in enumerate(articles, start=1):
-        a.id = j
+        a.id = id_base + j
         a.sort_key = sort_key(a.number)
         leaf = by_path.get(a.division_path)
         a.division_id = leaf.id if leaf else None
@@ -57,10 +61,10 @@ def _rows_sql(table: str, cols: list[str], rows: list[list], max_len: int = 90_0
     return out
 
 
-def to_sql(law: Law, divisions: list[Division], articles: list[Article]) -> str:
+def to_sql(law: Law, divisions: list[Division], articles: list[Article], lang: str) -> str:
     div_rows = [[getattr(d, c) for c in _DIV_COLS] for d in divisions]
     art_rows = [[getattr(a, c) for c in _ART_COLS] for a in articles]
-    law_row = [[getattr(law, c) for c in _LAW_COLS]]
+    law_vals = ", ".join(_q(getattr(law, c)) for c in _LAW_COLS)
 
     stmts: list[str] = [
         "-- Généré par pipeline.ingest — NE PAS éditer à la main.",
@@ -73,13 +77,11 @@ def to_sql(law: Law, divisions: list[Division], articles: list[Article]) -> str:
     stmts += _rows_sql("_stg_divisions", _DIV_COLS, div_rows)
     stmts += _rows_sql("_stg_articles", _ART_COLS, art_rows)
     # --- bascule (production intouchée tant que le staging n'est pas complet) ---
+    # Portée (law_id, lang) : recharger une langue ne touche pas l'autre langue de la loi.
     stmts += [
-        f"DELETE FROM articles  WHERE law_id = {_q(law.id)};",
-        f"DELETE FROM divisions WHERE law_id = {_q(law.id)};",
-        f"DELETE FROM laws      WHERE id = {_q(law.id)};",
-    ]
-    stmts += _rows_sql("laws", _LAW_COLS, law_row)
-    stmts += [
+        f"DELETE FROM articles  WHERE law_id = {_q(law.id)} AND lang = {_q(lang)};",
+        f"DELETE FROM divisions WHERE law_id = {_q(law.id)} AND lang = {_q(lang)};",
+        f"INSERT OR REPLACE INTO laws ({', '.join(_LAW_COLS)}) VALUES ({law_vals});",
         "INSERT INTO divisions SELECT * FROM _stg_divisions;",
         "INSERT INTO articles  SELECT * FROM _stg_articles;",
         "DROP TABLE _stg_divisions;",

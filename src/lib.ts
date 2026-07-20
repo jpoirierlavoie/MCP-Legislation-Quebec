@@ -107,7 +107,8 @@ export async function listLaws(db: D1Database): Promise<LawSummary[]> {
     out.push({
       ...law,
       langs: rows.map((r) => r.lang),
-      article_count: rows.reduce((a, r) => a + r.n, 0),
+      // par langue (fr et en ont le même décompte) — pas la somme des langues
+      article_count: Math.max(0, ...rows.map((r) => r.n)),
     });
   }
   return out;

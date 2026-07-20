@@ -1,0 +1,45 @@
+name: refresh-statutes
+
+# Rafraîchissement semestriel du corpus (PLAN.md §6). Retélécharge les EPUB de
+# LégisQuébec, reparse, et recharge la base D1 cloud (staging -> bascule).
+on:
+  schedule:
+    - cron: "0 9 5 1,7 *" # 5 janvier et 5 juillet, 09:00 UTC
+  workflow_dispatch: {} # déclenchement manuel à la demande
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refresh-statutes
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci # installe wrangler (utilisé par --apply-remote)
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r pipeline/requirements.txt
+
+      # Toutes les lois × langues -> D1 cloud. --refresh-dates capte la date
+      # « à jour au » live sur la page de chaque loi. Écrit d'abord en staging,
+      # valide les compteurs, puis bascule (une langue à la fois, sans toucher l'autre).
+      # NB : le schéma D1 doit avoir été appliqué une fois (phase 1) ; ce job ne
+      # recharge que les données. LégisQuébec bloque certains User-Agent : le
+      # pipeline utilise un UA navigateur (voir pipeline/config.py). Si un blocage
+      # par IP de centre de données survient, exécuter le pipeline hors CI.
+      - name: Ingérer toutes les lois (FR+EN) dans D1
+        run: python -m pipeline.ingest --all --download --refresh-dates --apply-remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

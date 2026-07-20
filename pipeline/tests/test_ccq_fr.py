@@ -23,7 +23,10 @@ class CcqFrTest(unittest.TestCase):
         cls.law = _law_from_config(cfg)
         epub = _sample_path(LAW_ID, LANG)
         if not epub.exists():
-            _download(cfg["epub"][LANG], epub)
+            try:
+                _download(cfg["epub"][LANG], epub)
+            except Exception as e:  # pragma: no cover
+                raise unittest.SkipTest(f"EPUB {LAW_ID}/{LANG} indisponible : {e}")
         cls.divisions, cls.articles = parse_epub(epub, cls.law, LANG)
         load.prepare(cls.law, cls.divisions, cls.articles)
         cls.by_num = {a.number: a for a in cls.articles}

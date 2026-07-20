@@ -8,21 +8,37 @@ from dataclasses import dataclass, field
 
 from .model import Article, Division
 
-# Invariants attendus, par (law_id, lang).
+# Pseudo-articles hors numérotation ordinaire (dispositions, annexes).
+DISPOSITION_NUMBERS = {"préliminaire", "finales", "annexe"}
+
+# Invariants attendus, par (law_id, lang). FR et EN d'une même loi partagent les mêmes
+# décomptes (même loi, traduite) — seul le texte diffère.
+_CCQ = {
+    "articles_real": 3523,          # articles se: (hors dispositions)
+    "int_min": 1, "int_max": 3168,  # entiers complets 1..3168
+    "decimals": 355,                # 351 à un niveau + 4 à deux niveaux
+    "divisions": 800,
+    "div_by_kind": {"livre": 10, "titre": 45, "chapitre": 160, "section": 270,
+                     "sous-section": 213, "niveau6": 86, "niveau7": 13, "niveau8": 3},
+    "repealed_articles": 68,
+    # 4 divisions abrogées : 2 sections + 1 chapitre (phase 0, niveaux ga-gd) + 1 sous-section
+    # « § 8 » (ge:l_8, Livre 5) que le scan ga-gd de la phase 0 n'avait pas comptée.
+    "repealed_divisions": 4,
+    "dispositions": 2,              # préliminaire + finales
+}
+_CPC = {
+    "articles_real": 876,
+    "int_min": 1, "int_max": 836,
+    "decimals": 40,
+    "divisions": 307,
+    "div_by_kind": {"livre": 8, "titre": 30, "chapitre": 129, "section": 123, "sous-section": 17},
+    "repealed_articles": 1,
+    "repealed_divisions": 0,
+    "dispositions": 2,             # préliminaire + annexe (les « finales » sont des articles réels du Livre VIII)
+}
 EXPECTED = {
-    ("ccq", "fr"): {
-        "articles_real": 3523,          # articles se: (hors dispositions)
-        "int_min": 1, "int_max": 3168,  # entiers complets 1..3168
-        "decimals": 355,                # 351 à un niveau + 4 à deux niveaux
-        "divisions": 800,
-        "div_by_kind": {"livre": 10, "titre": 45, "chapitre": 160, "section": 270,
-                         "sous-section": 213, "niveau6": 86, "niveau7": 13, "niveau8": 3},
-        "repealed_articles": 68,
-        # 4 divisions abrogées : 2 sections + 1 chapitre (constatés en phase 0, niveaux ga-gd)
-        # + 1 sous-section « § 8 » (ge:l_8, Livre 5) que le scan ga-gd de la phase 0 n'avait pas comptée.
-        "repealed_divisions": 4,
-        "dispositions": 2,              # préliminaire + finales
-    }
+    ("ccq", "fr"): _CCQ, ("ccq", "en"): _CCQ,
+    ("cpc", "fr"): _CPC, ("cpc", "en"): _CPC,
 }
 
 
@@ -43,11 +59,11 @@ class Report:
 
 def validate(law_id: str, lang: str, divisions: list[Division], articles: list[Article]) -> Report:
     r = Report()
-    real = [a for a in articles if a.number not in ("préliminaire", "finales")]
-    disp = [a for a in articles if a.number in ("préliminaire", "finales")]
+    real = [a for a in articles if a.number not in DISPOSITION_NUMBERS]
+    disp = [a for a in articles if a.number in DISPOSITION_NUMBERS]
     ints = sorted({int(a.number) for a in real if "." not in a.number})
     decimals = [a for a in real if "." in a.number]
-    div_no_disp = [d for d in divisions if d.kind != "disposition"]
+    div_no_disp = [d for d in divisions if d.kind not in ("disposition", "annexe")]
     by_kind: dict[str, int] = {}
     for d in div_no_disp:
         by_kind[d.kind] = by_kind.get(d.kind, 0) + 1

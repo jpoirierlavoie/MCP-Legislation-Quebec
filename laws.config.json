@@ -11,7 +11,7 @@
       },
       "consolidation": {
         "fr": "2026-04-01",
-        "en": null
+        "en": "2026-04-01"
       },
       "consolidation_source": {
         "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/lc/CCQ-1991",
@@ -35,8 +35,12 @@
         "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-25.01.epub"
       },
       "consolidation": {
-        "fr": null,
-        "en": null
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/C-25.01",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/C-25.01"
       },
       "numbering": "recodified-2016"
     }

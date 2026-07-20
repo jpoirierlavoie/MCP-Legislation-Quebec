@@ -15,10 +15,18 @@ const READONLY = {
 
 const LANG = z.enum(["fr", "en"]).default("fr").describe("Langue : 'fr' (défaut) ou 'en'.");
 
-const KIND_LABEL: Record<string, string> = {
-  livre: "Livre", titre: "Titre", chapitre: "Chapitre", section: "Section",
-  "sous-section": "Sous-section", niveau6: "Niveau", niveau7: "Niveau", niveau8: "Niveau",
-  disposition: "Disposition",
+// Libellés de type de division, par langue (l'anglais dit « Division » pour la « Section »).
+const KIND_LABEL: Record<Lang, Record<string, string>> = {
+  fr: {
+    livre: "Livre", titre: "Titre", chapitre: "Chapitre", section: "Section",
+    "sous-section": "Sous-section", niveau6: "Niveau", niveau7: "Niveau", niveau8: "Niveau",
+    disposition: "Disposition", annexe: "Annexe",
+  },
+  en: {
+    livre: "Book", titre: "Title", chapitre: "Chapter", section: "Division",
+    "sous-section": "Subsection", niveau6: "Level", niveau7: "Level", niveau8: "Level",
+    disposition: "Provision", annexe: "Schedule",
+  },
 };
 
 type ToolResult = {
@@ -33,15 +41,15 @@ const ok = (text: string, structured?: Record<string, unknown>): ToolResult => (
   ...(structured ? { structuredContent: structured } : {}),
 });
 
-function divisionLabel(kind: string, number: string | null, heading: string | null): string {
-  const label = KIND_LABEL[kind] ?? kind;
+function divisionLabel(kind: string, number: string | null, heading: string | null, lang: Lang): string {
+  const label = (KIND_LABEL[lang] ?? KIND_LABEL.fr)[kind] ?? kind;
   const parts = [label, number ?? ""].filter(Boolean).join(" ");
   return heading ? `${parts} — ${heading}` : parts || (heading ?? "");
 }
 
-function renderArticle(a: ArticleJoined, consol: string | null): string {
+function renderArticle(a: ArticleJoined, consol: string | null, lang: Lang): string {
   const cite = citationOf(a.rlrq_cite, a.number);
-  const loc = a.d_kind ? `\n${divisionLabel(a.d_kind, a.d_number, a.d_heading)} [${a.division_path}]` : "";
+  const loc = a.d_kind ? `\n${divisionLabel(a.d_kind, a.d_number, a.d_heading, lang)} [${a.division_path}]` : "";
   const head = `${cite}${consol ? ` (à jour au ${consol})` : ""}${a.repealed ? " — ABROGÉ" : ""}${loc}`;
   const hist = a.history ? `\n\nHistorique : ${a.history}` : "";
   return `${head}\n\n${a.text}${hist}`;
@@ -109,7 +117,7 @@ export function registerTools(server: McpServer, env: Env): void {
         );
       }
       const consol = consolOf(lawRow, lang as Lang);
-      return ok(renderArticle(row, consol), {
+      return ok(renderArticle(row, consol, lang as Lang), {
         law, number: row.number, lang,
         citation: citationOf(row.rlrq_cite, row.number),
         division_path: row.division_path,
@@ -191,7 +199,7 @@ export function registerTools(server: McpServer, env: Env): void {
       if (tree.length === 0) return err(`Aucune division${root_path ? ` sous '${root_path}'` : ""}.`);
       const render = (nodes: StructureNode[], level: number): string =>
         nodes.map((n) =>
-          `${"  ".repeat(level)}${divisionLabel(n.kind, n.number, n.heading)}` +
+          `${"  ".repeat(level)}${divisionLabel(n.kind, n.number, n.heading, lang as Lang)}` +
           `${n.repealed ? " (abrogé)" : ""}  [${n.path}]` +
           (n.children.length ? "\n" + render(n.children, level + 1) : ""),
         ).join("\n");
@@ -227,9 +235,9 @@ export function registerTools(server: McpServer, env: Env): void {
       const kids = await childDivisions(db, div.id);
       const page = paginate(limit, offset);
       const { rows, total } = await articlesInDivision(db, law, lang as Lang, div.path, page, include_text);
-      const header = `${divisionLabel(div.kind, div.number, div.heading)}${div.repealed ? " (abrogé)" : ""} [${div.path}]`;
+      const header = `${divisionLabel(div.kind, div.number, div.heading, lang as Lang)}${div.repealed ? " (abrogé)" : ""} [${div.path}]`;
       const subs = kids.length
-        ? `\n\nSous-divisions :\n` + kids.map((k) => `  • ${divisionLabel(k.kind, k.number, k.heading)} [${k.path}]`).join("\n")
+        ? `\n\nSous-divisions :\n` + kids.map((k) => `  • ${divisionLabel(k.kind, k.number, k.heading, lang as Lang)} [${k.path}]`).join("\n")
         : "";
       const arts = rows.length
         ? `\n\nArticles (${page.offset + 1}–${page.offset + rows.length} / ${total}) :\n` +
@@ -319,7 +327,7 @@ export function registerTools(server: McpServer, env: Env): void {
       }
       const lawRow = await getLaw(db, law);
       const consol = consolOf(lawRow, lang as Lang);
-      return ok(renderArticle(row, consol), {
+      return ok(renderArticle(row, consol, lang as Lang), {
         resolved: { law, number: row.number, lang },
         citation: citationOf(row.rlrq_cite, row.number),
         division_path: row.division_path, consolidation: consol,

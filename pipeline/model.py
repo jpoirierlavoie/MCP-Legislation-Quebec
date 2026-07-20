@@ -59,6 +59,8 @@ def sort_key(number: str) -> int:
         return 0
     if number == "finales":
         return 9_000_000_000
+    if number == "annexe":
+        return 9_500_000_000
     parts = number.split(".")
     n = int(parts[0])
     d1 = int(parts[1]) if len(parts) > 1 else 0

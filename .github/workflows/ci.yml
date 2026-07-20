@@ -1,0 +1,25 @@
+name: ci
+
+# Vérifications sans réseau ni secret : type-check du Worker TypeScript.
+# (Les tests Python du parseur téléchargent les EPUB ; ils tournent en local /
+# dans le job de rafraîchissement, pas ici, pour éviter tout blocage réseau CI.)
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx wrangler types # génère worker-configuration.d.ts (pas d'auth requise)
+      - run: npx tsc --noEmit
