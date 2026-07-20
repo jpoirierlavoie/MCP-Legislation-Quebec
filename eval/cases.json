@@ -1,0 +1,170 @@
+{
+  "_comment": "Vérité terrain du plan Discovery v2, Appendice A — VERBATIM. ⛔ Toute évolution de ce jeu passe par Jason (plan v2 §3.4) : proposition en PR distincte, jamais de modification directe. law_scope null = corpus entier.",
+  "cases": [
+    {
+      "id": 1,
+      "query": "délai réponse défendeur hors du Québec assignation",
+      "law_scope": null,
+      "must_include": [{ "law": "cpc", "article": "490" }],
+      "nice_to_have": [{ "law": "cpc", "article": "145" }]
+    },
+    {
+      "id": 2,
+      "query": "signification hors du Québec délai",
+      "law_scope": "cpc",
+      "must_include": [{ "law": "cpc", "article": "490" }],
+      "nice_to_have": [{ "law": "cpc", "article": "494" }]
+    },
+    {
+      "id": 3,
+      "query": "élément d'extranéité",
+      "law_scope": null,
+      "must_include": [
+        { "law": "ccq", "article": "3111" },
+        { "law": "cpc", "article": "490" }
+      ],
+      "nice_to_have": [{ "law": "cpc", "article": "489" }]
+    },
+    {
+      "id": 4,
+      "query": "défendeur étranger cautionnement frais",
+      "law_scope": "cpc",
+      "must_include": [{ "law": "cpc", "article": "492" }],
+      "nice_to_have": [{ "law": "cpc", "article": "493" }]
+    },
+    {
+      "id": 5,
+      "query": "notification internationale Convention La Haye",
+      "law_scope": "cpc",
+      "must_include": [{ "law": "cpc", "article": "494" }],
+      "nice_to_have": [{ "law": "cpc", "article": "495" }]
+    },
+    {
+      "id": 6,
+      "query": "vice caché maison recours",
+      "law_scope": "ccq",
+      "must_include": [
+        { "law": "ccq", "article": "1726" },
+        { "law": "ccq", "article": "1739" }
+      ],
+      "nice_to_have": [
+        { "law": "ccq", "article": "1728" },
+        { "law": "ccq", "article": "1729" },
+        { "law": "ccq", "article": "2118" }
+      ]
+    },
+    {
+      "id": 7,
+      "query": "dénonciation vice caché délai",
+      "law_scope": "ccq",
+      "must_include": [{ "law": "ccq", "article": "1739" }],
+      "nice_to_have": [{ "law": "ccq", "article": "2925" }]
+    },
+    {
+      "id": 8,
+      "query": "récusation juge motifs",
+      "law_scope": "cpc",
+      "must_include": [{ "law": "cpc", "article": "202" }],
+      "nice_to_have": [
+        { "law": "cpc", "article": "201" },
+        { "law": "cpc", "article": "203" },
+        { "law": "cpc", "article": "204" },
+        { "law": "cpc", "article": "205" }
+      ]
+    },
+    {
+      "id": 9,
+      "query": "désaveu avocat",
+      "law_scope": "cpc",
+      "must_include": [{ "law": "cpc", "article": "191" }],
+      "nice_to_have": []
+    },
+    {
+      "id": 10,
+      "query": "avocat cesser d'occuper",
+      "law_scope": "cpc",
+      "must_include": [{ "law": "cpc", "article": "194" }],
+      "nice_to_have": [{ "law": "cpc", "article": "192" }]
+    },
+    {
+      "id": 11,
+      "query": "avocat conflit d'intérêts inhabile",
+      "law_scope": "cpc",
+      "must_include": [{ "law": "cpc", "article": "193" }],
+      "nice_to_have": []
+    },
+    {
+      "id": 12,
+      "query": "responsabilité civile faute préjudice",
+      "law_scope": "ccq",
+      "must_include": [{ "law": "ccq", "article": "1457" }],
+      "nice_to_have": [{ "law": "ccq", "article": "1458" }]
+    },
+    {
+      "id": 13,
+      "query": "prescription trois ans action personnelle",
+      "law_scope": "ccq",
+      "must_include": [{ "law": "ccq", "article": "2925" }],
+      "nice_to_have": [{ "law": "ccq", "article": "2880" }]
+    },
+    {
+      "id": 14,
+      "query": "congédiement délai de congé raisonnable",
+      "law_scope": "ccq",
+      "must_include": [{ "law": "ccq", "article": "2091" }],
+      "nice_to_have": [
+        { "law": "ccq", "article": "2092" },
+        { "law": "ccq", "article": "2094" }
+      ]
+    },
+    {
+      "id": 15,
+      "query": "clause non-concurrence fin d'emploi",
+      "law_scope": "ccq",
+      "must_include": [
+        { "law": "ccq", "article": "2089" },
+        { "law": "ccq", "article": "2095" }
+      ],
+      "nice_to_have": []
+    },
+    {
+      "id": 16,
+      "query": "vente sous contrôle de justice garantie",
+      "law_scope": "ccq",
+      "must_include": [{ "law": "ccq", "article": "1731" }],
+      "nice_to_have": []
+    },
+    {
+      "id": 17,
+      "query": "remplacement du juge délibéré",
+      "law_scope": "cpc",
+      "must_include": [{ "law": "cpc", "article": "326" }],
+      "nice_to_have": [{ "law": "cpc", "article": "327" }]
+    },
+    {
+      "id": 18,
+      "query": "moyen déclinatoire compétence internationale",
+      "law_scope": "cpc",
+      "must_include": [{ "law": "cpc", "article": "491" }],
+      "nice_to_have": [{ "law": "cpc", "article": "167" }]
+    },
+    {
+      "id": 19,
+      "query": "defendant outside Quebec time to answer",
+      "note": "EN → FR, test sémantique multilingue (plan v2, acceptation phase 2)",
+      "law_scope": null,
+      "must_include": [{ "law": "cpc", "article": "490" }],
+      "nice_to_have": []
+    },
+    {
+      "id": 20,
+      "query": "perte de l'ouvrage cinq ans entrepreneur",
+      "law_scope": "ccq",
+      "must_include": [{ "law": "ccq", "article": "2118" }],
+      "nice_to_have": [
+        { "law": "ccq", "article": "2119" },
+        { "law": "ccq", "article": "2124" }
+      ]
+    }
+  ]
+}

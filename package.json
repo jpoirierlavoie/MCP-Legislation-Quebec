@@ -11,7 +11,8 @@
     "type-check": "tsc --noEmit",
     "db:schema:local": "wrangler d1 execute qclaw --local --file=./schema.sql",
     "db:schema:remote": "wrangler d1 execute qclaw --remote --file=./schema.sql",
-    "evals": "node tests/evals.mjs"
+    "evals": "node tests/evals.mjs",
+    "eval": "node eval/run.mjs"
   },
   "dependencies": {
     "agents": "^0.17.1",

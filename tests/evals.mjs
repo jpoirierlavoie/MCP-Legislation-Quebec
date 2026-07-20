@@ -6,57 +6,13 @@
 //
 // Sortie : une ligne par éval, code de sortie 1 si l'une échoue.
 
+import { createMcpClient } from "../eval/mcp-client.mjs";
+
 const MCP_URL = process.env.MCP_URL ?? "http://127.0.0.1:8787/mcp";
 
-// --- client MCP minimal (initialize -> initialized -> tools/call) --------------
-
-let sessionId = null;
-let nextId = 1;
-
-/** Le transport peut répondre en JSON ou en SSE (`event: message\ndata: {…}`). */
-function parseBody(text, contentType) {
-  if (contentType.includes("text/event-stream")) {
-    const payloads = [];
-    for (const line of text.split(/\r?\n/)) {
-      if (line.startsWith("data:")) payloads.push(line.slice(5).trim());
-    }
-    if (!payloads.length) throw new Error(`SSE sans data: ${text.slice(0, 200)}`);
-    return JSON.parse(payloads[payloads.length - 1]);
-  }
-  return JSON.parse(text);
-}
-
-async function rpc(method, params, { notification = false } = {}) {
-  const body = notification
-    ? { jsonrpc: "2.0", method, params }
-    : { jsonrpc: "2.0", id: nextId++, method, params };
-  const headers = {
-    "Content-Type": "application/json",
-    Accept: "application/json, text/event-stream",
-  };
-  if (sessionId) headers["mcp-session-id"] = sessionId;
-
-  const res = await fetch(MCP_URL, { method: "POST", headers, body: JSON.stringify(body) });
-  const sid = res.headers.get("mcp-session-id");
-  if (sid) sessionId = sid;
-  if (notification) return null;
-  const text = await res.text();
-  if (!res.ok) throw new Error(`HTTP ${res.status} sur ${method} : ${text.slice(0, 300)}`);
-  const msg = parseBody(text, res.headers.get("content-type") ?? "");
-  if (msg.error) throw new Error(`${method} : ${msg.error.message}`);
-  return msg.result;
-}
-
-async function connect() {
-  await rpc("initialize", {
-    protocolVersion: "2025-06-18",
-    capabilities: {},
-    clientInfo: { name: "qclaw-evals", version: "1.0.0" },
-  });
-  await rpc("notifications/initialized", {}, { notification: true });
-}
-
-const callTool = (name, args) => rpc("tools/call", { name, arguments: args });
+// Client MCP partagé avec le harnais d'évaluation (eval/mcp-client.mjs) —
+// UNE session pour tous les appels.
+const { connect, callTool } = createMcpClient(MCP_URL);
 
 // --- évals du §8 --------------------------------------------------------------
 //
