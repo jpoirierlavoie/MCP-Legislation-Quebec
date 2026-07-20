@@ -1,0 +1,540 @@
+{
+  "laws": [
+    {
+      "id": "c-25.01-r.0.2.01",
+      "name_fr": "Règlement de la Cour d'appel du Québec en matière civile",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-25.01, r. 0.2.01",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/C-25.01,%20R.%200.2.01.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/C-25.01,%20R.%200.2.01.epub"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Cour d'appel"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "c-25.01-r.0.2.2",
+      "name_fr": "Règlement de la Cour supérieure du Québec en matière civile et familiale pour le district de Montréal",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-25.01, r. 0.2.2",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/C-25.01,%20R.%200.2.2.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/C-25.01,%20R.%200.2.2.epub"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Cour supérieure"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "c-25.01-r.0.2.3",
+      "name_fr": "Règlement de la Cour supérieure du Québec en matière civile et familiale pour le district de Québec",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-25.01, r. 0.2.3",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/C-25.01,%20R.%200.2.3.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/C-25.01,%20R.%200.2.3.epub"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Cour supérieure"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "c-25.01-r.9",
+      "name_fr": "Règlement de la Cour du Québec",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-25.01, r. 9",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/C-25.01,%20R.%209.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/C-25.01,%20R.%209.epub"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Cour du Québec"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "t-16",
+      "name_fr": "Loi sur les tribunaux judiciaires",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. T-16",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/T-16.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/T-16.epub"
+      },
+      "fonction": "loi",
+      "forum": [
+        "Transversal"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "t-16-r.10",
+      "name_fr": "Tarif judiciaire en matière civile",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. T-16, r. 10",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/T-16,%20R.%2010.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/T-16,%20R.%2010.epub"
+      },
+      "fonction": "tarif",
+      "forum": [
+        "Transversal"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "c-12",
+      "name_fr": "Charte des droits et libertés de la personne",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-12",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-12.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-12.epub"
+      },
+      "fonction": "loi",
+      "forum": [
+        "Transversal"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "i-16",
+      "name_fr": "Loi d’interprétation",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. I-16",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/I-16.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/I-16.epub"
+      },
+      "fonction": "loi",
+      "forum": [
+        "Transversal"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "c-25.01-r.0.2.4",
+      "name_fr": "Règlement de la Cour supérieure du Québec en matière familiale",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-25.01, r. 0.2.4",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/C-25.01,%20R.%200.2.4.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/C-25.01,%20R.%200.2.4.epub"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Cour supérieure"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "c-25.01-r.0.2.1",
+      "name_fr": "Règlement de la Cour supérieure du Québec en matière civile",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-25.01, r. 0.2.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/C-25.01,%20R.%200.2.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/C-25.01,%20R.%200.2.1.epub"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Cour supérieure"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "j-3",
+      "name_fr": "Loi sur la justice administratif",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. J-3",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/J-3.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/J-3.epub"
+      },
+      "fonction": "loi",
+      "forum": [
+        "Tribunal administratif du Québec"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "j-3-r.3.01",
+      "name_fr": "Règlement sur la procédure du Tribunal administratif du Québec",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. J-3, r. 3.01",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/J-3,%20R.%203.01.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/J-3,%20R.%203.01.epub"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Tribunal administratif du Québec"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "j-3-r.3.2",
+      "name_fr": "Tarif des droits, honoraires et autres frais afférents aux recours instruits devant le Tribunal administratif du Québec",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. J-3, r. 3.2",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/J-3,%20R.%203.2.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/J-3,%20R.%203.2.epub"
+      },
+      "fonction": "tarif",
+      "forum": [
+        "Tribunal administratif du Québec"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "i-13.2.2",
+      "name_fr": "Loi sur les institutions de dépôts et la protection des dépôts",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. I-13.2.2",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/I-13.2.2.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/I-13.2.2.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "b-9",
+      "name_fr": "Loi sur les bureaux de la publicité des droits",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. B-9",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/B-9.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/B-9.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "t-15.01-r.5",
+      "name_fr": "Règlement sur la procédure devant le Tribunal administratif du logement",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. T-15.01, r. 5",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/T-15.01,%20R.%205.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/T-15.01,%20R.%205.epub"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Tribunal administratif du logement"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "t-15.01",
+      "name_fr": "Loi sur le Tribunal administratif du logement",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. T-15.01",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/T-15.01.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/T-15.01.epub"
+      },
+      "fonction": "loi",
+      "forum": [
+        "Tribunal administratif du logement"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "t-15.01-r.6",
+      "name_fr": "Tarif des frais exigibles par le Tribunal administratif du logement",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. T-15.01, r. 6",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/T-15.01,%20R.%206.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/T-15.01,%20R.%206.epub"
+      },
+      "fonction": "tarif",
+      "forum": [
+        "Tribunal administratif du logement"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "p-40.1",
+      "name_fr": "Loi sur la protection du consommateur",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. P-40.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/P-40.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/P-40.1.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "b-1",
+      "name_fr": "Loi sur le Barreau",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. B-1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/B-1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/B-1.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "b-1-r.3.1",
+      "name_fr": "Code de déontologie des avocats",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. B-1, r. 3.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/B-1,%20R.%203.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/B-1,%20R.%203.1.epub"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "b-1-r.5",
+      "name_fr": "Règlement sur la comptabilité et les normes d’exercice professionnel des avocats",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. B-1, r. 5",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/B-1,%20R.%205.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/B-1,%20R.%205.epub"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "c-1.1",
+      "name_fr": "Loi concernant le cadre juridique des technologies de l’information",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-1.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-1.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-1.1.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "c-19",
+      "name_fr": "Loi sur les cités et villes",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-19",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-19.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-19.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "c-26",
+      "name_fr": "Code des professions",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-26",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-26.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-26.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "c-38",
+      "name_fr": "Loi sur les compagnies",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-38",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-38.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-38.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "c-73.2",
+      "name_fr": "Loi sur le courtage immobilier",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. C-73.2",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-73.2.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-73.2.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "e-6.1",
+      "name_fr": "Loi sur l’encadrement du secteur financier",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. E-6.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/E-6.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/E-6.1.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "d-9.2",
+      "name_fr": "Loi sur la distribution de produits et services financiers",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. D-9.2",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/D-9.2.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/D-9.2.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "e-12.000001",
+      "name_fr": "Loi sur les entreprises de services monétaires",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. E-12.000001",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/E-12.000001.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/E-12.000001.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "i-14.01",
+      "name_fr": "Loi sur les instruments dérivés",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. I-14.01",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/I-14.01.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/I-14.01.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "n-1.1",
+      "name_fr": "Loi sur les normes du travail",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. N-1.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/N-1.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/N-1.1.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "p-39.1",
+      "name_fr": "Loi sur la protection des renseignements personnels dans le secteur privé",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. P-39.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/P-39.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/P-39.1.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "p-44.1",
+      "name_fr": "Loi sur la publicité légale des entreprises",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. P-44.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/P-44.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/P-44.1.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "s-31.1",
+      "name_fr": "Loi sur les sociétés par actions",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. S-31.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/S-31.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/S-31.1.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "t-11.002",
+      "name_fr": "Loi sur le transfert de valeurs mobilières et l’obtention de titres intermédiés",
+      "name_en": null,
+      "rlrq_cite": "RLRQ, c. T-11.002",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/T-11.002.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/T-11.002.epub"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    }
+  ]
+}

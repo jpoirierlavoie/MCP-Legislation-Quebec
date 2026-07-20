@@ -1,0 +1,46 @@
+{
+  "relations": [
+    {
+      "from": "cpc",
+      "to": "ccq",
+      "rel_type": "met-en-oeuvre",
+      "note": "Le C.p.c. régit la mise en œuvre judiciaire des droits du C.c.Q."
+    },
+    {
+      "from": "t-15.01",
+      "to": "ccq",
+      "rel_type": "applique",
+      "note": "Le TAL applique le régime du louage résidentiel du C.c.Q. (art. 1851 et s.)."
+    },
+    {
+      "from": "p-40.1",
+      "to": "ccq",
+      "rel_type": "complete",
+      "note": "Régime de protection du consommateur s'ajoutant au droit commun des obligations."
+    },
+    {
+      "from": "b-1",
+      "to": "c-26",
+      "rel_type": "encadre-par",
+      "note": "Le Barreau est un ordre professionnel régi par le Code des professions."
+    },
+    {
+      "from": "p-44.1",
+      "to": "s-31.1",
+      "rel_type": "connexe",
+      "note": "Publicité légale des sociétés constituées sous la LSAQ."
+    },
+    {
+      "from": "p-44.1",
+      "to": "c-38",
+      "rel_type": "connexe",
+      "note": "Publicité légale des compagnies (Loi sur les compagnies)."
+    },
+    {
+      "from": "t-11.002",
+      "to": "ccq",
+      "rel_type": "connexe",
+      "note": "Le transfert de valeurs mobilières interagit avec les sûretés mobilières (Livre 6 C.c.Q.)."
+    }
+  ]
+}

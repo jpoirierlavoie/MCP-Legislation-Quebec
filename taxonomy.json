@@ -1,0 +1,457 @@
+{
+  "subjects": [
+    {
+      "id": "personnes",
+      "label_fr": "Personnes",
+      "kind": "prive-ccq",
+      "description_fr": "Personnalité juridique, capacité, majeurs protégés, personnes morales (Livre 1 C.c.Q.)."
+    },
+    {
+      "id": "famille",
+      "label_fr": "Famille",
+      "kind": "prive-ccq",
+      "description_fr": "Mariage, union civile/parentale, filiation, obligation alimentaire, autorité parentale (Livre 2 C.c.Q.)."
+    },
+    {
+      "id": "successions",
+      "label_fr": "Successions",
+      "kind": "prive-ccq",
+      "description_fr": "Dévolution légale et testamentaire, liquidation, partage (Livre 3 C.c.Q.)."
+    },
+    {
+      "id": "biens",
+      "label_fr": "Biens",
+      "kind": "prive-ccq",
+      "description_fr": "Propriété, copropriété, usufruit, servitudes, fiducie (Livre 4 C.c.Q.)."
+    },
+    {
+      "id": "obligations-contrats",
+      "label_fr": "Obligations et contrats",
+      "kind": "prive-ccq",
+      "description_fr": "Droit commun des obligations et contrats nommés (Livre 5 C.c.Q.)."
+    },
+    {
+      "id": "responsabilite-civile",
+      "label_fr": "Responsabilité civile",
+      "kind": "prive-ccq",
+      "description_fr": "Responsabilité extracontractuelle et contractuelle, art. 1457 et s. C.c.Q."
+    },
+    {
+      "id": "suretes",
+      "label_fr": "Sûretés (priorités et hypothèques)",
+      "kind": "prive-ccq",
+      "description_fr": "Priorités, hypothèques mobilières et immobilières, exercice des droits hypothécaires (Livre 6 C.c.Q.)."
+    },
+    {
+      "id": "preuve",
+      "label_fr": "Preuve",
+      "kind": "prive-ccq",
+      "description_fr": "Moyens de preuve, écrits, témoignage, présomptions, recevabilité (Livre 7 C.c.Q.)."
+    },
+    {
+      "id": "prescription",
+      "label_fr": "Prescription",
+      "kind": "prive-ccq",
+      "description_fr": "Prescription extinctive et acquisitive, délais, suspension, interruption (Livre 8 C.c.Q.)."
+    },
+    {
+      "id": "publicite-droits",
+      "label_fr": "Publicité des droits",
+      "kind": "prive-ccq",
+      "description_fr": "Registre foncier, RDPRM, effets de la publicité (Livre 9 C.c.Q.)."
+    },
+    {
+      "id": "droit-international-prive",
+      "label_fr": "Droit international privé",
+      "kind": "prive-ccq",
+      "description_fr": "Conflits de lois et de juridictions, reconnaissance des décisions étrangères (Livre 10 C.c.Q.)."
+    },
+    {
+      "id": "procedure-civile",
+      "label_fr": "Procédure civile",
+      "kind": "specialise",
+      "description_fr": "Déroulement de l'instance civile : C.p.c. et règlements des tribunaux judiciaires."
+    },
+    {
+      "id": "administration-justice",
+      "label_fr": "Administration de la justice",
+      "kind": "specialise",
+      "description_fr": "Organisation des tribunaux, compétences, frais de justice, fonctionnement des instances."
+    },
+    {
+      "id": "droit-administratif",
+      "label_fr": "Droit administratif",
+      "kind": "specialise",
+      "description_fr": "Justice administrative, contrôle des décisions de l'Administration, TAQ."
+    },
+    {
+      "id": "louage-residentiel",
+      "label_fr": "Louage résidentiel",
+      "kind": "specialise",
+      "description_fr": "Bail de logement et Tribunal administratif du logement; renvoie aussi au louage du C.c.Q."
+    },
+    {
+      "id": "protection-consommateur",
+      "label_fr": "Protection du consommateur",
+      "kind": "specialise",
+      "description_fr": "Contrats de consommation, garanties, pratiques de commerce (L.p.c.)."
+    },
+    {
+      "id": "societes-entreprises",
+      "label_fr": "Sociétés et entreprises",
+      "kind": "specialise",
+      "description_fr": "Sociétés par actions, compagnies, publicité légale, société civile du C.c.Q."
+    },
+    {
+      "id": "valeurs-mobilieres",
+      "label_fr": "Valeurs mobilières et dérivés",
+      "kind": "specialise",
+      "description_fr": "Instruments dérivés, transfert de valeurs mobilières et titres intermédiés."
+    },
+    {
+      "id": "secteur-financier",
+      "label_fr": "Secteur financier et institutions financières",
+      "kind": "specialise",
+      "description_fr": "Encadrement AMF, institutions de dépôts, entreprises de services monétaires, distribution de produits financiers."
+    },
+    {
+      "id": "assurances",
+      "label_fr": "Assurances",
+      "kind": "specialise",
+      "description_fr": "Contrat d'assurance (C.c.Q.) et distribution de produits d'assurance."
+    },
+    {
+      "id": "travail-emploi",
+      "label_fr": "Travail et emploi",
+      "kind": "specialise",
+      "description_fr": "Normes du travail et contrat de travail du C.c.Q."
+    },
+    {
+      "id": "renseignements-personnels",
+      "label_fr": "Renseignements personnels",
+      "kind": "specialise",
+      "description_fr": "Protection des renseignements personnels dans le secteur privé (Loi 25)."
+    },
+    {
+      "id": "droit-professionnel",
+      "label_fr": "Droit professionnel et déontologie",
+      "kind": "specialise",
+      "description_fr": "Ordres professionnels, Barreau, déontologie et normes d'exercice des avocats."
+    },
+    {
+      "id": "technologies-information",
+      "label_fr": "Technologies de l'information",
+      "kind": "specialise",
+      "description_fr": "Cadre juridique des TI : documents technologiques, équivalence fonctionnelle, signatures."
+    },
+    {
+      "id": "droit-municipal",
+      "label_fr": "Droit municipal",
+      "kind": "specialise",
+      "description_fr": "Cités et villes : pouvoirs, contrats et responsabilité municipale."
+    },
+    {
+      "id": "immobilier-courtage",
+      "label_fr": "Immobilier et courtage",
+      "kind": "specialise",
+      "description_fr": "Courtage immobilier et encadrement OACIQ."
+    },
+    {
+      "id": "droits-libertes-fondamentaux",
+      "label_fr": "Droits et libertés fondamentaux",
+      "kind": "specialise",
+      "description_fr": "Charte québécoise : droits fondamentaux, égalité, recours; d'application transversale."
+    },
+    {
+      "id": "interpretation-lois",
+      "label_fr": "Interprétation des lois",
+      "kind": "specialise",
+      "description_fr": "Loi d'interprétation : règles transversales de lecture des lois du Québec."
+    }
+  ],
+  "mappings": [
+    {
+      "subject": "administration-justice",
+      "law": "c-25.01-r.0.2.01"
+    },
+    {
+      "subject": "administration-justice",
+      "law": "c-25.01-r.0.2.2"
+    },
+    {
+      "subject": "administration-justice",
+      "law": "c-25.01-r.0.2.3"
+    },
+    {
+      "subject": "administration-justice",
+      "law": "c-25.01-r.9"
+    },
+    {
+      "subject": "administration-justice",
+      "law": "t-16"
+    },
+    {
+      "subject": "administration-justice",
+      "law": "t-16-r.10"
+    },
+    {
+      "subject": "droits-libertes-fondamentaux",
+      "law": "c-12"
+    },
+    {
+      "subject": "interpretation-lois",
+      "law": "i-16"
+    },
+    {
+      "subject": "administration-justice",
+      "law": "c-25.01-r.0.2.4"
+    },
+    {
+      "subject": "famille",
+      "law": "c-25.01-r.0.2.4"
+    },
+    {
+      "subject": "administration-justice",
+      "law": "c-25.01-r.0.2.1"
+    },
+    {
+      "subject": "droit-administratif",
+      "law": "j-3"
+    },
+    {
+      "subject": "administration-justice",
+      "law": "j-3"
+    },
+    {
+      "subject": "droit-administratif",
+      "law": "j-3-r.3.01"
+    },
+    {
+      "subject": "droit-administratif",
+      "law": "j-3-r.3.2"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "i-13.2.2"
+    },
+    {
+      "subject": "publicite-droits",
+      "law": "b-9"
+    },
+    {
+      "subject": "louage-residentiel",
+      "law": "t-15.01-r.5"
+    },
+    {
+      "subject": "louage-residentiel",
+      "law": "t-15.01"
+    },
+    {
+      "subject": "administration-justice",
+      "law": "t-15.01"
+    },
+    {
+      "subject": "louage-residentiel",
+      "law": "t-15.01-r.6"
+    },
+    {
+      "subject": "protection-consommateur",
+      "law": "p-40.1"
+    },
+    {
+      "subject": "obligations-contrats",
+      "law": "p-40.1"
+    },
+    {
+      "subject": "droit-professionnel",
+      "law": "b-1"
+    },
+    {
+      "subject": "administration-justice",
+      "law": "b-1"
+    },
+    {
+      "subject": "droit-professionnel",
+      "law": "b-1-r.3.1"
+    },
+    {
+      "subject": "droit-professionnel",
+      "law": "b-1-r.5"
+    },
+    {
+      "subject": "technologies-information",
+      "law": "c-1.1"
+    },
+    {
+      "subject": "preuve",
+      "law": "c-1.1"
+    },
+    {
+      "subject": "droit-municipal",
+      "law": "c-19"
+    },
+    {
+      "subject": "droit-professionnel",
+      "law": "c-26"
+    },
+    {
+      "subject": "societes-entreprises",
+      "law": "c-38"
+    },
+    {
+      "subject": "immobilier-courtage",
+      "law": "c-73.2"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "e-6.1"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "d-9.2"
+    },
+    {
+      "subject": "assurances",
+      "law": "d-9.2"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "e-12.000001"
+    },
+    {
+      "subject": "valeurs-mobilieres",
+      "law": "i-14.01"
+    },
+    {
+      "subject": "travail-emploi",
+      "law": "n-1.1"
+    },
+    {
+      "subject": "renseignements-personnels",
+      "law": "p-39.1"
+    },
+    {
+      "subject": "societes-entreprises",
+      "law": "p-44.1"
+    },
+    {
+      "subject": "societes-entreprises",
+      "law": "s-31.1"
+    },
+    {
+      "subject": "valeurs-mobilieres",
+      "law": "t-11.002"
+    },
+    {
+      "subject": "suretes",
+      "law": "t-11.002"
+    },
+    {
+      "subject": "procedure-civile",
+      "law": "c-25.01-r.0.2.01"
+    },
+    {
+      "subject": "procedure-civile",
+      "law": "c-25.01-r.0.2.2"
+    },
+    {
+      "subject": "procedure-civile",
+      "law": "c-25.01-r.0.2.3"
+    },
+    {
+      "subject": "procedure-civile",
+      "law": "c-25.01-r.9"
+    },
+    {
+      "subject": "procedure-civile",
+      "law": "c-25.01-r.0.2.4"
+    },
+    {
+      "subject": "procedure-civile",
+      "law": "c-25.01-r.0.2.1"
+    },
+    {
+      "subject": "personnes",
+      "law": "ccq",
+      "division_path": "ga:l_premier"
+    },
+    {
+      "subject": "famille",
+      "law": "ccq",
+      "division_path": "ga:l_deuxieme"
+    },
+    {
+      "subject": "successions",
+      "law": "ccq",
+      "division_path": "ga:l_troisieme"
+    },
+    {
+      "subject": "biens",
+      "law": "ccq",
+      "division_path": "ga:l_quatrieme"
+    },
+    {
+      "subject": "obligations-contrats",
+      "law": "ccq",
+      "division_path": "ga:l_cinquieme"
+    },
+    {
+      "subject": "responsabilite-civile",
+      "law": "ccq",
+      "division_path": "ga:l_cinquieme-gb:l_premier-gc:l_troisieme"
+    },
+    {
+      "subject": "louage-residentiel",
+      "law": "ccq",
+      "division_path": "ga:l_cinquieme-gb:l_deuxieme-gc:l_quatrieme"
+    },
+    {
+      "subject": "travail-emploi",
+      "law": "ccq",
+      "division_path": "ga:l_cinquieme-gb:l_deuxieme-gc:l_septieme"
+    },
+    {
+      "subject": "societes-entreprises",
+      "law": "ccq",
+      "division_path": "ga:l_cinquieme-gb:l_deuxieme-gc:l_dixieme"
+    },
+    {
+      "subject": "assurances",
+      "law": "ccq",
+      "division_path": "ga:l_cinquieme-gb:l_deuxieme-gc:l_quinzieme"
+    },
+    {
+      "subject": "suretes",
+      "law": "ccq",
+      "division_path": "ga:l_sixieme"
+    },
+    {
+      "subject": "preuve",
+      "law": "ccq",
+      "division_path": "ga:l_septieme"
+    },
+    {
+      "subject": "prescription",
+      "law": "ccq",
+      "division_path": "ga:l_huitieme"
+    },
+    {
+      "subject": "publicite-droits",
+      "law": "ccq",
+      "division_path": "ga:l_neuvieme"
+    },
+    {
+      "subject": "droit-international-prive",
+      "law": "ccq",
+      "division_path": "ga:l_dixieme"
+    },
+    {
+      "subject": "procedure-civile",
+      "law": "cpc"
+    },
+    {
+      "subject": "administration-justice",
+      "law": "cpc"
+    }
+  ]
+}
