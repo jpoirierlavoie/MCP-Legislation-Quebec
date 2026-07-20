@@ -6,8 +6,8 @@ import {
   ArticleJoined, ArticleRow, Lang, LawSummary, StructureNode,
   articlesByNumbers, articlesByRange, articlesInDivision, childDivisions,
   citationOf, consolOf, getArticle, getDivision, getLaw, getStructure,
-  boundKey, listLaws, listSubjects, loadRelevanceData, nearestArticles, paginate,
-  parseCitation, relatedLaws, searchText, sortKeyOf,
+  boundKey, listLaws, listSubjects, loadRelevanceData, logSearch, nearestArticles,
+  paginate, parseCitation, relatedLaws, searchText, sortKeyOf,
 } from "./lib";
 import { WEIGHTS, rank, tokenize } from "./relevance";
 
@@ -277,6 +277,9 @@ export function registerTools(server: McpServer, env: Env): void {
       }
       const data = await loadRelevanceData(db, tokens, lang as Lang);
       const cands = rank({ tokens, ...data }, page.limit);
+      await logSearch(db, {
+        tool: "find_relevant", query, lang, result_count: cands.length,
+      });
       if (cands.length === 0) {
         return err(
           `Aucun rapprochement pour « ${query} » (termes retenus : ${tokens.join(", ")}). ` +
@@ -511,8 +514,12 @@ export function registerTools(server: McpServer, env: Env): void {
       try {
         res = await searchText(db, query, lang as Lang, law, page);
       } catch (e) {
+        await logSearch(db, { tool: "search_text", query, law, lang, result_count: 0 });
         return err(`Recherche invalide. Essayez des mots simples. (${(e as Error).message})`);
       }
+      await logSearch(db, {
+        tool: "search_text", query, law, lang, result_count: res.hits.length,
+      });
       if (res.hits.length === 0) return err(`Aucun résultat pour « ${query} » (${lang}).`);
       const body = res.hits.map(
         (h) => `${h.law_id} art. ${h.number} — ${h.snippet}  [${h.division_path}]`,

@@ -740,6 +740,36 @@ export async function loadRelevanceData(
   };
 }
 
+// --- journal des recherches (plan v2, 1.6) ------------------------------------
+
+export interface SearchLogEntry {
+  tool: "search_text" | "find_relevant";
+  query: string;
+  law?: string | null;
+  lang?: string | null;
+  result_count: number;
+  /** null | 'widened' | 'loo:<terme>' | 'or_relax' | 'semantic' */
+  fallback?: string | null;
+}
+
+/**
+ * Journalise CHAQUE appel de recherche/orientation (pas seulement les échecs :
+ * result_count permet de filtrer). Échec d'insertion SILENCIEUX — un journal ne doit
+ * jamais casser une recherche.
+ */
+export async function logSearch(db: D1Database, e: SearchLogEntry): Promise<void> {
+  try {
+    await db
+      .prepare(
+        "INSERT INTO search_log (tool, query, law, lang, result_count, fallback) VALUES (?,?,?,?,?,?)",
+      )
+      .bind(e.tool, e.query, e.law ?? null, e.lang ?? null, e.result_count, e.fallback ?? null)
+      .run();
+  } catch {
+    // table absente (migration non appliquée) ou write refusé : on n'échoue jamais.
+  }
+}
+
 // --- recherche plein texte (FTS5) --------------------------------------------
 
 export interface SearchHit {
