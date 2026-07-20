@@ -28,7 +28,7 @@
       "id": "obligations-contrats",
       "label_fr": "Obligations et contrats",
       "kind": "prive-ccq",
-      "description_fr": "Droit commun des obligations et contrats nommés (Livre 5 C.c.Q.)."
+      "description_fr": "Droit commun des obligations et contrats nommés (Livre 5 C.c.Q.) : formation et effets du contrat, vente, garantie de qualité et vice caché, louage, contrat d'entreprise, mandat."
     },
     {
       "id": "responsabilite-civile",
@@ -124,7 +124,7 @@
       "id": "travail-emploi",
       "label_fr": "Travail et emploi",
       "kind": "specialise",
-      "description_fr": "Normes du travail et contrat de travail du C.c.Q."
+      "description_fr": "Normes du travail et contrat de travail du C.c.Q. : congédiement, licenciement, salaire, vacances, harcèlement psychologique, avis de cessation d'emploi."
     },
     {
       "id": "renseignements-personnels",

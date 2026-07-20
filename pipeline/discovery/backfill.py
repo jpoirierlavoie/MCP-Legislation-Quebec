@@ -38,11 +38,14 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Rattrapage name_norm / heading_norm.")
     ap.add_argument("--target", default="local", choices=["local", "cloud"])
     ap.add_argument("--laws", nargs="*", default=["ccq", "cpc"])
+    ap.add_argument("--all", action="store_true", help="Toutes les lois présentes en base.")
     args = ap.parse_args(argv)
     db = make_client(args.target)
-    n_laws, n_divs = backfill(db, args.laws)
+    laws = [r["id"] for r in db.run("SELECT id FROM laws ORDER BY id")] if args.all else args.laws
+    n_laws, n_divs = backfill(db, laws)
+    scope = "toutes les lois" if args.all else ", ".join(laws)
     print(f"[{db.name}] rattrapage : name_norm sur {n_laws} lois, "
-          f"heading_norm sur {n_divs} divisions ({', '.join(args.laws)})")
+          f"heading_norm sur {n_divs} divisions ({scope})")
     return 0
 
 

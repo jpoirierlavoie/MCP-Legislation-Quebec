@@ -3,11 +3,26 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import {
-  ArticleJoined, ArticleRow, Lang, StructureNode,
+  ArticleJoined, ArticleRow, Lang, LawSummary, StructureNode,
   articlesByNumbers, articlesByRange, articlesInDivision, childDivisions,
   citationOf, consolOf, getArticle, getDivision, getLaw, getStructure,
-  listLaws, nearestArticles, paginate, searchText, sortKeyOf,
+  listLaws, listSubjects, loadRelevanceData, nearestArticles, paginate,
+  relatedLaws, searchText, sortKeyOf,
 } from "./lib";
+import { WEIGHTS, rank, tokenize } from "./relevance";
+
+/**
+ * Garde-fou imposé par le plan (§4.4) — repris TEL QUEL, à ne pas reformuler.
+ * Il rappelle que la découverte est heuristique et ne décide pas du droit applicable.
+ */
+const GARDE_FOU =
+  "Aide heuristique au repérage de lois et de parties de lois candidates. " +
+  "Ne détermine PAS le droit applicable : toujours vérifier en lisant le texte via " +
+  "get_structure / get_division / get_article.";
+
+/** Rappel du patron en deux temps sur les outils d'extraction (§6.4). */
+const DEUX_TEMPS =
+  " Si la loi pertinente est inconnue, commencer par qclaw_find_relevant.";
 
 const READONLY = {
   readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false,
@@ -59,31 +74,231 @@ export function registerTools(server: McpServer, env: Env): void {
   const db = env.DB;
 
   // 1) qclaw_list_laws ---------------------------------------------------------
+  const renderLaw = (l: LawSummary): string => {
+    const attrs = [
+      l.fonction ? `fonction: ${l.fonction}` : null,
+      l.forum ? `forum: ${l.forum}` : null,
+      l.parent_law_id ? `loi habilitante: ${l.parent_law_id}` : null,
+      l.subjects.length ? `matières: ${l.subjects.join(", ")}` : null,
+    ].filter(Boolean).join(" ; ");
+    const head =
+      `• ${l.id} — ${l.name_fr} / ${l.name_en} (${l.rlrq_cite}) ; ` +
+      `langues: ${l.langs.join(", ") || "aucune"} ; ` +
+      `à jour au ${l.consol_date_fr ?? "?"}${l.consol_date_en ? ` (en: ${l.consol_date_en})` : ""} ; ` +
+      `${l.article_count} articles`;
+    // portée : repli sur name_fr tant que la passe éditoriale scope_fr n'est pas faite (§5)
+    const scope = l.scope_fr ? `\n    portée: ${l.scope_fr}` : "";
+    // pour les grands codes : les divisions rattachées à une matière (les Livres du C.c.Q.)
+    const divs = l.mapped_divisions.length
+      ? "\n" + l.mapped_divisions
+        .map((d) => `    ◦ ${d.heading ?? d.division_path} [${d.division_path}] — ${d.subject}`)
+        .join("\n")
+      : "";
+    return `${head}${attrs ? `\n    ${attrs}` : ""}${scope}${divs}`;
+  };
+
   server.registerTool(
     "qclaw_list_laws",
     {
       description:
-        "Liste les lois disponibles : identifiant, noms FR/EN, citation RLRQ, langues chargées " +
-        "et date de consolidation courante. Point de départ pour découvrir le corpus.",
-      inputSchema: { lang: LANG.optional() },
+        "Carte du corpus : toutes les lois avec identifiant, noms FR/EN, citation RLRQ, langues, " +
+        "date de consolidation, nombre d'articles, et les attributs de découverte (fonction, forum, " +
+        "matières, loi habilitante ; pour les grands codes, les Livres avec leur matière). " +
+        "Filtres optionnels : fonction, forum, subject. Point de départ pour explorer le corpus ; " +
+        "pour partir d'un problème concret, préférer qclaw_find_relevant.",
+      inputSchema: {
+        fonction: z.string().optional()
+          .describe("Filtrer par fonction : 'loi', 'regles-procedure', 'tarif', 'reglement'."),
+        forum: z.string().optional()
+          .describe("Filtrer par forum, ex. 'Tribunal administratif du logement', 'Cour d'appel'."),
+        subject: z.string().optional()
+          .describe("Filtrer par identifiant de matière, ex. 'louage-residentiel' (cf. qclaw_list_subjects)."),
+        lang: LANG.optional(),
+      },
       annotations: READONLY,
     },
-    async () => {
-      const laws = await listLaws(db);
-      if (laws.length === 0) return err("Aucune loi chargée dans la base.");
-      const lines = laws.map(
-        (l) => `• ${l.id} — ${l.name_fr} / ${l.name_en} (${l.rlrq_cite}) ; ` +
-          `langues: ${l.langs.join(", ") || "aucune"} ; ` +
-          `à jour au ${l.consol_date_fr ?? "?"}${l.consol_date_en ? ` (en: ${l.consol_date_en})` : ""} ; ` +
-          `${l.article_count} articles`,
-      );
-      return ok(`Lois disponibles :\n${lines.join("\n")}`, {
+    async ({ fonction, forum, subject }) => {
+      const laws = await listLaws(db, { fonction, forum, subject });
+      if (laws.length === 0) {
+        const applied = [
+          fonction ? `fonction='${fonction}'` : null,
+          forum ? `forum='${forum}'` : null,
+          subject ? `subject='${subject}'` : null,
+        ].filter(Boolean).join(", ");
+        return err(
+          applied
+            ? `Aucune loi pour ${applied}. Vérifiez les valeurs (qclaw_list_subjects pour les matières) ` +
+              "ou appelez qclaw_list_laws sans filtre."
+            : "Aucune loi chargée dans la base.",
+        );
+      }
+      const header = `${laws.length} loi(s) au corpus :`;
+      return ok(`${header}\n${laws.map(renderLaw).join("\n")}`, {
+        filters: { fonction: fonction ?? null, forum: forum ?? null, subject: subject ?? null },
+        count: laws.length,
         laws: laws.map((l) => ({
           id: l.id, name_fr: l.name_fr, name_en: l.name_en, rlrq_cite: l.rlrq_cite,
           langs: l.langs, consol_date_fr: l.consol_date_fr, consol_date_en: l.consol_date_en,
           article_count: l.article_count,
+          fonction: l.fonction, forum: l.forum,
+          scope: l.scope_fr ?? l.name_fr, parent_law_id: l.parent_law_id,
+          subjects: l.subjects, mapped_divisions: l.mapped_divisions,
         })),
       });
+    },
+  );
+
+  // 1b) qclaw_list_subjects ----------------------------------------------------
+  server.registerTool(
+    "qclaw_list_subjects",
+    {
+      description:
+        "Liste les matières de la taxonomie (droit privé du C.c.Q. et matières spécialisées) : " +
+        "identifiant, libellé, description, et nombre de lois / divisions rattachées. " +
+        "Sert à choisir un domaine, puis à filtrer qclaw_list_laws (subject=…).",
+      inputSchema: { lang: LANG.optional() },
+      annotations: READONLY,
+    },
+    async () => {
+      const subs = await listSubjects(db);
+      if (subs.length === 0) return err("Aucune matière chargée (taxonomie absente).");
+      const KIND: Record<string, string> = {
+        "prive-ccq": "Droit privé (C.c.Q.)", specialise: "Matières spécialisées",
+      };
+      const groups = new Map<string, typeof subs>();
+      for (const s of subs) {
+        const g = groups.get(s.kind);
+        if (g) g.push(s); else groups.set(s.kind, [s]);
+      }
+      const body = [...groups.entries()].map(([kind, items]) =>
+        `\n${KIND[kind] ?? kind} :\n` + items.map((s) =>
+          `  • ${s.id} — ${s.label_fr} (${s.laws_count} loi(s)` +
+          `${s.divisions_count ? `, ${s.divisions_count} division(s)` : ""})` +
+          `${s.description_fr ? `\n      ${s.description_fr}` : ""}`,
+        ).join("\n"),
+      ).join("\n");
+      return ok(`${subs.length} matières :${body}`, {
+        count: subs.length,
+        subjects: subs.map((s) => ({
+          id: s.id, label_fr: s.label_fr, label_en: s.label_en, kind: s.kind,
+          description: s.description_fr, laws_count: s.laws_count, divisions_count: s.divisions_count,
+        })),
+      });
+    },
+  );
+
+  // 1c) qclaw_related_laws -----------------------------------------------------
+  server.registerTool(
+    "qclaw_related_laws",
+    {
+      description:
+        "Graphe d'interconnexion d'une loi : règlements pris sous son autorité, loi habilitante, " +
+        "renvois vers d'autres textes, et relations curées (met-en-oeuvre, applique, complète…). " +
+        "Signale les cibles NON disponibles au corpus. Ex. : law='cpc' pour voir ses règlements de cour.",
+      inputSchema: {
+        law: z.string().describe("Identifiant de la loi, ex. 'cpc'."),
+        rel_type: z.string().optional()
+          .describe("Filtrer par type : 'reglement-de', 'renvoie-a', 'met-en-oeuvre', 'applique', 'complete', 'encadre-par', 'connexe'."),
+        direction: z.enum(["out", "in", "both"]).default("both")
+          .describe("'out' : depuis la loi ; 'in' : vers la loi ; 'both' (défaut)."),
+        limit: z.number().int().optional().describe("Max d'arêtes (défaut 50, max 200)."),
+        lang: LANG.optional(),
+      },
+      annotations: READONLY,
+    },
+    async ({ law, rel_type, direction, limit }) => {
+      if (!(await getLaw(db, law))) {
+        const all = (await listLaws(db)).map((l) => l.id).join(", ");
+        return err(`Loi '${law}' inconnue. Lois disponibles : ${all || "aucune"}.`);
+      }
+      const all = await relatedLaws(db, law, rel_type, direction);
+      if (all.length === 0) {
+        return err(
+          `Aucune relation pour '${law}'` +
+          `${rel_type ? ` de type '${rel_type}'` : ""}` +
+          `${direction !== "both" ? ` en direction '${direction}'` : ""}. ` +
+          "Essayez sans filtre, ou qclaw_list_laws pour la carte du corpus.",
+        );
+      }
+      const page = paginate(limit, 0, 50, 200);
+      const edges = all.slice(0, page.limit);
+      const lines = edges.map((e) => {
+        const arrow = e.direction === "out" ? "→" : "←";
+        const dispo = e.in_corpus
+          ? (e.other_name ? ` — ${e.other_name}` : "")
+          : " — NON disponible au corpus (candidat d'acquisition)";
+        const w = e.rel_type === "renvoie-a" ? ` ; ${e.weight} renvoi(s)` : "";
+        return `  ${arrow} ${e.other_id} [${e.rel_type}, ${e.source}${w}]${dispo}` +
+          `${e.note ? `\n      ${e.note}` : ""}`;
+      });
+      const hors = edges.filter((e) => !e.in_corpus).length;
+      const head = `${all.length} relation(s) pour '${law}'` +
+        `${edges.length < all.length ? ` (${edges.length} affichées)` : ""}` +
+        `${hors ? ` — dont ${hors} hors corpus` : ""} :`;
+      return ok(`${head}\n${lines.join("\n")}`, {
+        law, rel_type: rel_type ?? null, direction, total: all.length, count: edges.length,
+        relations: edges.map((e) => ({
+          direction: e.direction, other_id: e.other_id, other_name: e.other_name,
+          rel_type: e.rel_type, source: e.source, weight: e.weight,
+          in_corpus: !!e.in_corpus, note: e.note,
+        })),
+      });
+    },
+  );
+
+  // 1d) qclaw_find_relevant ----------------------------------------------------
+  server.registerTool(
+    "qclaw_find_relevant",
+    {
+      description: GARDE_FOU +
+        " Classement déterministe sur la matière (taxonomie), les intitulés de divisions, " +
+        "les noms de lois et le graphe d'interconnexion. Ex. : query='vice caché maison', " +
+        "'congédiement', 'bail commercial'. Enchaîner ensuite avec get_structure / get_division.",
+      inputSchema: {
+        query: z.string().describe("Thème ou description libre du problème, ex. « bail de logement »."),
+        limit: z.number().int().optional().describe("Nombre de candidats (défaut 8, max 50)."),
+        lang: LANG,
+      },
+      annotations: READONLY,
+    },
+    async ({ query, limit, lang }) => {
+      const tokens = tokenize(query);
+      const page = paginate(limit, 0, 8, 50);
+      if (tokens.length === 0) {
+        return err(
+          `Aucun terme exploitable dans « ${query} ». Reformulez avec des mots porteurs ` +
+          "(ex. « bail de logement », « congédiement »), ou consultez qclaw_list_subjects.",
+        );
+      }
+      const data = await loadRelevanceData(db, tokens, lang as Lang);
+      const cands = rank({ tokens, ...data }, page.limit);
+      if (cands.length === 0) {
+        return err(
+          `Aucun rapprochement pour « ${query} » (termes retenus : ${tokens.join(", ")}). ` +
+          "Voir les domaines avec qclaw_list_subjects, ou chercher dans le texte avec qclaw_search_text.",
+        );
+      }
+      const lines = cands.map((c, i) => {
+        const cible = c.division_path
+          ? `${c.law_id} › ${c.heading ?? c.division_path} [${c.division_path}]`
+          : `${c.law_id} (loi entière)`;
+        return `${i + 1}. ${cible}  — score ${c.score}\n     pourquoi : ${c.pourquoi.join(" ; ")}`;
+      });
+      return ok(
+        `${cands.length} piste(s) pour « ${query} » (termes : ${tokens.join(", ")}) :\n` +
+        `${lines.join("\n")}\n\n${GARDE_FOU}`,
+        {
+          query, lang, tokens, weights: WEIGHTS, count: cands.length,
+          avertissement: GARDE_FOU,
+          candidates: cands.map((c) => ({
+            law: c.law_id,
+            division_path: c.division_path || null,
+            heading: c.heading,
+            score: c.score,
+            pourquoi: c.pourquoi,
+          })),
+        },
+      );
     },
   );
 
@@ -94,7 +309,7 @@ export function registerTools(server: McpServer, env: Env): void {
       description:
         "Retourne le texte officiel verbatim d'un article, avec citation, chemin hiérarchique, " +
         "date de consolidation et historique. Ex. : law='ccq', article='1457'. Les dispositions " +
-        "se demandent avec article='préliminaire' ou 'finales'.",
+        "se demandent avec article='préliminaire' ou 'finales'." + DEUX_TEMPS,
       inputSchema: {
         law: z.string().describe("Identifiant de la loi, ex. 'ccq'."),
         article: z.coerce.string().describe("Numéro d'article, ex. '1457', '2926.1', '132.0.1'."),
@@ -134,7 +349,7 @@ export function registerTools(server: McpServer, env: Env): void {
     {
       description:
         "Retourne plusieurs articles : soit une plage (from..to), soit une liste explicite (numbers). " +
-        "Paginé. Ex. : law='ccq', from='1457', to='1460' ; ou numbers=['1457','1590'].",
+        "Paginé. Ex. : law='ccq', from='1457', to='1460' ; ou numbers=['1457','1590']." + DEUX_TEMPS,
       inputSchema: {
         law: z.string().describe("Identifiant de la loi, ex. 'ccq'."),
         from: z.coerce.string().optional().describe("Borne basse d'une plage, ex. '1457'."),
@@ -183,7 +398,7 @@ export function registerTools(server: McpServer, env: Env): void {
         "Arbre hiérarchique des divisions (Livre → Titre → Chapitre → Section → Sous-section), " +
         "SANS texte d'article — pour explorer avant d'extraire. Chaque nœud donne kind, number, " +
         "heading et son 'path' (à passer à qclaw_get_division). Utiliser root_path pour un sous-arbre " +
-        "et depth pour limiter la profondeur (défaut 2 : livres et titres).",
+        "et depth pour limiter la profondeur (défaut 2 : livres et titres)." + DEUX_TEMPS,
       inputSchema: {
         law: z.string().describe("Identifiant de la loi, ex. 'ccq'."),
         lang: LANG,
@@ -215,7 +430,7 @@ export function registerTools(server: McpServer, env: Env): void {
         "Retourne une division (Livre/Titre/Chapitre/Section/…) : son intitulé, ses sous-divisions " +
         "immédiates, et les articles qu'elle contient (tout le sous-arbre, paginés). Identifier par " +
         "path (recommandé, via qclaw_get_structure) ou division_id. include_text=false pour n'avoir " +
-        "que les numéros d'articles.",
+        "que les numéros d'articles." + DEUX_TEMPS,
       inputSchema: {
         law: z.string().describe("Identifiant de la loi, ex. 'ccq'."),
         path: z.string().optional().describe("Chemin de la division (ex. 'ga:l_cinquieme-gb:l_premier')."),
@@ -269,7 +484,7 @@ export function registerTools(server: McpServer, env: Env): void {
       description:
         "Recherche plein texte (FTS5) dans le texte des articles. Retourne les correspondances " +
         "classées par pertinence avec un extrait surligné. Ex. : query='prescription action', " +
-        "law='ccq' (défaut : toutes les lois).",
+        "law='ccq' (défaut : toutes les lois)." + DEUX_TEMPS,
       inputSchema: {
         query: z.string().describe("Termes à rechercher, ex. 'responsabilité préjudice'."),
         law: z.string().optional().describe("Restreindre à une loi (défaut : toutes)."),

@@ -9,8 +9,22 @@ import { registerTools } from "./tools";
  * Expose les outils qclaw_* (PLAN §3), en lecture seule sur D1. Transport HTTP
  * streamable sur POST /mcp.
  */
+/**
+ * Orientation générale renvoyée à l'initialisation (plan-couche-decouverte §6.2).
+ * Deuxième canal de fiabilité après les sorties d'outils : il énonce le patron en deux
+ * temps (s'orienter, puis extraire) et le caractère heuristique du repérage.
+ */
+const INSTRUCTIONS =
+  "Corpus large (lois, règlements de procédure, tarifs du Québec). Pour repérer les sources " +
+  "pertinentes d'un problème, commencer par qclaw_find_relevant ou qclaw_list_laws, puis cibler " +
+  "avec get_structure → get_division/get_article. L'aide au repérage est heuristique : toujours " +
+  "vérifier le texte.";
+
 export class QclawMCP extends McpAgent {
-  server = new McpServer({ name: "qclaw-mcp", version: "0.1.0" });
+  server = new McpServer(
+    { name: "qclaw-mcp", version: "0.2.0" },
+    { instructions: INSTRUCTIONS },
+  );
 
   async init() {
     registerTools(this.server, this.env);

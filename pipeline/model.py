@@ -12,6 +12,7 @@ class Law:
     rlrq_cite: str
     consol_date_fr: str | None = None
     consol_date_en: str | None = None
+    name_norm: str | None = None     # rempli au chargement (couche découverte)
 
 
 @dataclass
@@ -26,6 +27,7 @@ class Division:
     repealed: int = 0            # 1 si division abrogée
     parent_path: str | None = None   # path du parent, résolu en parent_id au chargement
     sort_order: int = 0
+    heading_norm: str | None = None  # rempli au chargement (recherche d'orientation)
     # rempli au chargement :
     id: int | None = None
     parent_id: int | None = None

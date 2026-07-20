@@ -7,17 +7,23 @@ bascule en production en fin de script. Si une insertion échoue, la production 
 from __future__ import annotations
 
 from .model import Article, Division, Law, sort_key
+from .norm import normalize
 
 
 def prepare(law: Law, divisions: list[Division], articles: list[Article], id_base: int = 0) -> None:
-    """Attribue id (divisions, articles), parent_id, division_id et sort_key, en place.
+    """Attribue id (divisions, articles), parent_id, division_id, sort_key et les colonnes
+    normalisées de la couche découverte, en place.
 
     `id_base` décale les id pour qu'ils soient GLOBALEMENT uniques : les tables divisions et
     articles ont une clé primaire partagée par toutes les lois/langues, mais on charge une
     combinaison à la fois. ingest passe un base distinct par (loi, langue)."""
+    # normalisées à CHAQUE chargement : sans quoi une réingestion les remettrait à NULL
+    # et aveuglerait la recherche d'orientation (signaux S2/S3 de find_relevant).
+    law.name_norm = normalize(law.name_fr)
     by_path: dict[str, Division] = {}
     for i, d in enumerate(divisions, start=1):
         d.id = id_base + i
+        d.heading_norm = normalize(d.heading)
         by_path[d.path] = d
     for d in divisions:
         d.parent_id = by_path[d.parent_path].id if d.parent_path and d.parent_path in by_path else None
@@ -39,9 +45,10 @@ def _q(v) -> str:
     return "'" + str(v).replace("'", "''") + "'"
 
 
-_DIV_COLS = ["id", "law_id", "lang", "kind", "number", "heading", "history", "path", "repealed", "parent_id", "sort_order"]
+_DIV_COLS = ["id", "law_id", "lang", "kind", "number", "heading", "history", "path", "repealed", "parent_id", "sort_order", "heading_norm"]
 _ART_COLS = ["id", "law_id", "lang", "number", "sort_key", "division_id", "division_path", "text", "html", "history", "repealed", "consol_date"]
-_LAW_COLS = ["id", "name_fr", "name_en", "rlrq_cite", "consol_date_fr", "consol_date_en"]
+# name_norm est recalculé ici ; fonction/forum/scope_fr/parent_law_id restent préservés par l'UPSERT.
+_LAW_COLS = ["id", "name_fr", "name_en", "rlrq_cite", "consol_date_fr", "consol_date_en", "name_norm"]
 
 
 # D1 refuse toute instruction > 100 Ko (SQLITE_TOOBIG). On plafonne en OCTETS UTF-8 (le
