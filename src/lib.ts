@@ -53,16 +53,31 @@ export type Lang = "fr" | "en";
 
 // --- clés & citations ---------------------------------------------------------
 
-/** Clé de tri 64 bits (miroir de pipeline/model.py) : n*1e6 + d1*1e3 + d2. */
+/**
+ * Base de tri des pseudo-articles de disposition — miroir de DISPOSITION_SORT_BASE
+ * (pipeline/model.py) : ils se rangent APRÈS tout le corpus.
+ */
+export const DISPOSITION_SORT_BASE = 9_000_000_000_000_000;
+
+/**
+ * Clé de tri — MIROIR EXACT de sort_key() dans pipeline/model.py : packing en base 1000
+ * de l'entier et de jusqu'à 4 niveaux décimaux, normalisé à 5 composantes
+ * (132 < 132.0.1 < 133, et gère 350.52.0.1).
+ *
+ * ⚠️ Cette fonction et sa jumelle Python DOIVENT rester alignées : elles indexent la même
+ * colonne `articles.sort_key`. Une divergence d'échelle rend les plages silencieusement
+ * vides (le mode from/to ne trouve plus rien).
+ * Max ≈ 3168 * 1000^4 ≈ 3.17e15 < 2^53 : exact en nombre JS.
+ */
 export function sortKeyOf(article: string): number {
   if (article === "préliminaire") return 0;
-  if (article === "finales") return 9_000_000_000;
   const parts = article.split(".");
-  const n = parseInt(parts[0], 10);
-  if (Number.isNaN(n)) return -1;
-  const d1 = parts[1] ? parseInt(parts[1], 10) || 0 : 0;
-  const d2 = parts[2] ? parseInt(parts[2], 10) || 0 : 0;
-  return n * 1_000_000 + d1 * 1_000 + d2;
+  if (!/^\d+$/.test(parts[0])) return DISPOSITION_SORT_BASE;
+  const comps = parts.slice(0, 5);
+  let key = 0;
+  for (const p of comps) key = key * 1000 + (/^\d+$/.test(p) ? parseInt(p, 10) : 0);
+  for (let i = comps.length; i < 5; i++) key *= 1000;
+  return key;
 }
 
 export function citationOf(rlrqCite: string, article: string): string {
@@ -89,10 +104,21 @@ export function paginate(limit?: number, offset?: number, def = 50, max = 200): 
   return { limit: l, offset: o };
 }
 
-// --- correspondance préfixe de chemin (sans piège LIKE : `_` est un joker) ----
-// On utilise GLOB, où `_` est littéral et seuls `* ? [` sont spéciaux (absents des chemins).
-function subtreeGlob(path: string): string {
-  return `${path}-*`;
+// --- correspondance « ce chemin ou tout son sous-arbre » ----------------------
+//
+// Ni LIKE (où `_` est un joker, présent dans nos chemins) ni GLOB : D1 plafonne la
+// COMPLEXITÉ des motifs LIKE/GLOB (« LIKE or GLOB pattern too complex »), seuil qu'un
+// chemin profond du C.c.Q. dépasse (ex. `ga:l_cinquieme-gb:l_premier-gc:l_troisieme-gd:l_i-ge:l_1`).
+// On passe donc par un INTERVALLE LEXICOGRAPHIQUE, sans motif, et indexable :
+// les descendants d'un chemin sont exactement ceux de [path+'-', path+'.'),
+// car '.' (0x2E) suit immédiatement '-' (0x2D).
+function subtreeClause(col: string): string {
+  return `(${col} = ? OR (${col} >= ? || '-' AND ${col} < ? || '.'))`;
+}
+
+/** Les 3 liaisons attendues par subtreeClause (le chemin, trois fois). */
+function subtreeBinds(path: string): [string, string, string] {
+  return [path, path, path];
 }
 
 // --- requêtes -----------------------------------------------------------------
@@ -292,6 +318,22 @@ export async function nearestArticles(
   return rows.map((r) => r.number);
 }
 
+/**
+ * Clé de tri d'une borne de plage : on la LIT en base quand l'article existe, au lieu de la
+ * recalculer. C'est la seule façon d'être insensible à un changement d'échelle de sort_key
+ * (une divergence entre le pipeline et le serveur vidait silencieusement toutes les plages).
+ * Repli sur le calcul si le numéro n'existe pas (borne ouverte, ex. to='9999').
+ */
+export async function boundKey(
+  db: D1Database, lawId: string, lang: Lang, number: string,
+): Promise<number> {
+  const row = await db
+    .prepare("SELECT sort_key FROM articles WHERE law_id=? AND lang=? AND number=?")
+    .bind(lawId, lang, number)
+    .first<{ sort_key: number }>();
+  return row ? row.sort_key : sortKeyOf(number);
+}
+
 export async function articlesByRange(
   db: D1Database, lawId: string, lang: Lang, fromKey: number, toKey: number, page: Page,
 ): Promise<{ rows: ArticleRow[]; total: number }> {
@@ -347,22 +389,21 @@ export async function childDivisions(db: D1Database, parentId: number): Promise<
 export async function articlesInDivision(
   db: D1Database, lawId: string, lang: Lang, path: string, page: Page, includeText: boolean,
 ): Promise<{ rows: Partial<ArticleRow>[]; total: number }> {
-  const glob = subtreeGlob(path);
+  const sub = subtreeClause("division_path");
+  const subBinds = subtreeBinds(path);
   const total = (await db
-    .prepare(
-      "SELECT COUNT(*) AS n FROM articles WHERE law_id=? AND lang=? AND (division_path=? OR division_path GLOB ?)",
-    )
-    .bind(lawId, lang, path, glob)
+    .prepare(`SELECT COUNT(*) AS n FROM articles WHERE law_id=? AND lang=? AND ${sub}`)
+    .bind(lawId, lang, ...subBinds)
     .first<{ n: number }>())!.n;
   const cols = includeText
     ? "number, division_path, text, history, repealed"
     : "number, division_path, repealed";
   const rows = (await db
     .prepare(
-      `SELECT ${cols} FROM articles WHERE law_id=? AND lang=? AND (division_path=? OR division_path GLOB ?)
+      `SELECT ${cols} FROM articles WHERE law_id=? AND lang=? AND ${sub}
        ORDER BY sort_key LIMIT ? OFFSET ?`,
     )
-    .bind(lawId, lang, path, glob, page.limit, page.offset)
+    .bind(lawId, lang, ...subBinds, page.limit, page.offset)
     .all<Partial<ArticleRow>>()).results;
   return { rows, total };
 }
@@ -386,9 +427,9 @@ export async function getStructure(
   if (rootPath) {
     rows = (await db
       .prepare(
-        "SELECT * FROM divisions WHERE law_id=? AND lang=? AND (path=? OR path GLOB ?) ORDER BY sort_order",
+        `SELECT * FROM divisions WHERE law_id=? AND lang=? AND ${subtreeClause("path")} ORDER BY sort_order`,
       )
-      .bind(lawId, lang, rootPath, subtreeGlob(rootPath))
+      .bind(lawId, lang, ...subtreeBinds(rootPath))
       .all<DivisionRow>()).results;
   } else {
     rows = (await db
@@ -422,6 +463,62 @@ function pruneDepth(nodes: StructureNode[], depth: number): void {
     if (depth <= 1) n.children = [];
     else pruneDepth(n.children, depth - 1);
   }
+}
+
+// --- analyse d'une citation libre (qclaw_resolve_reference) -------------------
+
+export interface ParsedCitation {
+  law: string | null;
+  article: string | null;
+  /** Comment la loi a été reconnue, pour l'expliquer dans la réponse. */
+  law_source: "chapitre" | "abreviation" | "defaut" | null;
+}
+
+/** Clé de comparaison d'un chapitre RLRQ : sans espaces ni ponctuation faible. */
+const chapterKey = (s: string) => s.toLowerCase().replace(/[\s.]/g, "");
+
+/**
+ * Analyse « art. 1457 C.c.Q. », « RLRQ, c. T-16, art. 12 », « article 25 C.p.c. »…
+ *
+ * Deux pièges que la version naïve (« premier nombre trouvé », « défaut ccq ») ne gérait
+ * pas, et qui faisaient rendre SILENCIEUSEMENT le mauvais article de la mauvaise loi :
+ *  1. le chapitre contient des chiffres (« c. T-16 » -> article « 16 ») : on retire donc
+ *     d'abord le chapitre reconnu, puis on privilégie un numéro introduit par « art. » ;
+ *  2. toute citation non reconnue retombait sur le C.c.Q. : on préfère ne rien affirmer.
+ */
+export function parseCitation(citation: string, laws: { id: string; rlrq_cite: string }[]): ParsedCitation {
+  const key = chapterKey(citation);
+  // chapitre RLRQ le PLUS LONG qui apparaît dans la citation (« C-25.01, r. 9 » avant « C-25.01 »)
+  let law: string | null = null;
+  let lawSource: ParsedCitation["law_source"] = null;
+  let bestLen = 0;
+  let matchedCite = "";
+  for (const l of laws) {
+    const chap = l.rlrq_cite.replace(/^RLRQ,\s*c\.\s*/i, "");
+    const ck = chapterKey(chap);
+    if (ck && key.includes(ck) && ck.length > bestLen) {
+      bestLen = ck.length;
+      law = l.id;
+      lawSource = "chapitre";
+      matchedCite = chap;
+    }
+  }
+  if (!law) {
+    if (/c\.?\s*p\.?\s*c\.?|cpc/i.test(citation)) { law = "cpc"; lawSource = "abreviation"; }
+    else if (/c\.?\s*c\.?\s*q\.?|ccq/i.test(citation)) { law = "ccq"; lawSource = "abreviation"; }
+  }
+
+  // on retire le chapitre reconnu avant de chercher le numéro d'article (« T-16 » ≠ art. 16)
+  let rest = citation;
+  if (matchedCite) {
+    const esc = matchedCite.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*");
+    rest = rest.replace(new RegExp(`c\\.?\\s*${esc}`, "i"), " ");
+  }
+  const withMarker = rest.match(/\bart(?:icle)?s?\.?\s*(\d+(?:\.\d+)*)/i);
+  const anyNumber = rest.match(/(\d+(?:\.\d+)*)/);
+  const article = withMarker?.[1] ?? anyNumber?.[1] ?? null;
+
+  return { law, article, law_source: law ? lawSource : null };
 }
 
 // --- données de pertinence (qclaw_find_relevant) ------------------------------

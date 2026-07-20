@@ -38,15 +38,18 @@ def _insert_rows(db, table: str, cols: list[str], rows: list[list], or_ignore: b
 
 
 def seed_laws(db, additions: dict) -> int:
-    """Enregistre les lois additionnelles (métadonnées seulement)."""
+    """Enregistre les lois additionnelles (métadonnées), puis pose les attributs de découverte
+    sur TOUTES les lois de la configuration — additions ET codes de base (ccq/cpc). Sans quoi
+    ccq/cpc restaient sans `fonction` et échappaient au filtre correspondant."""
     laws = additions["laws"]
     rows = [[l["id"], l["name_fr"], l.get("name_en") or l["name_fr"], l["rlrq_cite"]]
             for l in laws]
     _insert_rows(db, "laws", ["id", "name_fr", "name_en", "rlrq_cite"], rows, or_ignore=True)
-    for l in laws:
+    for l in config.load_all_laws():
         forum = " ; ".join(l.get("forum") or []) or None
         db.run(f"UPDATE laws SET fonction = {q(l.get('fonction'))}, forum = {q(forum)}, "
-               f"name_norm = {q(normalize(l['name_fr']))} WHERE id = {q(l['id'])}")
+               f"name_fr = {q(l['name_fr'])}, name_norm = {q(normalize(l['name_fr']))} "
+               f"WHERE id = {q(l['id'])}")
     return len(laws)
 
 

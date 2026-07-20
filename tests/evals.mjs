@@ -201,6 +201,43 @@ async function smokeTests() {
   add("related_laws : erreur actionnable si loi inconnue",
     bad.isError === true && /Lois disponibles/.test(bad.content?.[0]?.text ?? ""));
 
+  // --- extraction : garde-fous contre les régressions trouvées en phase E ---
+
+  // Le mode plage (from/to) dépend de l'échelle de articles.sort_key. Une divergence entre
+  // le pipeline (Python) et le serveur (TS) l'avait vidé silencieusement sur 36 lois / 38.
+  // On l'exerce donc sur TOUTES les lois, pas seulement sur ccq.
+  const toutes = laws.structuredContent?.laws ?? [];
+  const cassees = [];
+  for (const l of toutes) {
+    const r = await callTool("qclaw_get_articles", { law: l.id, from: "1", to: "3" });
+    if (r.isError) cassees.push(l.id);
+  }
+  add("get_articles : mode plage opérant sur les 38 lois", cassees.length === 0,
+    cassees.length ? `échec sur ${cassees.length} : ${cassees.slice(0, 6).join(", ")}…` : "");
+
+  // D1 plafonne la complexité des motifs LIKE/GLOB : les chemins profonds du C.c.Q. le
+  // dépassaient et faisaient échouer get_division / get_structure(root_path).
+  const profond = "ga:l_cinquieme-gb:l_premier-gc:l_troisieme-gd:l_i-ge:l_1";
+  const div = await callTool("qclaw_get_division", { law: "ccq", path: profond });
+  add("get_division : chemin profond (55 car.) sans erreur D1", div.isError !== true,
+    div.isError ? (div.content?.[0]?.text ?? "").slice(0, 90) : "");
+  const stru = await callTool("qclaw_get_structure", { law: "ccq", root_path: profond });
+  add("get_structure : root_path profond sans erreur D1", stru.isError !== true,
+    stru.isError ? (stru.content?.[0]?.text ?? "").slice(0, 90) : "");
+
+  // resolve_reference rendait silencieusement le MAUVAIS article de la MAUVAISE loi :
+  // « c. T-16 » lui donnait l'article 16 du C.c.Q.
+  const t16 = await callTool("qclaw_resolve_reference", { citation: "RLRQ, c. T-16, art. 12" });
+  add("resolve_reference : chapitre RLRQ correctement reconnu",
+    t16.structuredContent?.resolved?.law === "t-16" &&
+    t16.structuredContent?.resolved?.number === "12",
+    `obtenu ${t16.structuredContent?.resolved?.law}/${t16.structuredContent?.resolved?.number}`);
+  const ccqRef = await callTool("qclaw_resolve_reference", { citation: "art. 1457 C.c.Q." });
+  add("resolve_reference : abréviation C.c.Q. toujours reconnue",
+    ccqRef.structuredContent?.resolved?.law === "ccq" &&
+    ccqRef.structuredContent?.resolved?.number === "1457",
+    `obtenu ${ccqRef.structuredContent?.resolved?.law}/${ccqRef.structuredContent?.resolved?.number}`);
+
   return checks;
 }
 

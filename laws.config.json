@@ -20,10 +20,18 @@
       "numbering": "decimal",
       "phase0_verification": {
         "checked_on": "2026-07-19",
-        "fr": { "http_status": 200, "content_length": 1058652, "last_modified": "2026-07-16" },
-        "en": { "http_status": 200, "content_length": 1046233 },
+        "fr": {
+          "http_status": 200,
+          "content_length": 1058652,
+          "last_modified": "2026-07-16"
+        },
+        "en": {
+          "http_status": 200,
+          "content_length": 1046233
+        },
         "note": "La date « à jour au » n'est pas dans l'EPUB : la capturer sur la page HTML de la loi au téléchargement (User-Agent navigateur requis). Voir docs/phase0-structure-epub.md."
-      }
+      },
+      "fonction": "loi"
     },
     {
       "id": "cpc",
@@ -42,7 +50,8 @@
         "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/C-25.01",
         "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/C-25.01"
       },
-      "numbering": "recodified-2016"
+      "numbering": "recodified-2016",
+      "fonction": "loi"
     }
   ]
 }

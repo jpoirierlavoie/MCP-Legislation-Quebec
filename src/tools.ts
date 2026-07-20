@@ -6,8 +6,8 @@ import {
   ArticleJoined, ArticleRow, Lang, LawSummary, StructureNode,
   articlesByNumbers, articlesByRange, articlesInDivision, childDivisions,
   citationOf, consolOf, getArticle, getDivision, getLaw, getStructure,
-  listLaws, listSubjects, loadRelevanceData, nearestArticles, paginate,
-  relatedLaws, searchText, sortKeyOf,
+  boundKey, listLaws, listSubjects, loadRelevanceData, nearestArticles, paginate,
+  parseCitation, relatedLaws, searchText, sortKeyOf,
 } from "./lib";
 import { WEIGHTS, rank, tokenize } from "./relevance";
 
@@ -371,7 +371,12 @@ export function registerTools(server: McpServer, env: Env): void {
       let rows: Partial<ArticleRow>[];
       let total: number;
       if (useRange) {
-        const r = await articlesByRange(db, law, lang as Lang, sortKeyOf(from!), sortKeyOf(to!), page);
+        // bornes LUES en base (insensible à l'échelle de sort_key) — cf. boundKey
+        const [k1, k2] = await Promise.all([
+          boundKey(db, law, lang as Lang, from!),
+          boundKey(db, law, lang as Lang, to!),
+        ]);
+        const r = await articlesByRange(db, law, lang as Lang, k1, k2, page);
         rows = r.rows; total = r.total;
       } else {
         rows = await articlesByNumbers(db, law, lang as Lang, numbers!);
@@ -520,8 +525,9 @@ export function registerTools(server: McpServer, env: Env): void {
     "qclaw_resolve_reference",
     {
       description:
-        "Résout une citation en texte libre (ex. « art. 1457 C.c.Q. ») vers l'article officiel. " +
-        "Détecte le numéro d'article et la loi (C.c.Q.→ccq, C.p.c.→cpc ; défaut ccq).",
+        "Résout une citation en texte libre (ex. « art. 1457 C.c.Q. », « RLRQ, c. T-16, art. 12 ») " +
+        "vers l'article officiel. Reconnaît le chapitre RLRQ de n'importe quelle loi du corpus, " +
+        "ainsi que les abréviations C.c.Q. et C.p.c." + DEUX_TEMPS,
       inputSchema: {
         citation: z.string().describe("Citation libre, ex. « article 1457 C.c.Q. »."),
         lang: LANG,
@@ -529,12 +535,18 @@ export function registerTools(server: McpServer, env: Env): void {
       annotations: READONLY,
     },
     async ({ citation, lang }) => {
-      const numMatch = citation.match(/(\d+(?:\.\d+)*)/);
-      if (!numMatch) return err(`Aucun numéro d'article détecté dans « ${citation} ».`);
-      const article = numMatch[1];
-      let law = "ccq";
-      if (/c\.?\s*p\.?\s*c\.?|cpc/i.test(citation)) law = "cpc";
-      else if (/c\.?\s*c\.?\s*q\.?|ccq/i.test(citation)) law = "ccq";
+      const all = await listLaws(db);
+      const parsed = parseCitation(citation, all);
+      if (!parsed.article) return err(`Aucun numéro d'article détecté dans « ${citation} ».`);
+      if (!parsed.law) {
+        return err(
+          `Loi non reconnue dans « ${citation} ». Précisez le chapitre RLRQ (ex. « RLRQ, c. T-16 ») ` +
+          "ou une abréviation connue (C.c.Q., C.p.c.), ou utilisez qclaw_get_article avec law=… " +
+          `(voir qclaw_list_laws). Article détecté : ${parsed.article}.`,
+        );
+      }
+      const law = parsed.law;
+      const article = parsed.article;
       const row = await getArticle(db, law, lang as Lang, article);
       if (!row) {
         const near = await nearestArticles(db, law, lang as Lang, sortKeyOf(article));
@@ -543,7 +555,7 @@ export function registerTools(server: McpServer, env: Env): void {
       const lawRow = await getLaw(db, law);
       const consol = consolOf(lawRow, lang as Lang);
       return ok(renderArticle(row, consol, lang as Lang), {
-        resolved: { law, number: row.number, lang },
+        resolved: { law, number: row.number, lang, reconnue_par: parsed.law_source },
         citation: citationOf(row.rlrq_cite, row.number),
         division_path: row.division_path, consolidation: consol,
         history: row.history, repealed: !!row.repealed, text: row.text,
