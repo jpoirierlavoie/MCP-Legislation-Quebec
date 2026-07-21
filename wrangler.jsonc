@@ -29,7 +29,13 @@
 
   // Chemins de récupération réversibles (plan v2, R8) : rollback = flip de variable.
   // RELAX_SEARCH : échelle de relaxation de qclaw_search_text (1.2). "0" pour désactiver.
-  "vars": { "RELAX_SEARCH": "1" },
+  // HYBRID_SEARCH : recherche hybride FTS + vecteurs (2.3). "0" tant que le rattrapage
+  // des vecteurs n'est pas validé ; bascule à "1" ensuite (séquence de déploiement §2).
+  "vars": { "RELAX_SEARCH": "1", "HYBRID_SEARCH": "0" },
+
+  // Couche sémantique (plan v2, phase 2) : embeddings bge-m3 + index Vectorize.
+  "ai": { "binding": "AI" },
+  "vectorize": [{ "binding": "VECTORS", "index_name": "qclaw-articles" }],
 
   // Rafraîchissement semestriel (PLAN §5) : 5 janvier et 5 juillet, 09:00 UTC.
   "triggers": { "crons": ["0 9 5 1,7 *"] }
