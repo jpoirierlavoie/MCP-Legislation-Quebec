@@ -7,8 +7,11 @@
   "observability": { "enabled": true },
 
   // Domaine personnalisé (zone poirierlavoie.ca) : Cloudflare gère DNS + certificat.
-  // Le Worker reste aussi joignable sur son URL *.workers.dev.
   "routes": [{ "pattern": "legislation.poirierlavoie.ca", "custom_domain": true }],
+  // workers.dev fermé hors rattrapage (surface minimale). Pour un futur backfill
+  // (rafraîchissement semestriel), le réactiver temporairement : le WAF de la zone
+  // bloque les rafales de POST du pilote sur le domaine personnalisé.
+  "workers_dev": false,
 
   // McpAgent est un Durable Object : le binding + la migration new_sqlite_classes
   // sont obligatoires. Le nom de classe doit être identique à l'export de src/index.ts.
@@ -31,7 +34,7 @@
   // RELAX_SEARCH : échelle de relaxation de qclaw_search_text (1.2). "0" pour désactiver.
   // HYBRID_SEARCH : recherche hybride FTS + vecteurs (2.3). "0" tant que le rattrapage
   // des vecteurs n'est pas validé ; bascule à "1" ensuite (séquence de déploiement §2).
-  "vars": { "RELAX_SEARCH": "1", "HYBRID_SEARCH": "0" },
+  "vars": { "RELAX_SEARCH": "1", "HYBRID_SEARCH": "1" },
 
   // Couche sémantique (plan v2, phase 2) : embeddings bge-m3 + index Vectorize.
   "ai": { "binding": "AI" },

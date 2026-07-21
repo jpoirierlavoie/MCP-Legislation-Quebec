@@ -2,7 +2,8 @@
 // Le schéma est décrit dans schema.sql / PLAN.md §2 et schema-decouverte.sql.
 
 import {
-  DIVISION_MATCH_MAX, DIVISION_MATCH_MIN_SCORE, RRF_K, VECTOR_TOP_K, normalize,
+  DIVISION_MATCH_MAX, DIVISION_MATCH_MIN_SCORE, RRF_K, SEMANTIC_MIN_SCORE, VECTOR_TOP_K,
+  normalize,
 } from "./relevance";
 import type {
   DivisionLite, LawLite, RelationLite, SubjectLite, SubjectMapLite,
@@ -1074,6 +1075,7 @@ async function queryVectors(
     for (const m of res.matches ?? []) {
       const md = (m.metadata ?? {}) as Record<string, string>;
       if (md.type === "article" && md.law && md.article) {
+        if (m.score < SEMANTIC_MIN_SCORE) continue; // plancher anti-bruit
         out.arts.push({ law: md.law, number: md.article, score: m.score });
       } else if (md.type === "division" && md.law && md.path) {
         out.divs.push({ law_id: md.law, path: md.path, heading: md.heading || null, score: m.score });
@@ -1139,10 +1141,15 @@ async function fuseHybrid(
     .sort((a, b) => b.score - a.score);
   const missing = scored.filter((s) => !s.e.hit).map((s) => s.k);
   const briefs = missing.length ? await articleBriefs(db, lang, missing) : new Map<string, SearchHit>();
+  // score cosine des correspondances vectorielles, pour l'observabilité (calibrage du plancher)
+  const cosOf = new Map(vec.arts.map((a) => [`${a.law}|${a.number}`, a.score]));
   const hits: SearchHit[] = [];
   for (const s of scored) {
     const h = s.e.hit ?? briefs.get(s.k);
-    if (h) hits.push(h);
+    if (h) {
+      const cos = cosOf.get(s.k);
+      hits.push(cos !== undefined && h.semantic ? { ...h, score: cos } : h);
+    }
     if (hits.length >= limit) break;
   }
   return hits;
@@ -1156,8 +1163,9 @@ export async function searchText(
   if (!match) return { hits: [], total: 0, fallback: null, elsewhere: null };
   const scope: MatchScope = lawId ? { law: lawId } : {};
 
-  // Hybride (plan v2, 2.3) : embed de la requête EN PARALLÈLE du FTS exact. Pagination
-  // au-delà de la première page : FTS pur (une liste fusionnée ne se pagine pas).
+  // Hybride (plan v2, 2.3) : embed de la requête EN PARALLÈLE du FTS exact — une seule
+  // fois, réutilisé par tous les barreaux. Pagination au-delà de la 1re page : FTS pur
+  // (une liste fusionnée ne se pagine pas).
   const useVector = !!opts.vector && page.offset === 0;
   const [exact, qVec] = await Promise.all([
     runMatch(db, match, lang, scope, page),
@@ -1167,60 +1175,53 @@ export async function searchText(
   const semDivs = (vec?.divs ?? [])
     .filter((d) => d.score >= DIVISION_MATCH_MIN_SCORE)
     .slice(0, DIVISION_MATCH_MAX);
+  // vecteurs corpus entier (embedding réutilisé), pour les barreaux élargis — paresseux
+  let vecWideCache: Awaited<ReturnType<typeof queryVectors>> | undefined;
+  const vecWide = async () => {
+    if (vecWideCache === undefined) {
+      vecWideCache = lawId && qVec ? await queryVectors(opts.vector!, qVec, undefined) : vec;
+    }
+    return vecWideCache;
+  };
+  const fuse = async (fts: { hits: SearchHit[]; total: number }, v: Awaited<ReturnType<typeof queryVectors>>) =>
+    v?.arts.length ? await fuseHybrid(db, lang, fts, v, page.limit) : fts.hits;
 
+  // ÉCHELLE (décision 2.4, tranchée par l'éval) : dérouler le LEXICAL jusqu'à sa meilleure
+  // liste, PUIS fusionner avec les vecteurs. Le sémantique seul n'est que l'ultime barreau :
+  // (a) des correspondances exactes ailleurs au corpus valent mieux que des voisins
+  // sémantiques dans la loi demandée (« extranéité » restreinte à b-9) ; (b) deux voisins
+  // au-dessus du plancher ne doivent pas court-circuiter l'étape OU qui trouve ccq 1726
+  // (« vice caché maison recours » — régression attrapée par l'éval, corrigée ici).
+
+  // 1) exact, portée demandée
   if (exact.total > 0) {
-    // Recherche restreinte AVEC résultats : sonder le reste du corpus (1 requête) et
-    // signaler les correspondances d'autres lois — sans toucher aux résultats demandés.
     let elsewhere: SearchOutcome["elsewhere"] = null;
     if (lawId) {
       const others = await runMatch(db, match, lang, { notLaw: lawId }, { limit: 3, offset: 0 });
       if (others.total > 0) elsewhere = { total: others.total, hits: others.hits };
     }
-    // fusion RRF avec la liste vectorielle (si disponible)
-    const hits = vec?.arts.length
-      ? await fuseHybrid(db, lang, exact, vec, page.limit)
-      : exact.hits;
-    return { hits, total: exact.total, fallback: null, elsewhere, divisions: semDivs };
+    return {
+      hits: await fuse(exact, vec), total: exact.total,
+      fallback: null, elsewhere, divisions: semDivs,
+    };
   }
 
-  // FTS exact vide mais vecteurs parlants -> repérage sémantique (fallback étiqueté)
-  if (vec?.arts.length) {
-    const hits = await fuseHybrid(db, lang, exact, vec, page.limit);
-    if (hits.length) {
-      return { hits, total: hits.length, fallback: "semantic", elsewhere: null, divisions: semDivs };
-    }
-  }
-
-  // 2) élargissement automatique au corpus (plan v2, 1.1) — vecteurs SANS filtre de loi
-  //    (l'embedding est réutilisé, pas de second appel au modèle).
+  // 2) élargissement automatique au corpus (plan v2, 1.1)
   if (lawId) {
-    const [wide, wideVec] = await Promise.all([
-      runMatch(db, match, lang, {}, page),
-      qVec ? queryVectors(opts.vector!, qVec, undefined) : Promise.resolve(null),
-    ]);
+    const wide = await runMatch(db, match, lang, {}, page);
     if (wide.total > 0) {
-      const hits = wideVec?.arts.length
-        ? await fuseHybrid(db, lang, wide, wideVec, page.limit)
-        : wide.hits;
-      return { hits, total: wide.total, fallback: "widened", elsewhere: null, divisions: semDivs };
-    }
-    if (wideVec?.arts.length) {
-      const hits = await fuseHybrid(db, lang, wide, wideVec, page.limit);
-      if (hits.length) {
-        return { hits, total: hits.length, fallback: "semantic", elsewhere: null, divisions: semDivs };
-      }
+      return {
+        hits: await fuse(wide, await vecWide()), total: wide.total,
+        fallback: "widened", elsewhere: null, divisions: semDivs,
+      };
     }
   }
 
-  // --- Échelle de relaxation (plan v2, 1.2) — requêtes multi-termes seulement ---
   const tokens = ftsTokens(query);
-  if (!opts.relax || tokens.length < RELAX_MIN_TERMS) {
-    return { hits: [], total: 0, fallback: null, elsewhere: null, divisions: semDivs };
-  }
+  const relaxable = !!opts.relax && tokens.length >= RELAX_MIN_TERMS;
 
-  // 3) leave-one-out : omettre chaque terme à tour de rôle (≤ 6 SELECT), dans la portée
-  //    demandée ; retenir le meilleur ensemble non vide (somme bm25 — négatif, min = mieux).
-  if (tokens.length <= RELAX_MAX_LOO_TERMS) {
+  // 3) leave-one-out (plan v2, 1.2), portée demandée — ≤ 6 SELECT
+  if (relaxable && tokens.length <= RELAX_MAX_LOO_TERMS) {
     let best: { hits: SearchHit[]; total: number; omitted: string; sum: number } | null = null;
     for (let i = 0; i < tokens.length; i++) {
       const partial = tokens.filter((_, j) => j !== i).map(quoteTok).join(" ");
@@ -1230,25 +1231,44 @@ export async function searchText(
       if (!best || sum < best.sum) best = { ...r, omitted: tokens[i], sum };
     }
     if (best) {
-      return { hits: best.hits, total: best.total, fallback: { loo: best.omitted },
-        elsewhere: null, divisions: semDivs };
+      return {
+        hits: await fuse(best, vec), total: best.total,
+        fallback: { loo: best.omitted }, elsewhere: null, divisions: semDivs,
+      };
     }
   }
 
-  // 4) OU + bm25 : tous les termes en OR, classés par pertinence. Les termes composés
-  //    sont aussi éclatés (« non-concurrence » -> non, concurrence) : en mode phrase le
-  //    tiret exige la séquence exacte, ce qui rate « faire concurrence ».
-  const orTerms = [...new Set(tokens.flatMap((t) => t.split(/[-.'’]/)).filter((t) => t.length >= 2))];
-  if (orTerms.length) {
-    const matchOr = orTerms.map(quoteTok).join(" OR ");
-    const scoped = await runMatch(db, matchOr, lang, scope, page, true);
-    if (scoped.total > 0) {
-      return { ...scoped, fallback: "or_relax", elsewhere: null, divisions: semDivs };
+  // 4) OU + bm25 (plan v2, 1.2) : portée demandée, puis corpus. Termes composés éclatés
+  //    (« non-concurrence » -> non, concurrence).
+  if (relaxable) {
+    const orTerms = [...new Set(tokens.flatMap((t) => t.split(/[-.'’]/)).filter((t) => t.length >= 2))];
+    if (orTerms.length) {
+      const matchOr = orTerms.map(quoteTok).join(" OR ");
+      const scoped = await runMatch(db, matchOr, lang, scope, page, true);
+      if (scoped.total > 0) {
+        return {
+          hits: await fuse(scoped, vec), total: scoped.total,
+          fallback: "or_relax", elsewhere: null, divisions: semDivs,
+        };
+      }
+      if (lawId) {
+        const wideOr = await runMatch(db, matchOr, lang, {}, page, true);
+        if (wideOr.total > 0) {
+          return {
+            hits: await fuse(wideOr, await vecWide()), total: wideOr.total,
+            fallback: "or_relax", elsewhere: null, divisions: semDivs,
+          };
+        }
+      }
     }
-    if (lawId) {
-      const wide = await runMatch(db, matchOr, lang, {}, page, true);
-      if (wide.total > 0) {
-        return { ...wide, fallback: "or_relax", elsewhere: null, divisions: semDivs };
+  }
+
+  // 5) repérage sémantique SEUL (au-dessus du plancher) : portée demandée, puis corpus
+  for (const v of [vec, lawId ? await vecWide() : null]) {
+    if (v?.arts.length) {
+      const hits = await fuseHybrid(db, lang, { hits: [], total: 0 }, v, page.limit);
+      if (hits.length) {
+        return { hits, total: hits.length, fallback: "semantic", elsewhere: null, divisions: semDivs };
       }
     }
   }

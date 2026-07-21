@@ -38,6 +38,15 @@ export const VECTOR_TOP_K = 20;
 /** Correspondances de type 'division' : seuil de score cosine et plafond d'affichage. */
 export const DIVISION_MATCH_MIN_SCORE = 0.5;
 export const DIVISION_MATCH_MAX = 2;
+/**
+ * Plancher de score cosine des correspondances d'ARTICLES vectorielles. Vectorize rend
+ * TOUJOURS ses topK, pertinents ou non : sans plancher, « zzz qqq » recevait les plus
+ * proches voisins d'un embedding de charabia, présentés comme des résultats.
+ */
+export const SEMANTIC_MIN_SCORE = 0.40;
+// Calibré par MESURE en production (2026-07-21) : requête réelle EN->FR (cas 19)
+// cpc 490 @ 0,525 ; requête FR vague 0,47-0,49 ; charabia « zzz qqq » max 0,303.
+// 0,40 sépare avec marge des deux côtés.
 
 /** Longueur minimale d'un token retenu (« du », « la »… n'apportent rien). */
 export const MIN_TOKEN_LENGTH = 3;

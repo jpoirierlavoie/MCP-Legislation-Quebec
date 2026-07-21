@@ -7,8 +7,15 @@
 
 import { EMBED_MODEL, breadcrumbChains } from "./lib";
 
-/** Textes par appel au modèle (bge-m3 accepte un tableau ; 50 = marge confortable). */
+/** Fenêtre bge-m3 : 60 K tokens PAR REQUÊTE, consommés comme lot × (texte le plus
+ * long) — le moteur REMBOURRE tous les textes à la longueur du plus long (constaté :
+ * « Max context reached 60850 » pour 50 textes de 1 217 tokens max). Contrainte réelle :
+ * n × tokens(max) <= 60 000. Estimation prudente : 3,5 caractères/token (réel ~4,9). */
 const EMBED_BATCH = 50;
+const EMBED_TOKEN_BUDGET = 55_000;
+/** Estimation d'empaquetage seulement : la vérité vient du modèle (scission sur 3030).
+ * 2,0 car./token — des textes denses (énumérations d'i-16) descendent à ~2,4 réels. */
+const estTokens = (chars: number) => Math.ceil(chars / 2.0);
 /** Plafond du texte embeddé (~1 500 tokens — plan 2.2) ; dépassements comptés. */
 const MAX_CHARS = 6000;
 /** Plafond d'éléments par invocation de la route (borne le temps par requête). */
@@ -28,7 +35,27 @@ interface EnvWithSecrets extends Env {
 const json = (data: unknown, status = 200): Response =>
   new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
 
+/**
+ * Id Vectorize d'une division : les ids sont plafonnés à 64 OCTETS, or un chemin Irosoft
+ * profond dépasse largement (div:ccq:ga:l_cinquieme-gb:…). On hache le chemin (SHA-256,
+ * 24 hex = 96 bits — collision impensable sur ~2,7 K divisions) ; le chemin complet vit
+ * dans metadata.path. Stable -> upserts idempotents.
+ */
+async function divVectorId(law: string, path: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${law}|${path}`));
+  const hex = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `div:${law}:${hex.slice(0, 24)}`;
+}
+
 export async function handleBackfill(request: Request, env: Env): Promise<Response> {
+  try {
+    return await handleBackfillInner(request, env);
+  } catch (e) {
+    return json({ error: `exception: ${(e as Error).message?.slice(0, 300)}` }, 500);
+  }
+}
+
+async function handleBackfillInner(request: Request, env: Env): Promise<Response> {
   const secret = (env as EnvWithSecrets).BACKFILL_TOKEN;
   if (!secret) return new Response("Not found", { status: 404 }); // route inerte sans secret
   if ((request.headers.get("Authorization") ?? "") !== `Bearer ${secret}`) {
@@ -98,25 +125,70 @@ export async function handleBackfill(request: Request, env: Env): Promise<Respon
         .map((n) => [n.kind, n.number, n.heading].filter(Boolean).join(" "))
         .join(" › ");
       items.push({
-        id: `div:${law}:${r.path}`,
+        id: await divVectorId(law, r.path),
         text: `${lawRow.name_fr} — ${crumb}`.slice(0, MAX_CHARS),
         metadata: { law, path: r.path, heading: r.heading ?? "", type: "division" },
       });
     }
   }
 
-  // --- embed (lots de 50) puis upsert -----------------------------------------
+  // --- embed (lots bornés en items ET en caractères) puis upsert ---------------
+  const batches: typeof items[] = [];
+  let cur: typeof items = [];
+  let curMaxChars = 0;
+  for (const it of items) {
+    const nextMax = Math.max(curMaxChars, it.text.length);
+    const cost = (cur.length + 1) * estTokens(nextMax); // rembourrage au plus long
+    if (cur.length && (cur.length >= EMBED_BATCH || cost > EMBED_TOKEN_BUDGET)) {
+      batches.push(cur);
+      cur = []; curMaxChars = 0;
+    }
+    cur.push(it);
+    curMaxChars = Math.max(curMaxChars, it.text.length);
+  }
+  if (cur.length) batches.push(cur);
+
+  // Embed AUTO-ADAPTATIF : l'estimation ne fait que pré-empaqueter ; si le modèle
+  // répond « Max context reached » (3030), on scinde le lot en deux et on recommence —
+  // jusqu'au texte seul, qui tient toujours (6 000 car. « 2 car./token = 3 000 tokens).
+  async function embedSplit(texts: string[]): Promise<number[][]> {
+    try {
+      const res = (await env.AI.run(EMBED_MODEL as Parameters<Ai["run"]>[0], {
+        text: texts,
+      })) as { data?: number[][] };
+      if (!res?.data || res.data.length !== texts.length) {
+        throw new Error(`réponse d'embedding inattendue (data: ${res?.data?.length ?? "absent"})`);
+      }
+      return res.data;
+    } catch (e) {
+      const msg = (e as Error).message ?? "";
+      if (texts.length > 1 && /3030|Max context/i.test(msg)) {
+        const mid = Math.ceil(texts.length / 2);
+        const [a, b] = await Promise.all([
+          embedSplit(texts.slice(0, mid)),
+          embedSplit(texts.slice(mid)),
+        ]);
+        return [...a, ...b];
+      }
+      throw e;
+    }
+  }
+
   let embedded = 0;
-  for (let i = 0; i < items.length; i += EMBED_BATCH) {
-    const batch = items.slice(i, i + EMBED_BATCH);
-    const res = (await env.AI.run(EMBED_MODEL as Parameters<Ai["run"]>[0], {
-      text: batch.map((b) => b.text),
-    })) as { data?: number[][] };
-    if (!res?.data || res.data.length !== batch.length) {
-      return json({ error: `réponse d'embedding inattendue (data: ${res?.data?.length ?? "absent"})` }, 502);
+  for (const batch of batches) {
+    let data: number[][];
+    try {
+      data = await embedSplit(batch.map((b) => b.text));
+    } catch (e) {
+      // JAMAIS de page HTML : le pilote a besoin d'un JSON actionnable.
+      return json({
+        error: `AI.run a échoué (${(e as Error).message?.slice(0, 200)})`,
+        law, kind, offset, batch_size: batch.length,
+        batch_chars: batch.reduce((a, b) => a + b.text.length, 0),
+      }, 502);
     }
     await env.VECTORS.upsert(batch.map((b, j) => ({
-      id: b.id, values: res.data![j], metadata: b.metadata,
+      id: b.id, values: data[j], metadata: b.metadata,
     })));
     embedded += batch.length;
   }

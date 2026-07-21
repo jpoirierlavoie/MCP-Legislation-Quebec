@@ -308,12 +308,15 @@ async function smokeTests() {
     (scoped.structuredContent?.results ?? []).every((r) => r.law_id === "ccq") &&
     (scoped.structuredContent?.elsewhere?.results ?? []).some((r) => r.law_id === "cpc" && r.number === "490"));
 
-  // 1.2 : LE CAS FONDATEUR — leave-one-out place cpc 490 dans le top 5, étiqueté
+  // 1.2/2.4 : LE CAS FONDATEUR — cpc 490 dans le top 5, par un chemin ÉTIQUETÉ.
+  // Depuis la phase 2, le repérage sémantique répond AVANT le leave-one-out (décision
+  // 2.4) ; les deux chemins sont légitimes, l'exigence est le résultat + l'étiquette.
   const fond = await callTool("qclaw_search_text",
     { query: "signification hors du Québec délai", law: "cpc" });
   const fondTop5 = (fond.structuredContent?.results ?? []).slice(0, 5);
-  add("v2 1.2 : cas fondateur — relaxation leave-one-out trouve cpc 490",
-    /terme ignoré : « hors »/.test(fond.content?.[0]?.text ?? "") &&
+  add("v2 1.2/2.4 : cas fondateur — cpc 490 top 5, chemin étiqueté (LOO ou sémantique)",
+    (/terme ignoré : « hors »/.test(fond.content?.[0]?.text ?? "") ||
+     /repérage sémantique/.test(fond.content?.[0]?.text ?? "")) &&
     fondTop5.some((r) => r.law_id === "cpc" && r.number === "490"),
     fondTop5.map((r) => `${r.law_id}|${r.number}`).join(", "));
 
@@ -346,6 +349,24 @@ async function smokeTests() {
     { law: "ccq", path: "ga:l_cinquieme-gb:l_deuxieme-gc:l_septieme", lang: "en", include_text: false });
   add("v2 1.5 : chemin FR accepté sous lang=en (CONTRACT OF EMPLOYMENT)",
     pont.isError !== true && /CONTRACT OF EMPLOYMENT/.test(pont.content?.[0]?.text ?? ""));
+
+  // --- phase 2 : hybride sémantique (exigent HYBRID_SEARCH=1 + index rempli) ---
+
+  // Cas 19 du plan (acceptation de la phase 2) : requête ANGLAISE -> texte FRANÇAIS.
+  // Aucun terme lexical commun ; seul le pont sémantique multilingue (bge-m3) y arrive.
+  const sem = await callTool("qclaw_search_text", { query: "defendant outside Quebec time to answer" });
+  add("v2 2.3 : cas 19 — requête EN trouve cpc 490 (pont sémantique)",
+    (sem.structuredContent?.results ?? []).some((r) => r.law_id === "cpc" && r.number === "490"),
+    (sem.structuredContent?.results ?? []).slice(0, 5).map((r) => `${r.law_id}|${r.number}`).join(", "));
+  add("v2 2.3 : chemin sémantique étiqueté (R7 : fail open, dit)",
+    /repérage sémantique/.test(sem.content?.[0]?.text ?? "") ||
+    sem.structuredContent?.fallback === "semantic");
+
+  // Une requête lexicalement servie reste lexicale (pas de bruit sémantique en tête).
+  const lex = await callTool("qclaw_search_text", { query: "extranéité" });
+  add("v2 2.3 : requête lexicale — le 1er résultat reste la correspondance exacte",
+    (lex.structuredContent?.results ?? [])[0]?.number !== undefined &&
+    ["3111", "490", "622"].includes((lex.structuredContent?.results ?? [])[0]?.number));
 
   return checks;
 }
