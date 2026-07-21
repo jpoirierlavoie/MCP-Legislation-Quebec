@@ -6,9 +6,9 @@ import {
   ArticleJoined, ArticleRow, Lang, LawSummary, StructureNode,
   articlesByNumbers, articlesByRange, articlesInDivision, childDivisions,
   citationOf, consolOf, getArticle, getDivision, getLaw, getStructure,
-  boundKey, breadcrumbChains, lawNames, lawOutlines, listLaws, listSubjects,
-  loadRelevanceData, logSearch, nearestArticles, paginate, parseCitation, relatedLaws,
-  searchText, sortKeyOf,
+  boundKey, breadcrumbChains, headingInOtherLang, lawNames, lawOutlines, listLaws,
+  listSubjects, loadRelevanceData, logSearch, nearestArticles, paginate, parseCitation,
+  relatedLaws, searchText, sortKeyOf, translateDivisionPath,
 } from "./lib";
 import { WEIGHTS, rank, tokenize } from "./relevance";
 
@@ -456,7 +456,13 @@ export function registerTools(server: McpServer, env: Env): void {
     async ({ law, lang, root_path, depth }) => {
       if (!(await getLaw(db, law))) return err(`Loi '${law}' inconnue.`);
       const d = depth ?? 2;
-      const tree = await getStructure(db, law, lang as Lang, root_path, d);
+      let tree = await getStructure(db, law, lang as Lang, root_path, d);
+      if (tree.length === 0 && root_path) {
+        // 1.5 : les chemins Irosoft sont propres à la langue — un chemin venu de l'autre
+        // langue est traduit par le pont des numéros d'articles, au lieu d'échouer.
+        const t = await translateDivisionPath(db, law, root_path, lang as Lang);
+        if (t) tree = await getStructure(db, law, lang as Lang, t.path, d);
+      }
       if (tree.length === 0) return err(`Aucune division${root_path ? ` sous '${root_path}'` : ""}.`);
       const render = (nodes: StructureNode[], level: number): string =>
         nodes.map((n) =>
@@ -491,12 +497,24 @@ export function registerTools(server: McpServer, env: Env): void {
     async ({ law, path, division_id, lang, include_text, limit, offset }) => {
       if (!(await getLaw(db, law))) return err(`Loi '${law}' inconnue.`);
       if (path == null && division_id == null) return err("Fournir path ou division_id.");
-      const div = await getDivision(db, law, lang as Lang, { path, id: division_id });
+      let div = await getDivision(db, law, lang as Lang, { path, id: division_id });
+      if (!div && path) {
+        // 1.5 : chemin de l'autre langue -> pont par numéros d'articles.
+        const t = await translateDivisionPath(db, law, path, lang as Lang);
+        if (t) div = await getDivision(db, law, lang as Lang, { path: t.path });
+      }
       if (!div) return err(`Division introuvable (${path ?? division_id}).`);
+      // repli d'intitulé : si la division n'en a pas dans la langue demandée, montrer
+      // celui de l'autre langue, marqué (plan v2, 1.5).
+      let headingShown = div.heading;
+      if (!headingShown) {
+        const other = await headingInOtherLang(db, law, div.path, lang as Lang);
+        if (other) headingShown = `${other} [${lang === "fr" ? "en" : "fr"}]`;
+      }
       const kids = await childDivisions(db, div.id);
       const page = paginate(limit, offset);
       const { rows, total } = await articlesInDivision(db, law, lang as Lang, div.path, page, include_text);
-      const header = `${divisionLabel(div.kind, div.number, div.heading, lang as Lang)}${div.repealed ? " (abrogé)" : ""} [${div.path}]`;
+      const header = `${divisionLabel(div.kind, div.number, headingShown, lang as Lang)}${div.repealed ? " (abrogé)" : ""} [${div.path}]`;
       const subs = kids.length
         ? `\n\nSous-divisions :\n` + kids.map((k) => `  • ${divisionLabel(k.kind, k.number, k.heading, lang as Lang)} [${k.path}]`).join("\n")
         : "";

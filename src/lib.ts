@@ -285,6 +285,51 @@ export async function translatePaths(
   return out;
 }
 
+// --- pont de langue à l'ENTRÉE des outils (plan v2, 1.5) ----------------------
+
+/**
+ * Traduit UN chemin de division donné dans l'autre langue que celle demandée.
+ *
+ * Les identifiants Irosoft sont propres à la langue (`ga:l_cinquieme` FR / `ga:l_five` EN) ;
+ * un agent qui tient un chemin d'une réponse FR et le passe avec lang='en' recevait
+ * « Division introuvable ». Pont par les numéros d'articles (invariants), puis troncature
+ * à la même profondeur. Retourne aussi le chemin source résolu — utile pour le repli
+ * d'intitulé `[fr]` quand la cible n'en a pas.
+ */
+export async function translateDivisionPath(
+  db: D1Database, lawId: string, path: string, toLang: Lang,
+): Promise<{ path: string; heading: string | null } | null> {
+  const fromLang: Lang = toLang === "fr" ? "en" : "fr";
+  const seg = /-(?=g[a-z]:)/;
+  const bridge = await db
+    .prepare(
+      `SELECT a2.division_path AS p FROM articles a1
+       JOIN articles a2 ON a2.law_id = a1.law_id AND a2.number = a1.number AND a2.lang = ?
+       WHERE a1.law_id = ? AND a1.lang = ?
+         AND (a1.division_path = ? OR (a1.division_path >= ? || '-' AND a1.division_path < ? || '.'))
+       LIMIT 1`,
+    )
+    .bind(toLang, lawId, fromLang, path, path, path)
+    .first<{ p: string }>();
+  if (!bridge?.p) return null;
+  const depth = path.split(seg).length;
+  const target = bridge.p.split(seg).slice(0, depth).join("-");
+  const div = await db
+    .prepare("SELECT path, heading FROM divisions WHERE law_id = ? AND lang = ? AND path = ?")
+    .bind(lawId, toLang, target)
+    .first<{ path: string; heading: string | null }>();
+  return div ?? null;
+}
+
+/** Intitulé de la même division dans l'autre langue (repli `[fr]` du plan v2, 1.5). */
+export async function headingInOtherLang(
+  db: D1Database, lawId: string, path: string, lang: Lang,
+): Promise<string | null> {
+  const other: Lang = lang === "fr" ? "en" : "fr";
+  const t = await translateDivisionPath(db, lawId, path, other);
+  return t?.heading ?? null;
+}
+
 // --- plan profondeur 2 des grands codes (plan v2, 1.4) ------------------------
 
 export interface OutlineNode {
