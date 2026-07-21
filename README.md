@@ -103,6 +103,3 @@ Démarrage : `npm install`, `npx wrangler dev`, puis `npm run evals` contre
 les invariants critiques du dépôt y sont consignés (ordre de la config, miroirs de clés
 de tri, limites D1/Vectorize, échelle de recherche). Trajectoire mesurée du repérage :
 recall@10 **40 % → 88 % → 98 %** (`docs/reports/`).
-
-— Projet de [Jason Poirier Lavoie](https://poirierlavoie.ca), avocat. Données :
-© Éditeur officiel du Québec (source officielle : LégisQuébec).
