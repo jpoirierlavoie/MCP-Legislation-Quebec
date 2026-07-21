@@ -570,9 +570,12 @@ export function registerTools(server: McpServer, env: Env): void {
         // Recherche corpus : sur-échantillonner (3×) pour pouvoir plafonner à 6 résultats
         // par loi sans se retrouver avec la seule loi dominante au classement bm25.
         const fetchPage = law ? page : { limit: Math.min(45, page.limit * 3), offset: page.offset };
-        // RELAX_SEARCH (R8) : échelle de relaxation débrayable sans redéploiement
-        res = await searchText(db, query, lang as Lang, law, fetchPage,
-          { relax: (env as { RELAX_SEARCH?: string }).RELAX_SEARCH !== "0" });
+        // RELAX_SEARCH / HYBRID_SEARCH (R8) : chemins débrayables sans redéploiement
+        const flags = env as unknown as { RELAX_SEARCH?: string; HYBRID_SEARCH?: string };
+        res = await searchText(db, query, lang as Lang, law, fetchPage, {
+          relax: flags.RELAX_SEARCH !== "0",
+          vector: flags.HYBRID_SEARCH === "1" ? { ai: env.AI, index: env.VECTORS } : undefined,
+        });
         if (!law) {
           const perLaw = new Map<string, number>();
           const picked: typeof res.hits = [];
@@ -599,11 +602,12 @@ export function registerTools(server: McpServer, env: Env): void {
       if (res.hits.length === 0) return err(`Aucun résultat pour « ${query} » (${lang}).`);
 
       // 1.3 : fils d'Ariane (résultats auto-explicatifs) + regroupement par loi.
-      const allRefs = [...res.hits, ...(res.elsewhere?.hits ?? [])];
+      const semDivRefs = (res.divisions ?? []).map((d) => ({ law_id: d.law_id, division_path: d.path }));
+      const allRefs = [...res.hits, ...(res.elsewhere?.hits ?? []), ...semDivRefs];
       const chains = await breadcrumbChains(db, lang as Lang, allRefs);
       const names = await lawNames(db, [...new Set(allRefs.map((h) => h.law_id))]);
       const ABBREV: Record<string, string> = { ccq: "C.c.Q.", cpc: "C.p.c." };
-      const crumbOf = (h: typeof res.hits[number]): string => {
+      const crumbOf = (h: { law_id: string; division_path: string }): string => {
         const chain = chains.get(`${h.law_id}|${h.division_path}`) ?? [];
         // seuls les nœuds AVEC ordinal portent un repère utile (« Livre V, Titre IV ») ;
         // les autres produiraient des « Livre, Titre, » vides.
@@ -617,7 +621,8 @@ export function registerTools(server: McpServer, env: Env): void {
       };
       const line = (h: typeof res.hits[number]) => {
         const crumb = crumbOf(h);
-        return `${ABBREV[h.law_id] ?? h.law_id}${crumb ? ` — ${crumb}` : ""} › art. ${h.number}  [${h.division_path}]\n` +
+        return `${ABBREV[h.law_id] ?? h.law_id}${crumb ? ` — ${crumb}` : ""} › art. ${h.number}` +
+          `${h.semantic ? " (repérage sémantique)" : ""}  [${h.division_path}]\n` +
           `   « ${h.snippet} »`;
       };
       // corps : groupé par loi dès que les résultats en couvrent plusieurs (max 6 par loi)
@@ -648,20 +653,30 @@ export function registerTools(server: McpServer, env: Env): void {
             ? `Correspondance exacte introuvable ; résultats approchés (terme ignoré : « ${res.fallback.loo} ») :`
             : res.fallback === "or_relax"
               ? `Résultats partiels (au moins un terme sur ${nTerms}) :`
-              : `${res.total} résultat(s) pour « ${query} » :`;
+              : res.fallback === "semantic"
+                ? "Aucune correspondance lexicale ; repérage sémantique :"
+                : `${res.total} résultat(s) pour « ${query} » :`;
       // Recherche restreinte avec résultats : signaler ce que la restriction cache (post-mortem)
       const elsewhere = res.elsewhere
         ? `\n\nAilleurs au corpus (${res.elsewhere.total} résultat(s) hors ${law}) — aperçu :\n` +
           res.elsewhere.hits.map(line).join("\n") +
           "\nRelancer sans `law` pour la vue complète."
         : "";
+      const structures = res.divisions?.length
+        ? "\n\nStructures pertinentes (repérage sémantique) :\n" +
+          res.divisions.map((d) => {
+            const crumb = crumbOf({ law_id: d.law_id, division_path: d.path });
+            return `  • ${ABBREV[d.law_id] ?? d.law_id} — ${crumb || d.heading || d.path}  [${d.path}]`;
+          }).join("\n")
+        : "";
       const enrich = (h: typeof res.hits[number]) => ({ ...h, breadcrumb: crumbOf(h) });
-      return ok(`${header}\n${body}${elsewhere}`, {
+      return ok(`${header}\n${body}${structures}${elsewhere}`, {
         query, lang, law: law ?? null, total: res.total,
         fallback: fallbackLog,
         elsewhere: res.elsewhere
           ? { total: res.elsewhere.total, results: res.elsewhere.hits.map(enrich) }
           : null,
+        divisions_semantiques: res.divisions ?? [],
         pagination: { limit: page.limit, offset: page.offset },
         results: res.hits.map(enrich),
       });

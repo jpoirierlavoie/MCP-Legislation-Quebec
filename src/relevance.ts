@@ -28,6 +28,17 @@ export const WEIGHTS = {
 export const SPECIFIC_TOKEN_MAX_REACH = 4;
 export const SPECIFIC_TOKEN_FACTOR = 2;
 
+/**
+ * Fusion RRF de la recherche hybride (plan v2, 2.3) : score(d) = Σ 1/(k + rang_liste(d)).
+ * k = 60 (valeur canonique du plan). La calibration vit ICI, avec les poids S1–S4.
+ */
+export const RRF_K = 60;
+/** Profondeur des deux listes fusionnées (FTS et vecteurs). */
+export const VECTOR_TOP_K = 20;
+/** Correspondances de type 'division' : seuil de score cosine et plafond d'affichage. */
+export const DIVISION_MATCH_MIN_SCORE = 0.5;
+export const DIVISION_MATCH_MAX = 2;
+
 /** Longueur minimale d'un token retenu (« du », « la »… n'apportent rien). */
 export const MIN_TOKEN_LENGTH = 3;
 /** Plafond de tokens pris en compte (borne le nombre de requêtes et le score maximal). */

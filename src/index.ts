@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { McpAgent } from "agents/mcp";
 
+import { handleBackfill } from "./backfill";
 import { registerTools } from "./tools";
 
 /**
@@ -39,6 +40,11 @@ export default {
     }
     if (url.pathname === "/mcp") {
       return QclawMCP.serve("/mcp").fetch(request, env, ctx);
+    }
+    // Administration (plan v2, 2.2) : rattrapage des vecteurs. HORS MCP ; inerte sans
+    // le secret BACKFILL_TOKEN, et exige l'Authorization Bearer correspondante.
+    if (url.pathname === "/admin/backfill-vectors") {
+      return handleBackfill(request, env);
     }
     return new Response("Not found", { status: 404 });
   },

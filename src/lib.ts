@@ -1,7 +1,9 @@
 // Helpers et requêtes D1 (lecture seule) pour le serveur MCP « Lois du Québec ».
 // Le schéma est décrit dans schema.sql / PLAN.md §2 et schema-decouverte.sql.
 
-import { normalize } from "./relevance";
+import {
+  DIVISION_MATCH_MAX, DIVISION_MATCH_MIN_SCORE, RRF_K, VECTOR_TOP_K, normalize,
+} from "./relevance";
 import type {
   DivisionLite, LawLite, RelationLite, SubjectLite, SubjectMapLite,
 } from "./relevance";
@@ -956,6 +958,8 @@ export interface SearchHit {
   snippet: string;
   /** Score bm25 (négatif : plus bas = plus pertinent). Présent sur les chemins relaxés. */
   score?: number;
+  /** Résultat issu du seul chemin vectoriel (repérage sémantique). */
+  semantic?: boolean;
 }
 
 /** Tokens FTS d'une requête (même découpage que toFtsQuery — un seul point de vérité). */
@@ -979,10 +983,12 @@ export function toFtsQuery(query: string): string {
 export interface SearchOutcome {
   hits: SearchHit[];
   total: number;
-  /** null = exact dans la portée demandée. */
-  fallback: null | "widened" | { loo: string } | "or_relax";
+  /** null = exact dans la portée demandée ; 'semantic' = aucune correspondance lexicale. */
+  fallback: null | "widened" | { loo: string } | "or_relax" | "semantic";
   /** Aperçu hors portée quand la recherche restreinte a des résultats ET que d'autres lois en ont. */
   elsewhere: { total: number; hits: SearchHit[] } | null;
+  /** Correspondances de STRUCTURE (intitulés de divisions) par repérage sémantique. */
+  divisions?: DivisionMatch[];
 }
 
 interface MatchScope {
@@ -1021,16 +1027,147 @@ async function runMatch(
 const RELAX_MIN_TERMS = 2;
 const RELAX_MAX_LOO_TERMS = 6; // au-delà : sauter le leave-one-out, aller à l'étape OU
 
+// --- couche sémantique (plan v2, 2.3) -----------------------------------------
+
+/** Modèle d'embedding — multilingue (les requêtes EN atteignent les vecteurs FR). */
+export const EMBED_MODEL = "@cf/baai/bge-m3";
+
+export interface VectorBackend {
+  ai: Ai;
+  index: VectorizeIndex;
+}
+
+export interface DivisionMatch {
+  law_id: string;
+  path: string;
+  heading: string | null;
+  score: number;
+}
+
+interface VectorHits {
+  arts: { law: string; number: string; score: number }[];
+  divs: DivisionMatch[];
+}
+
+/** Embed la requête UNE fois (réutilisable entre la passe restreinte et l'élargie). */
+async function embedQuery(v: VectorBackend, query: string): Promise<number[] | null> {
+  try {
+    const res = (await v.ai.run(EMBED_MODEL as Parameters<Ai["run"]>[0], {
+      text: [query],
+    })) as { data?: number[][] };
+    return res?.data?.[0] ?? null;
+  } catch {
+    return null; // fail open : l'hybride se dégrade en FTS pur
+  }
+}
+
+async function queryVectors(
+  v: VectorBackend, values: number[], lawId: string | undefined,
+): Promise<VectorHits | null> {
+  try {
+    const res = await v.index.query(values, {
+      topK: VECTOR_TOP_K,
+      returnMetadata: "all",
+      ...(lawId ? { filter: { law: lawId } } : {}),
+    });
+    const out: VectorHits = { arts: [], divs: [] };
+    for (const m of res.matches ?? []) {
+      const md = (m.metadata ?? {}) as Record<string, string>;
+      if (md.type === "article" && md.law && md.article) {
+        out.arts.push({ law: md.law, number: md.article, score: m.score });
+      } else if (md.type === "division" && md.law && md.path) {
+        out.divs.push({ law_id: md.law, path: md.path, heading: md.heading || null, score: m.score });
+      }
+    }
+    return out;
+  } catch {
+    return null; // fail open
+  }
+}
+
+/** Matérialise des (law, number) en SearchHit dans la LANGUE DEMANDÉE (extrait ~240 car.). */
+async function articleBriefs(
+  db: D1Database, lang: Lang, keys: string[],
+): Promise<Map<string, SearchHit>> {
+  const byLaw = new Map<string, string[]>();
+  for (const k of keys) {
+    const [law, number] = k.split("|");
+    const arr = byLaw.get(law);
+    if (arr) arr.push(number); else byLaw.set(law, [number]);
+  }
+  const out = new Map<string, SearchHit>();
+  for (const [law, numbers] of byLaw) {
+    const rows = (await db
+      .prepare(
+        `SELECT law_id, number, division_path, substr(text, 1, 240) AS t, length(text) AS len
+         FROM articles WHERE lang = ? AND law_id = ? AND number IN (${numbers.map(() => "?").join(",")})`,
+      )
+      .bind(lang, law, ...numbers)
+      .all<{ law_id: string; number: string; division_path: string; t: string; len: number }>()).results;
+    for (const r of rows) {
+      out.set(`${r.law_id}|${r.number}`, {
+        law_id: r.law_id, number: r.number, division_path: r.division_path,
+        snippet: r.len > 240 ? `${r.t}…` : r.t, semantic: true,
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Fusion RRF (k = RRF_K) des listes FTS et vectorielle. Les résultats absents du FTS
+ * sont matérialisés depuis D1 dans la langue demandée et marqués `semantic`.
+ */
+async function fuseHybrid(
+  db: D1Database, lang: Lang, fts: { hits: SearchHit[]; total: number }, vec: VectorHits,
+  limit: number,
+): Promise<SearchHit[]> {
+  interface Entry { ftsRank?: number; vecRank?: number; hit?: SearchHit }
+  const entries = new Map<string, Entry>();
+  fts.hits.forEach((h, i) => entries.set(`${h.law_id}|${h.number}`, { ftsRank: i + 1, hit: h }));
+  vec.arts.forEach((a, i) => {
+    const k = `${a.law}|${a.number}`;
+    const e = entries.get(k) ?? {};
+    e.vecRank = i + 1;
+    entries.set(k, e);
+  });
+  const scored = [...entries.entries()]
+    .map(([k, e]) => ({
+      k, e,
+      score: (e.ftsRank ? 1 / (RRF_K + e.ftsRank) : 0) + (e.vecRank ? 1 / (RRF_K + e.vecRank) : 0),
+    }))
+    .sort((a, b) => b.score - a.score);
+  const missing = scored.filter((s) => !s.e.hit).map((s) => s.k);
+  const briefs = missing.length ? await articleBriefs(db, lang, missing) : new Map<string, SearchHit>();
+  const hits: SearchHit[] = [];
+  for (const s of scored) {
+    const h = s.e.hit ?? briefs.get(s.k);
+    if (h) hits.push(h);
+    if (hits.length >= limit) break;
+  }
+  return hits;
+}
+
 export async function searchText(
   db: D1Database, query: string, lang: Lang, lawId: string | undefined, page: Page,
-  opts: { relax?: boolean } = {},
+  opts: { relax?: boolean; vector?: VectorBackend } = {},
 ): Promise<SearchOutcome> {
   const match = toFtsQuery(query);
   if (!match) return { hits: [], total: 0, fallback: null, elsewhere: null };
   const scope: MatchScope = lawId ? { law: lawId } : {};
 
-  // 1) requête exacte, portée demandée
-  const exact = await runMatch(db, match, lang, scope, page);
+  // Hybride (plan v2, 2.3) : embed de la requête EN PARALLÈLE du FTS exact. Pagination
+  // au-delà de la première page : FTS pur (une liste fusionnée ne se pagine pas).
+  const useVector = !!opts.vector && page.offset === 0;
+  const [exact, qVec] = await Promise.all([
+    runMatch(db, match, lang, scope, page),
+    useVector ? embedQuery(opts.vector!, query) : Promise.resolve(null),
+  ]);
+  const vec = qVec ? await queryVectors(opts.vector!, qVec, lawId) : null;
+  const semDivs = (vec?.divs ?? [])
+    .filter((d) => d.score >= DIVISION_MATCH_MIN_SCORE)
+    .slice(0, DIVISION_MATCH_MAX);
+
   if (exact.total > 0) {
     // Recherche restreinte AVEC résultats : sonder le reste du corpus (1 requête) et
     // signaler les correspondances d'autres lois — sans toucher aux résultats demandés.
@@ -1039,19 +1176,46 @@ export async function searchText(
       const others = await runMatch(db, match, lang, { notLaw: lawId }, { limit: 3, offset: 0 });
       if (others.total > 0) elsewhere = { total: others.total, hits: others.hits };
     }
-    return { ...exact, fallback: null, elsewhere };
+    // fusion RRF avec la liste vectorielle (si disponible)
+    const hits = vec?.arts.length
+      ? await fuseHybrid(db, lang, exact, vec, page.limit)
+      : exact.hits;
+    return { hits, total: exact.total, fallback: null, elsewhere, divisions: semDivs };
   }
 
-  // 2) élargissement automatique au corpus (plan v2, 1.1)
+  // FTS exact vide mais vecteurs parlants -> repérage sémantique (fallback étiqueté)
+  if (vec?.arts.length) {
+    const hits = await fuseHybrid(db, lang, exact, vec, page.limit);
+    if (hits.length) {
+      return { hits, total: hits.length, fallback: "semantic", elsewhere: null, divisions: semDivs };
+    }
+  }
+
+  // 2) élargissement automatique au corpus (plan v2, 1.1) — vecteurs SANS filtre de loi
+  //    (l'embedding est réutilisé, pas de second appel au modèle).
   if (lawId) {
-    const wide = await runMatch(db, match, lang, {}, page);
-    if (wide.total > 0) return { ...wide, fallback: "widened", elsewhere: null };
+    const [wide, wideVec] = await Promise.all([
+      runMatch(db, match, lang, {}, page),
+      qVec ? queryVectors(opts.vector!, qVec, undefined) : Promise.resolve(null),
+    ]);
+    if (wide.total > 0) {
+      const hits = wideVec?.arts.length
+        ? await fuseHybrid(db, lang, wide, wideVec, page.limit)
+        : wide.hits;
+      return { hits, total: wide.total, fallback: "widened", elsewhere: null, divisions: semDivs };
+    }
+    if (wideVec?.arts.length) {
+      const hits = await fuseHybrid(db, lang, wide, wideVec, page.limit);
+      if (hits.length) {
+        return { hits, total: hits.length, fallback: "semantic", elsewhere: null, divisions: semDivs };
+      }
+    }
   }
 
   // --- Échelle de relaxation (plan v2, 1.2) — requêtes multi-termes seulement ---
   const tokens = ftsTokens(query);
   if (!opts.relax || tokens.length < RELAX_MIN_TERMS) {
-    return { hits: [], total: 0, fallback: null, elsewhere: null };
+    return { hits: [], total: 0, fallback: null, elsewhere: null, divisions: semDivs };
   }
 
   // 3) leave-one-out : omettre chaque terme à tour de rôle (≤ 6 SELECT), dans la portée
@@ -1066,7 +1230,8 @@ export async function searchText(
       if (!best || sum < best.sum) best = { ...r, omitted: tokens[i], sum };
     }
     if (best) {
-      return { hits: best.hits, total: best.total, fallback: { loo: best.omitted }, elsewhere: null };
+      return { hits: best.hits, total: best.total, fallback: { loo: best.omitted },
+        elsewhere: null, divisions: semDivs };
     }
   }
 
@@ -1077,12 +1242,16 @@ export async function searchText(
   if (orTerms.length) {
     const matchOr = orTerms.map(quoteTok).join(" OR ");
     const scoped = await runMatch(db, matchOr, lang, scope, page, true);
-    if (scoped.total > 0) return { ...scoped, fallback: "or_relax", elsewhere: null };
+    if (scoped.total > 0) {
+      return { ...scoped, fallback: "or_relax", elsewhere: null, divisions: semDivs };
+    }
     if (lawId) {
       const wide = await runMatch(db, matchOr, lang, {}, page, true);
-      if (wide.total > 0) return { ...wide, fallback: "or_relax", elsewhere: null };
+      if (wide.total > 0) {
+        return { ...wide, fallback: "or_relax", elsewhere: null, divisions: semDivs };
+      }
     }
   }
 
-  return { hits: [], total: 0, fallback: null, elsewhere: null };
+  return { hits: [], total: 0, fallback: null, elsewhere: null, divisions: semDivs };
 }
