@@ -2,10 +2,18 @@ name: refresh-statutes
 
 # Rafraîchissement semestriel du corpus (PLAN.md §6). Retélécharge les EPUB de
 # LégisQuébec, reparse, et recharge la base D1 cloud (staging -> bascule).
+#
+# ⚠️ DÉCLENCHEMENT MANUEL UNIQUEMENT — le `schedule:` a été RETIRÉ à dessein.
+# Ce job ne fait qu'une PARTIE du rafraîchissement : il recharge les articles, mais
+# PAS la couche découverte (discovery/load.py, relations.py) NI les ~27 000 vecteurs
+# Vectorize. Exécuté seul et sans surveillance, il laisserait les embeddings pointer
+# l'ANCIEN texte — la recherche sémantique rendrait du droit périmé sans le dire,
+# ce qui est le pire défaut possible pour un outil juridique.
+# La procédure complète (et l'éval de non-régression qui la clôt) est dans CLAUDE.md,
+# section « Rafraîchissement semestriel ». Ne remettre un `schedule:` qu'une fois les
+# étapes manquantes automatisées ET la porte d'éval câblée.
 on:
-  schedule:
-    - cron: "0 9 5 1,7 *" # 5 janvier et 5 juillet, 09:00 UTC
-  workflow_dispatch: {} # déclenchement manuel à la demande
+  workflow_dispatch: {} # déclenchement manuel à la demande, sous surveillance
 
 permissions:
   contents: read

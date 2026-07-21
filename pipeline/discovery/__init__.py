@@ -1,5 +1,5 @@
 """Couche de découverte / pertinence (plan-couche-decouverte.md, phase A).
 
-Migration additive du schéma, rattrapage des colonnes normalisées, et chargement des
-données de découverte (taxonomie + relations curées) avec validation stricte.
+Reconnaissance (dry-run), migration additive du schéma, chargement des données de
+découverte (taxonomie + relations curées) avec validation stricte, et vérification.
 """

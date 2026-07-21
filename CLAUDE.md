@@ -21,7 +21,10 @@ défaut possible — refuser vaut toujours mieux que deviner.**
 Fichiers clés : `src/tools.ts` (outils MCP), `src/lib.ts` (requêtes D1, échelle de
 recherche, fusion RRF), `src/relevance.ts` (TOUTES les constantes de calibration : poids
 S1–S4, RRF_K, SEMANTIC_MIN_SCORE…), `src/backfill.ts` (route admin vecteurs),
-`pipeline/ingest.py` (orchestrateur), `pipeline/discovery/` (migrate/load/relations/backfill).
+`pipeline/ingest.py` (orchestrateur), `pipeline/discovery/` (recon/migrate/load/relations/verify).
+Un seul « backfill » subsiste, celui des VECTEURS (`src/backfill.ts` + `scripts/backfill-vectors.mjs`) :
+l'homonyme Python remplissait `name_norm`/`heading_norm` avant que l'invariant n° 3 ne les
+fasse calculer au chargement, il est supprimé.
 
 ## Commandes
 
@@ -137,13 +140,18 @@ test) ; (2) dry-run de reconnaissance (`pipeline/discovery/recon.py`) — arrêt
 balisage inconnu ; (3) `ingest --law X` local puis remote (staging→bascule, invariants de
 scan) ; (4) `discovery/load.py` + `relations.py` (les deux cibles) ; (5) passe éditoriale
 de Jason sur `taxonomy.json` (sans mappage, la loi est invisible au signal S1) ;
-(6) backfill vecteurs (procédure §6 du rapport phase 2) ; (7) mettre à jour les contrôles
-épinglés (« 78 lois »…) ; (8) éval avant/après.
+(6) backfill vecteurs (procédure §6 du rapport phase 2) ; (7) `discovery/verify.py` —
+comptes de `subjects`/`subject_map`/`law_relations` et résolution de chaque
+`division_path` ; (8) mettre à jour les contrôles épinglés (« 78 lois »…) ;
+(9) éval avant/après.
 
 **Rafraîchissement semestriel** : `ingest --all --download --refresh-dates` (76 combos),
-rechargement découverte, re-backfill vecteurs complet, éval. Le cron déclaré dans
-`wrangler.jsonc` n'exécute RIEN aujourd'hui (pas de handler `scheduled`) — le
-rafraîchissement est manuel.
+rechargement découverte, re-backfill vecteurs complet, éval. **Entièrement manuel et
+sous surveillance** : ni le cron de `wrangler.jsonc` (aucun handler `scheduled`) ni
+`.github/workflows/refresh.yml` (réduit à `workflow_dispatch`) ne le déclenchent seuls.
+Le job GitHub ne couvre QUE les articles — l'exécuter sans enchaîner la découverte et le
+re-backfill des vecteurs laisse les embeddings sur l'ancien texte, donc du droit périmé
+rendu en silence par la recherche sémantique.
 
 ## Où trouver quoi
 
