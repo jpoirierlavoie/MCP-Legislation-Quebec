@@ -110,6 +110,23 @@ const EVALS = [
       { law: "ccq", pathPrefix: "ga:l_five-gb:l_two-gc:l_vii" },
     ],
   },
+  // Régression du lot 3 (78 lois) : « fin » captait « financier » faute de plafond de
+  // suffixe, et tout le bloc du secteur financier évinçait le chapitre du contrat de
+  // travail. Cf. MAX_SUFFIX (src/relevance.ts).
+  {
+    query: "clause non-concurrence fin d'emploi",
+    attendu: "contrat de travail du C.c.Q. présent ; le secteur financier n'est PAS capté par « fin »",
+    present: [{ law: "ccq", pathPrefix: "ga:l_cinquieme-gb:l_deuxieme-gc:l_septieme" }],
+    absent: [{ law: "d-9.2" }, { law: "d-9.2-r.20" }],
+  },
+  // Régression du lot 3 : « bâtiment et construction » compte 7 lois, qui remplissaient
+  // le top 8 à elles seules. Cf. MAX_PER_SUBJECT (src/relevance.ts).
+  {
+    query: "perte de l'ouvrage cinq ans entrepreneur",
+    attendu: "ouvrages immobiliers du C.c.Q. présents malgré la matière « bâtiment » à 7 lois",
+    present: [{ law: "ccq", pathPrefix: "ga:l_cinquieme-gb:l_deuxieme-gc:l_huitieme" }],
+    maxParMatiere: 3,
+  },
   {
     query: "zzzzq wxyv",
     attendu: "aucun rapprochement, message d'aide",
@@ -146,6 +163,21 @@ async function runEval(e) {
   for (const exp of e.present ?? []) {
     if (!cands.some((c) => matches(c, exp))) {
       failures.push(`absent : ${exp.law}${exp.pathPrefix ? `›${exp.pathPrefix}…` : ""}`);
+    }
+  }
+  for (const exp of e.absent ?? []) {
+    const parasite = cands.find((c) => matches(c, exp));
+    if (parasite) failures.push(`présent à tort : ${fmt(parasite)}`);
+  }
+  if (e.maxParMatiere) {
+    const parMatiere = new Map();
+    for (const c of cands) {
+      for (const m of (c.pourquoi ?? []).filter((x) => x.startsWith("matière : "))) {
+        parMatiere.set(m, (parMatiere.get(m) ?? 0) + 1);
+      }
+    }
+    for (const [m, n] of parMatiere) {
+      if (n > e.maxParMatiere) failures.push(`matière trop représentée : ${m} × ${n}`);
     }
   }
   return { failures, cands };

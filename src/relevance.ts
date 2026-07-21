@@ -37,6 +37,18 @@ export const WEIGHTS = {
 export const SPECIFIC_TOKEN_MAX_REACH = 4;
 export const SPECIFIC_TOKEN_FACTOR = 2;
 
+/**
+ * Plafond de candidats portés par UNE SEULE matière dans la liste rendue.
+ *
+ * Une matière est UNE preuve, mais elle injecte autant de candidats qu'elle a d'entités
+ * mappées, tous au même score : « bâtiment et construction » compte 7 lois, qui
+ * remplissaient à elles seules le top 8 de « perte de l'ouvrage cinq ans entrepreneur »
+ * et en chassaient le C.c.Q. Les candidats qui portent AUSSI un autre signal (intitulé,
+ * nom de loi, graphe) échappent au plafond ; les autres passent en file d'attente et ne
+ * reviennent que s'il reste de la place.
+ */
+export const MAX_PER_SUBJECT = 3;
+
 export function specificityFactor(reach: number): number {
   if (reach <= 0) return 1;
   return 1 + (SPECIFIC_TOKEN_FACTOR - 1) * Math.min(1, SPECIFIC_TOKEN_MAX_REACH / reach);
@@ -105,16 +117,29 @@ export function tokenize(query: string): string[] {
 }
 
 /**
- * Le token apparaît-il en DÉBUT DE MOT dans le texte normalisé ?
+ * Suffixe toléré après un token, en caractères. Couvre la flexion française usuelle
+ * (-s, -es, -aux, -ment, -tion) sans laisser un token court avaler un mot sans rapport :
+ * « fin » captait « financier » (+6) et noyait une requête sur la fin d'emploi sous tout
+ * le bloc du secteur financier. « hypotheque »->« hypotheques » (+1), « civil »->« civile »
+ * (+1), « travail »->« travailleur » (+4) restent valides.
+ */
+export const MAX_SUFFIX = 4;
+
+/**
+ * Le token apparaît-il en DÉBUT DE MOT dans le texte normalisé, avec un suffixe borné ?
  *
  * On veut « hypotheque » ⊂ « hypothèques » et « civil » ⊂ « civile » (suffixes tolérés),
  * mais PAS « vice » ⊂ « services » : une correspondance en plein milieu d'un mot est du
- * bruit. D'où l'ancrage sur un début de mot plutôt qu'un simple `indexOf`.
+ * bruit. D'où l'ancrage sur un début de mot plutôt qu'un simple `indexOf` — et le
+ * plafond de suffixe, sans lequel un token de 3 lettres capte des mots de 9.
  */
 export function wordMatch(haystackNorm: string, token: string): boolean {
   if (!haystackNorm || !token) return false;
   for (let i = haystackNorm.indexOf(token); i !== -1; i = haystackNorm.indexOf(token, i + 1)) {
-    if (i === 0 || !/[a-z0-9]/.test(haystackNorm[i - 1])) return true;
+    if (i > 0 && /[a-z0-9]/.test(haystackNorm[i - 1])) continue; // pas un début de mot
+    let j = i + token.length;
+    while (j < haystackNorm.length && /[a-z0-9]/.test(haystackNorm[j])) j++;
+    if (j - (i + token.length) <= MAX_SUFFIX) return true;
   }
   return false;
 }
@@ -283,12 +308,31 @@ export function rank(input: RelevanceInput, limit: number): Candidate[] {
     if (seedLaws.has(r.to_law_id)) link(r.from_law_id, r.to_law_id);
   }
 
-  return [...cands.values()]
-    .sort((a, b) =>
-      b.score - a.score ||
-      // départage stable : une cible précise (division) avant la loi entière, puis l'id
-      (a.division_path ? 0 : 1) - (b.division_path ? 0 : 1) ||
-      a.law_id.localeCompare(b.law_id) ||
-      a.division_path.localeCompare(b.division_path))
-    .slice(0, limit);
+  const tries = [...cands.values()].sort((a, b) =>
+    b.score - a.score ||
+    // départage stable : une cible précise (division) avant la loi entière, puis l'id
+    (a.division_path ? 0 : 1) - (b.division_path ? 0 : 1) ||
+    a.law_id.localeCompare(b.law_id) ||
+    a.division_path.localeCompare(b.division_path));
+
+  // Sélection avec plafond de diversité par matière (cf. MAX_PER_SUBJECT).
+  const parMatiere = new Map<string, number>();
+  const retenus: Candidate[] = [];
+  const attente: Candidate[] = [];
+  for (const c of tries) {
+    const matieres = c.pourquoi.filter((p) => p.startsWith("matière : "));
+    const autreSignal = c.pourquoi.length > matieres.length;
+    const sature = !autreSignal && matieres.length > 0 &&
+      matieres.every((m) => (parMatiere.get(m) ?? 0) >= MAX_PER_SUBJECT);
+    if (sature) { attente.push(c); continue; }
+    for (const m of matieres) parMatiere.set(m, (parMatiere.get(m) ?? 0) + 1);
+    retenus.push(c);
+    if (retenus.length >= limit) return retenus;
+  }
+  // la diversité n'a pas rempli la liste : on complète par la file d'attente (ordre de score)
+  for (const c of attente) {
+    if (retenus.length >= limit) break;
+    retenus.push(c);
+  }
+  return retenus;
 }

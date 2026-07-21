@@ -94,7 +94,7 @@ src/            Worker Cloudflare (TypeScript) : outils MCP, recherche, D1/Vecto
 pipeline/       Ingestion Python : EPUB LégisQuébec -> D1 (staging -> validation -> bascule)
 laws.config.json, taxonomy.json, relations.json   Données versionnées (corpus, matières, graphe)
 migrations/     Migrations D1 (wrangler d1 migrations)
-tests/, eval/   55 contrôles bout-en-bout + harnais d'évaluation (20 cas, recall@10/MRR)
+tests/, eval/   57 contrôles bout-en-bout + harnais d'évaluation (20 cas, recall@10/MRR)
 docs/           Notes d'architecture, rapports de phase, format EPUB ; archive des plans
 ```
 

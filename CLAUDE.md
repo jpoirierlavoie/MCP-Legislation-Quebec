@@ -28,7 +28,7 @@ S1–S4, RRF_K, SEMANTIC_MIN_SCORE…), `src/backfill.ts` (route admin vecteurs)
 ```bash
 npx wrangler dev                                   # dev local (D1 local ; PAS Vectorize)
 npx tsc --noEmit                                   # type-check (toujours avant commit)
-npm run evals                                      # 49 contrôles bout-en-bout (MCP_URL=… pour cibler)
+npm run evals                                      # 57 contrôles bout-en-bout (MCP_URL=… pour cibler)
 npm run eval                                       # harnais d'éval : 20 cas, recall@10/MRR (production)
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m unittest discover -s pipeline/tests -q   # 23 tests
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m pipeline.ingest --law X --lang fr --apply-local
@@ -99,7 +99,17 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
     dans la matière *Procédure pénale* lui a fait capter « appel civil » et évincer le
     C.p.c. Jamais de mention contrastive ni de « à ne pas confondre avec » dans une
     description ; n'y mettre que le vocabulaire que l'on VEUT voir matcher.
-14. **`eval/cases.json` est la vérité terrain de Jason** (⛔) : proposer les évolutions,
+14. **L'appariement par préfixe de mot est BORNÉ (`MAX_SUFFIX = 4`)** : sans plafond de
+    suffixe, un token de 3 lettres avale un mot de 9 — « fin » captait « financier » et
+    noyait « clause non-concurrence fin d'emploi » sous tout le secteur financier. Le
+    plafond couvre la flexion française (-s, -es, -aux, -ment, -tion) ; l'élargir revient
+    à rouvrir cette classe de faux positifs.
+15. **Une matière est UNE preuve, pas N candidats** (`MAX_PER_SUBJECT = 3`) : S1 injecte
+    un candidat par entité mappée, tous au même score. *Bâtiment et construction* (7 lois)
+    remplissait le top 8 à elle seule et en chassait le C.c.Q. Le plafond de diversité ne
+    s'applique QU'aux candidats sans autre signal (S2/S3/S4). Toute matière dépassant
+    ~5 entités mappées est un candidat à ce défaut : le vérifier à l'éval, pas au jugé.
+16. **`eval/cases.json` est la vérité terrain de Jason** (⛔) : proposer les évolutions,
     ne jamais modifier de son propre chef. Idem tout contenu éditorial juridique
     (taxonomie, gazetteer, headnotes — drapeau `validated`, phase 3 v2).
 
