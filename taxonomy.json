@@ -149,16 +149,16 @@
       "label_fr": "Secteur financier et institutions financières",
       "label_en": "Financial Sector and Financial Institutions",
       "kind": "specialise",
-      "description_fr": "Encadrement AMF, institutions de dépôts, assureurs et activités d'assurance, coopératives de services financiers (caisses), entreprises de services monétaires, distribution de produits et services financiers.",
-      "description_en": "Oversight by the Autorité des marchés financiers, deposit institutions, insurers and insurance activities, financial services cooperatives (credit unions), money-services businesses, distribution of financial products and services."
+      "description_fr": "Encadrement AMF et Tribunal administratif des marchés financiers (TAMF), institutions de dépôts, assureurs et activités d'assurance, coopératives de services financiers (caisses), entreprises de services monétaires, distribution de produits et services financiers.",
+      "description_en": "Oversight by the Autorité des marchés financiers and the Financial Markets Administrative Tribunal, deposit institutions, insurers and insurance activities, financial services cooperatives (credit unions), money-services businesses, distribution of financial products and services."
     },
     {
       "id": "assurances",
       "label_fr": "Assurances",
       "label_en": "Insurance",
       "kind": "specialise",
-      "description_fr": "Contrat d'assurance (C.c.Q.) et distribution de produits d'assurance.",
-      "description_en": "Contract of insurance (C.C.Q.) and distribution of insurance products."
+      "description_fr": "Contrat d'assurance (C.c.Q.) et distribution de produits d'assurance : représentant en assurance, cabinet, société et représentant autonome, planificateur financier.",
+      "description_en": "Contract of insurance (C.C.Q.) and distribution of insurance products: insurance representative, firm, independent partnership and representative, financial planner."
     },
     {
       "id": "travail-emploi",
@@ -197,16 +197,16 @@
       "label_fr": "Droit municipal",
       "label_en": "Municipal Law",
       "kind": "specialise",
-      "description_fr": "Cités et villes : pouvoirs, contrats et responsabilité municipale.",
-      "description_en": "Cities and towns: municipal powers, contracts and liability."
+      "description_fr": "Cités et villes, communautés métropolitaines : pouvoirs et compétences municipales, contrats et responsabilité municipale, éthique et déontologie des élus municipaux, fiscalité municipale et évaluation foncière, expropriation.",
+      "description_en": "Cities and towns, metropolitan communities: municipal powers and jurisdiction, municipal contracts and liability, ethics and professional conduct of municipal officers, municipal taxation and property assessment, expropriation."
     },
     {
       "id": "immobilier-courtage",
       "label_fr": "Immobilier et courtage",
       "label_en": "Real Estate and Brokerage",
       "kind": "specialise",
-      "description_fr": "Courtage immobilier et encadrement OACIQ.",
-      "description_en": "Real estate brokerage and oversight by the OACIQ."
+      "description_fr": "Courtage immobilier et encadrement OACIQ : permis de courtier et d'agence, conditions d'exercice, déontologie des courtiers, publicité, comptabilité en fidéicommis, dossiers et registres, inspection, instances disciplinaires, fonds d'indemnisation.",
+      "description_en": "Real estate brokerage and OACIQ oversight: broker and agency licences, conditions of practice, brokers' ethics, advertising, trust accounting, records and registers, inspection, disciplinary bodies, indemnity fund."
     },
     {
       "id": "droits-libertes-fondamentaux",
@@ -229,8 +229,40 @@
       "label_fr": "Procédure pénale",
       "label_en": "Penal Procedure",
       "kind": "specialise",
-      "description_fr": "Poursuite pénale québécoise (Code de procédure pénale) : constat d'infraction, dénonciation, comparution, défaut, instruction, jugement, peine et amende, moyens de défense, appel en matière pénale. Distincte de la procédure civile.",
-      "description_en": "Penal prosecution in Québec (Code of Penal Procedure): statement of offence, information, appearance, default, trial, judgment, sentence and fine, defences, appeal in penal matters. Distinct from civil procedure."
+      "description_fr": "Poursuite pénale québécoise (Code de procédure pénale) : constat d'infraction, dénonciation, comparution, défaut, instruction, jugement, peine et amende, moyens de défense, appel en matière pénale ; confiscation des produits et instruments d'activités illégales.",
+      "description_en": "Penal prosecution in Québec (Code of Penal Procedure): statement of offence, information, appearance, default, trial, judgment, sentence and fine, defences, appeal in penal matters; forfeiture of proceeds and instruments of unlawful activity."
+    },
+    {
+      "id": "police-deontologie",
+      "label_fr": "Police et déontologie policière",
+      "label_en": "Police and Police Ethics",
+      "kind": "specialise",
+      "description_fr": "Organisation policière, pouvoirs et devoirs des policiers, Code de déontologie des policiers, plainte en déontologie, enquête, discipline interne, Tribunal administratif de déontologie policière, Bureau des enquêtes indépendantes, École nationale de police.",
+      "description_en": "Police organization, powers and duties of police officers, Code of ethics of Québec police officers, ethics complaint, investigation, internal discipline, Administrative Tribunal of Police Ethics, Bureau des enquêtes indépendantes, police academy."
+    },
+    {
+      "id": "batiment-construction",
+      "label_fr": "Bâtiment et construction",
+      "label_en": "Building and Construction",
+      "kind": "specialise",
+      "description_fr": "Loi sur le bâtiment et Régie du bâtiment : Code de construction, Code de sécurité, licence d'entrepreneur, permis, qualification, plan de garantie des bâtiments résidentiels neufs, inspection préachat, sécurité des installations et des équipements.",
+      "description_en": "Building Act and Régie du bâtiment: Construction Code, Safety Code, contractor's licence, permits, qualification, guarantee plan for new residential buildings, pre-purchase inspection, safety of installations and equipment."
+    },
+    {
+      "id": "contrats-publics",
+      "label_fr": "Contrats publics",
+      "label_en": "Public Contracts",
+      "kind": "specialise",
+      "description_fr": "Contrats des organismes publics et municipaux : appel d'offres, soumission, adjudication, contrat de gré à gré, autorisation de contracter, intégrité des soumissionnaires, Autorité des marchés publics, plainte en matière d'adjudication.",
+      "description_en": "Contracts of public and municipal bodies: call for tenders, bid, awarding of contracts, contract by mutual agreement, authorization to contract, integrity of tenderers, Autorité des marchés publics, complaint concerning the awarding of contracts."
+    },
+    {
+      "id": "fonction-publique",
+      "label_fr": "Fonction publique",
+      "label_en": "Public Service",
+      "kind": "specialise",
+      "description_fr": "Emploi dans la fonction publique et les organismes publics : dotation, nomination, classement, promotion, éthique et discipline des fonctionnaires, employés publics, divulgation d'actes répréhensibles et protection contre les représailles.",
+      "description_en": "Employment in the public service and public bodies: staffing, appointment, classification, promotion, ethics and discipline of public servants, public employees, disclosure of wrongdoings and protection against reprisals."
     }
   ],
   "mappings": [
@@ -556,6 +588,162 @@
     {
       "subject": "publicite-droits",
       "law": "ccq-r.6"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "e-6.1-r.2"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "e-6.1-r.0.3"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "d-9.2-r.2"
+    },
+    {
+      "subject": "assurances",
+      "law": "d-9.2-r.2"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "d-9.2-r.10"
+    },
+    {
+      "subject": "assurances",
+      "law": "d-9.2-r.10"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "d-9.2-r.19"
+    },
+    {
+      "subject": "assurances",
+      "law": "d-9.2-r.19"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "d-9.2-r.20"
+    },
+    {
+      "subject": "assurances",
+      "law": "d-9.2-r.20"
+    },
+    {
+      "subject": "police-deontologie",
+      "law": "p-13.1"
+    },
+    {
+      "subject": "police-deontologie",
+      "law": "p-13.1-r.1"
+    },
+    {
+      "subject": "police-deontologie",
+      "law": "p-13.1-r.2.02"
+    },
+    {
+      "subject": "police-deontologie",
+      "law": "p-13.1-r.2.1"
+    },
+    {
+      "subject": "batiment-construction",
+      "law": "b-1.1"
+    },
+    {
+      "subject": "batiment-construction",
+      "law": "b-1.1-r.1"
+    },
+    {
+      "subject": "batiment-construction",
+      "law": "b-1.1-r.2"
+    },
+    {
+      "subject": "batiment-construction",
+      "law": "b-1.1-r.3"
+    },
+    {
+      "subject": "batiment-construction",
+      "law": "b-1.1-r.3.1"
+    },
+    {
+      "subject": "batiment-construction",
+      "law": "b-1.1-r.8"
+    },
+    {
+      "subject": "obligations-contrats",
+      "law": "b-1.1-r.8"
+    },
+    {
+      "subject": "batiment-construction",
+      "law": "b-1.1-r.10"
+    },
+    {
+      "subject": "immobilier-courtage",
+      "law": "c-73.2-r.1"
+    },
+    {
+      "subject": "immobilier-courtage",
+      "law": "c-73.2-r.4"
+    },
+    {
+      "subject": "immobilier-courtage",
+      "law": "c-73.2-r.6"
+    },
+    {
+      "subject": "droit-municipal",
+      "law": "e-15.1.0.1"
+    },
+    {
+      "subject": "droit-municipal",
+      "law": "e-25"
+    },
+    {
+      "subject": "biens",
+      "law": "e-25"
+    },
+    {
+      "subject": "fonction-publique",
+      "law": "e-6"
+    },
+    {
+      "subject": "fonction-publique",
+      "law": "f-3.1"
+    },
+    {
+      "subject": "contrats-publics",
+      "law": "a-33.2.1"
+    },
+    {
+      "subject": "contrats-publics",
+      "law": "c-65.1"
+    },
+    {
+      "subject": "contrats-publics",
+      "law": "c-65.01"
+    },
+    {
+      "subject": "droit-municipal",
+      "law": "c-65.01"
+    },
+    {
+      "subject": "droit-municipal",
+      "law": "c-37.01"
+    },
+    {
+      "subject": "fonction-publique",
+      "law": "d-11.1"
+    },
+    {
+      "subject": "fonction-publique",
+      "law": "p-33.01"
+    },
+    {
+      "subject": "travail-emploi",
+      "law": "p-33.01"
+    },
+    {
+      "subject": "procedure-penale",
+      "law": "c-52.2"
     }
   ]
 }

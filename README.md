@@ -46,7 +46,7 @@ Le patron d'usage est en deux temps : **s'orienter** (découverte), puis **extra
 |---|---|---|
 | `qclaw_find_relevant` | Le routeur : d'un problème en langage libre vers les lois et chapitres candidats, avec le *pourquoi* de chaque rapprochement | `« vice caché »` → C.c.Q. Livre 5 (Obligations) + L.p.c. |
 | `qclaw_list_laws` | Carte du corpus : noms FR/EN, citation RLRQ, dates, matières, loi habilitante, plan des grands codes ; filtres `fonction`/`forum`/`subject` | `fonction=tarif` → les 3 tarifs |
-| `qclaw_list_subjects` | Les 29 matières de la taxonomie (droit privé du C.c.Q. + matières spécialisées), bilingues | — |
+| `qclaw_list_subjects` | Les 33 matières de la taxonomie (droit privé du C.c.Q. + matières spécialisées), bilingues | — |
 | `qclaw_related_laws` | Graphe d'une loi : règlements pris sous elle, loi habilitante, renvois, relations curées | `law=cpc` → ses 6 règlements de cour |
 
 ### Extraction

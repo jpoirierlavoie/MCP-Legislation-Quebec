@@ -174,15 +174,15 @@ async function smokeTests() {
     `count=${bySubject.structuredContent?.count}`);
 
   const subs = await callTool("qclaw_list_subjects", {});
-  add("list_subjects : 29 matières", subs.structuredContent?.count === 29,
+  add("list_subjects : 33 matières", subs.structuredContent?.count === 33,
     `count=${subs.structuredContent?.count}`);
 
-  // Les 29 matières doivent être traduites : c'est la surface d'appariement du signal S1,
+  // Les 33 matières doivent être traduites : c'est la surface d'appariement du signal S1,
   // sans quoi le routeur reste muet en anglais.
   const subsEn = await callTool("qclaw_list_subjects", { lang: "en" });
   const sansEn = (subsEn.structuredContent?.subjects ?? [])
     .filter((s) => !s.label_en || !s.description_en).map((s) => s.id);
-  add("list_subjects (lang=en) : les 29 matières traduites", sansEn.length === 0,
+  add("list_subjects (lang=en) : les 33 matières traduites", sansEn.length === 0,
     sansEn.length ? `sans traduction : ${sansEn.slice(0, 5).join(", ")}…` : "");
   // Contrôler les ENTRÉES, pas seulement les en-têtes de groupe : une première version
   // traduisait « Private law (C.C.Q.) » tout en listant « biens — Biens » et sa description

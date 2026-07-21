@@ -14,7 +14,7 @@ défaut possible — refuser vaut toujours mieux que deviner.**
 2. **Pipeline Python** (`pipeline/`, venv `./.venv/Scripts/python.exe`, toujours
    `PYTHONUTF8=1`) — télécharge/parse les EPUB Irosoft, charge D1 par
    staging → validation → bascule. Ne JAMAIS écrire directement en production.
-3. **Données versionnées** — `laws.config.json` (78 lois), `taxonomy.json` (29 matières
+3. **Données versionnées** — `laws.config.json` (78 lois), `taxonomy.json` (33 matières
    bilingues), `relations.json` (relations curées), `schema.sql` + `schema-decouverte.sql`
    + `migrations/` (wrangler d1 migrations).
 
@@ -94,7 +94,12 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
     et le bon chapitre du C.p.c. a disparu du top 8 — sans erreur. Les pondérations sont
     désormais continues (`specificityFactor`). Se méfier de tout `<=` sur un décompte
     d'entités dans `src/relevance.ts`.
-13. **`eval/cases.json` est la vérité terrain de Jason** (⛔) : proposer les évolutions,
+13. **Une `description` de matière est une SURFACE D'APPARIEMENT, pas de la prose.** S1
+    apparie des tokens et ignore la négation : écrire « distincte de la procédure civile »
+    dans la matière *Procédure pénale* lui a fait capter « appel civil » et évincer le
+    C.p.c. Jamais de mention contrastive ni de « à ne pas confondre avec » dans une
+    description ; n'y mettre que le vocabulaire que l'on VEUT voir matcher.
+14. **`eval/cases.json` est la vérité terrain de Jason** (⛔) : proposer les évolutions,
     ne jamais modifier de son propre chef. Idem tout contenu éditorial juridique
     (taxonomie, gazetteer, headnotes — drapeau `validated`, phase 3 v2).
 
