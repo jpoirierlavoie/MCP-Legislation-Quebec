@@ -14,7 +14,7 @@ défaut possible — refuser vaut toujours mieux que deviner.**
 2. **Pipeline Python** (`pipeline/`, venv `./.venv/Scripts/python.exe`, toujours
    `PYTHONUTF8=1`) — télécharge/parse les EPUB Irosoft, charge D1 par
    staging → validation → bascule. Ne JAMAIS écrire directement en production.
-3. **Données versionnées** — `laws.config.json` (47 lois), `taxonomy.json` (28 matières
+3. **Données versionnées** — `laws.config.json` (47 lois), `taxonomy.json` (29 matières
    bilingues), `relations.json` (relations curées), `schema.sql` + `schema-decouverte.sql`
    + `migrations/` (wrangler d1 migrations).
 

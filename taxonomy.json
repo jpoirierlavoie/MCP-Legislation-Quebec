@@ -77,8 +77,8 @@
       "label_fr": "Publicité des droits",
       "label_en": "Publication of Rights",
       "kind": "prive-ccq",
-      "description_fr": "Registre foncier, RDPRM, effets de la publicité (Livre 9 C.c.Q.).",
-      "description_en": "Land register, Register of Personal and Movable Real Rights (RPMRR), effects of publication (Book Nine, C.C.Q.)."
+      "description_fr": "Registre foncier et publicité foncière, RDPRM (registre des droits personnels et réels mobiliers), inscription, réquisition, radiation, effets de la publicité (Livre 9 C.c.Q.).",
+      "description_en": "Land register and land registration, RPMRR (register of personal and movable real rights), registration, application, cancellation, effects of publication (Book Nine, C.C.Q.)."
     },
     {
       "id": "droit-international-prive",
@@ -141,16 +141,16 @@
       "label_fr": "Valeurs mobilières et dérivés",
       "label_en": "Securities and Derivatives",
       "kind": "specialise",
-      "description_fr": "Instruments dérivés, transfert de valeurs mobilières et titres intermédiés.",
-      "description_en": "Derivative instruments, transfer of securities and security entitlements."
+      "description_fr": "Valeurs mobilières : prospectus, placement, émetteur assujetti, information continue, courtier et conseiller, offre publique d'achat, initié ; instruments dérivés ; transfert de valeurs mobilières et titres intermédiés.",
+      "description_en": "Securities: prospectus, distribution, reporting issuer, continuous disclosure, dealers and advisers, take-over bid, insider; derivative instruments; transfer of securities and security entitlements."
     },
     {
       "id": "secteur-financier",
       "label_fr": "Secteur financier et institutions financières",
       "label_en": "Financial Sector and Financial Institutions",
       "kind": "specialise",
-      "description_fr": "Encadrement AMF, institutions de dépôts, entreprises de services monétaires, distribution de produits financiers.",
-      "description_en": "Oversight by the Autorité des marchés financiers, deposit institutions, money-services businesses, distribution of financial products and services."
+      "description_fr": "Encadrement AMF, institutions de dépôts, assureurs et activités d'assurance, coopératives de services financiers (caisses), entreprises de services monétaires, distribution de produits et services financiers.",
+      "description_en": "Oversight by the Autorité des marchés financiers, deposit institutions, insurers and insurance activities, financial services cooperatives (credit unions), money-services businesses, distribution of financial products and services."
     },
     {
       "id": "assurances",
@@ -173,8 +173,8 @@
       "label_fr": "Renseignements personnels",
       "label_en": "Personal Information",
       "kind": "specialise",
-      "description_fr": "Protection des renseignements personnels dans le secteur privé (Loi 25).",
-      "description_en": "Protection of personal information in the private sector (Law 25)."
+      "description_fr": "Protection des renseignements personnels dans le secteur privé ET dans le secteur public (Loi 25) : accès aux documents des organismes publics, consentement, collecte, communication, incident de confidentialité, droit de rectification.",
+      "description_en": "Protection of personal information in both the private and the public sector (Law 25): access to documents held by public bodies, consent, collection, communication, confidentiality incident, right of rectification."
     },
     {
       "id": "droit-professionnel",
@@ -223,6 +223,14 @@
       "kind": "specialise",
       "description_fr": "Loi d'interprétation : règles transversales de lecture des lois du Québec.",
       "description_en": "Interpretation Act: transversal rules for reading the statutes of Québec."
+    },
+    {
+      "id": "procedure-penale",
+      "label_fr": "Procédure pénale",
+      "label_en": "Penal Procedure",
+      "kind": "specialise",
+      "description_fr": "Poursuite pénale québécoise (Code de procédure pénale) : constat d'infraction, dénonciation, comparution, défaut, instruction, jugement, peine et amende, moyens de défense, appel en matière pénale. Distincte de la procédure civile.",
+      "description_en": "Penal prosecution in Québec (Code of Penal Procedure): statement of offence, information, appearance, default, trial, judgment, sentence and fine, defences, appeal in penal matters. Distinct from civil procedure."
     }
   ],
   "mappings": [
@@ -508,6 +516,46 @@
     {
       "subject": "administration-justice",
       "law": "cpc"
+    },
+    {
+      "subject": "valeurs-mobilieres",
+      "law": "v-1.1"
+    },
+    {
+      "subject": "renseignements-personnels",
+      "law": "a-2.1"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "a-32.1"
+    },
+    {
+      "subject": "assurances",
+      "law": "a-32.1"
+    },
+    {
+      "subject": "secteur-financier",
+      "law": "c-67.3"
+    },
+    {
+      "subject": "procedure-penale",
+      "law": "c-25.1"
+    },
+    {
+      "subject": "droit-municipal",
+      "law": "f-2.1"
+    },
+    {
+      "subject": "societes-entreprises",
+      "law": "a-33.01"
+    },
+    {
+      "subject": "publicite-droits",
+      "law": "ccq-r.8"
+    },
+    {
+      "subject": "publicite-droits",
+      "law": "ccq-r.6"
     }
   ]
 }
