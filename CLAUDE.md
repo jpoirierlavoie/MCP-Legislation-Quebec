@@ -1,6 +1,6 @@
 # CLAUDE.md — Lois du Québec (serveur MCP)
 
-Serveur MCP **en production** servant le texte officiel de 47 lois et règlements du Québec
+Serveur MCP **en production** servant le texte officiel de 78 lois et règlements du Québec
 (FR + EN) : `https://legislation.poirierlavoie.ca/mcp`. Propriétaire : Jason Poirier Lavoie
 (avocat). Lecture seule pour les usagers ; les données viennent des EPUB officiels de
 LégisQuébec. **C'est un outil juridique : un résultat faux rendu en silence est le pire
@@ -14,7 +14,7 @@ défaut possible — refuser vaut toujours mieux que deviner.**
 2. **Pipeline Python** (`pipeline/`, venv `./.venv/Scripts/python.exe`, toujours
    `PYTHONUTF8=1`) — télécharge/parse les EPUB Irosoft, charge D1 par
    staging → validation → bascule. Ne JAMAIS écrire directement en production.
-3. **Données versionnées** — `laws.config.json` (47 lois), `taxonomy.json` (29 matières
+3. **Données versionnées** — `laws.config.json` (78 lois), `taxonomy.json` (29 matières
    bilingues), `relations.json` (relations curées), `schema.sql` + `schema-decouverte.sql`
    + `migrations/` (wrangler d1 migrations).
 
@@ -88,7 +88,13 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
 11. **Environnement Windows/Git Bash : les heredocs bash retirent un niveau de `\`**.
     Tout patch contenant des barres obliques inverses passe par un FICHIER script
     (outil Write) puis exécution — jamais par heredoc.
-12. **`eval/cases.json` est la vérité terrain de Jason** (⛔) : proposer les évolutions,
+12. **Toute calibration doit dégrader EN DOUCEUR quand le corpus grandit** : un seuil
+    (« ≤ N entités → bonus, sinon rien ») a une position qui dépend de la taille du
+    corpus. En passant de 47 à 78 lois, « récusation » a franchi le seuil de spécificité
+    et le bon chapitre du C.p.c. a disparu du top 8 — sans erreur. Les pondérations sont
+    désormais continues (`specificityFactor`). Se méfier de tout `<=` sur un décompte
+    d'entités dans `src/relevance.ts`.
+13. **`eval/cases.json` est la vérité terrain de Jason** (⛔) : proposer les évolutions,
     ne jamais modifier de son propre chef. Idem tout contenu éditorial juridique
     (taxonomie, gazetteer, headnotes — drapeau `validated`, phase 3 v2).
 
@@ -107,7 +113,7 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
 ## Procédures sûres
 
 **Modifier le Worker** : coder → `tsc` → `wrangler dev` + contrôles locaux →
-`npm run evals` (49) → deploy → re-vérifier en production (les Durable Objects mettent
+`npm run evals` (55) → deploy → re-vérifier en production (les Durable Objects mettent
 ~30–60 s à recycler l'ancien code) → `npm run eval` si le comportement de recherche a
 changé — **porte : aucune régression sur les 20 cas**.
 
@@ -117,7 +123,7 @@ balisage inconnu ; (3) `ingest --law X` local puis remote (staging→bascule, in
 scan) ; (4) `discovery/load.py` + `relations.py` (les deux cibles) ; (5) passe éditoriale
 de Jason sur `taxonomy.json` (sans mappage, la loi est invisible au signal S1) ;
 (6) backfill vecteurs (procédure §6 du rapport phase 2) ; (7) mettre à jour les contrôles
-épinglés (« 47 lois »…) ; (8) éval avant/après.
+épinglés (« 78 lois »…) ; (8) éval avant/après.
 
 **Rafraîchissement semestriel** : `ingest --all --download --refresh-dates` (76 combos),
 rechargement découverte, re-backfill vecteurs complet, éval. Le cron déclaré dans

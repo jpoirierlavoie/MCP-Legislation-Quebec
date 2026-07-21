@@ -1,7 +1,7 @@
 # Lois du Québec — serveur MCP
 
 Serveur [MCP](https://modelcontextprotocol.io) donnant aux assistants IA un accès **en
-lecture seule** au texte officiel de la législation québécoise : **47 lois et règlements**
+lecture seule** au texte officiel de la législation québécoise : **78 lois et règlements**
 (dont le Code civil du Québec et le Code de procédure civile), en **français et en
 anglais**, avec dates de consolidation, hiérarchie complète (Livres → Titres → Chapitres →
 articles) et recherche hybride lexicale + sémantique.
@@ -29,11 +29,11 @@ Dans Claude (connecteurs personnalisés) ou tout client MCP :
 | Catégorie | Textes |
 |---|---|
 | Codes | Code civil du Québec (3 525 art.), Code de procédure civile (878 art.) |
-| Lois sectorielles | Charte des droits et libertés, Loi sur la protection du consommateur, normes du travail, renseignements personnels (Loi 25), cités et villes, compagnies / sociétés par actions, secteur financier, courtage immobilier, TI, interprétation… |
-| Règles de procédure | Règlements des cours (appel, supérieure, Québec), du TAQ et du TAL |
-| Tarifs | Tarif judiciaire, tarifs du TAQ et du TAL |
+| Lois sectorielles | Charte des droits et libertés, protection du consommateur, normes du travail, renseignements personnels (Loi 25) et accès aux documents publics, valeurs mobilières, assureurs, coopératives de services financiers, police et déontologie policière, bâtiment (Code de construction, Code de sécurité), courtage immobilier, cités et villes, fiscalité et éthique municipales, expropriation, contrats des organismes publics et municipaux, fonction publique, procédure pénale… |
+| Règles de procédure | Règlements des cours (appel, supérieure, Québec), du TAQ, du TAL, du TAMF, de la déontologie policière et de la Régie du bâtiment |
+| Tarifs | Tarif judiciaire, tarifs du TAQ, du TAL et du TAMF |
 
-Au total : **~36 700 articles** par langue, consolidés (dates affichées par l'outil
+Au total : **~46 000 articles** par langue, consolidés (dates affichées par l'outil
 `qclaw_list_laws`). Rafraîchissement semestriel.
 
 ## Les 10 outils
@@ -94,7 +94,7 @@ src/            Worker Cloudflare (TypeScript) : outils MCP, recherche, D1/Vecto
 pipeline/       Ingestion Python : EPUB LégisQuébec -> D1 (staging -> validation -> bascule)
 laws.config.json, taxonomy.json, relations.json   Données versionnées (corpus, matières, graphe)
 migrations/     Migrations D1 (wrangler d1 migrations)
-tests/, eval/   49 contrôles bout-en-bout + harnais d'évaluation (20 cas, recall@10/MRR)
+tests/, eval/   55 contrôles bout-en-bout + harnais d'évaluation (20 cas, recall@10/MRR)
 docs/           Notes d'architecture, rapports de phase, format EPUB ; archive des plans
 ```
 

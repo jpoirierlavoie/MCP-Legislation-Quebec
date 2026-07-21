@@ -1076,6 +1076,698 @@
       "forum": [],
       "numbering": "standard",
       "kind_epub": "cs"
+    },
+    {
+      "id": "e-6.1-r.2",
+      "name_fr": "Tarif des droits, honoraires et des frais afférents aux demandes entendues par le Tribunal administratif des marchés financiers",
+      "name_en": "Tariff of duties and fees related to applications heard by the Financial Markets Administrative Tribunal",
+      "rlrq_cite": "RLRQ, c. E-6.1, r. 2",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/E-6.1,%20R.%202.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/E-6.1,%20R.%202.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/E-6.1,%20R.%202",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/E-6.1,%20R.%202"
+      },
+      "fonction": "tarif",
+      "forum": [
+        "Tribunal administratif des marchés financiers"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "e-6.1-r.0.3",
+      "name_fr": "Règlement sur les règles de preuve et de procédure du Tribunal administratif des marchés financiers",
+      "name_en": "Rules of evidence and procedure of the Financial Markets Administrative Tribunal",
+      "rlrq_cite": "RLRQ, c. E-6.1, r. 0.3",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/E-6.1,%20R.%200.3.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/E-6.1,%20R.%200.3.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/E-6.1,%20R.%200.3",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/E-6.1,%20R.%200.3"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Tribunal administratif des marchés financiers"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "d-9.2-r.2",
+      "name_fr": "Règlement sur le cabinet, le représentant autonome et la société autonome",
+      "name_en": "Regulation respecting firms, independent representatives and independent partnerships",
+      "rlrq_cite": "RLRQ, c. D-9.2, r. 2",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/D-9.2,%20R.%202.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/D-9.2,%20R.%202.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/D-9.2,%20R.%202",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/D-9.2,%20R.%202"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "d-9.2-r.10",
+      "name_fr": "Règlement sur l’exercice des activités des représentants",
+      "name_en": "Regulation respecting the pursuit of activities as a representative",
+      "rlrq_cite": "RLRQ, c. D-9.2, r. 10",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/D-9.2,%20R.%2010.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/D-9.2,%20R.%2010.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/D-9.2,%20R.%2010",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/D-9.2,%20R.%2010"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "d-9.2-r.19",
+      "name_fr": "Règlement sur la tenue et la conservation des livres et registres",
+      "name_en": "Regulation respecting the keeping and preservation of books and registers",
+      "rlrq_cite": "RLRQ, c. D-9.2, r. 19",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/D-9.2,%20R.%2019.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/D-9.2,%20R.%2019.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/D-9.2,%20R.%2019",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/D-9.2,%20R.%2019"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "d-9.2-r.20",
+      "name_fr": "Règlement sur les titres similaires à celui de planificateur financier",
+      "name_en": "Regulation respecting titles similar to the title of financial planner",
+      "rlrq_cite": "RLRQ, c. D-9.2, r. 20",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/D-9.2,%20R.%2020.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/D-9.2,%20R.%2020.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/D-9.2,%20R.%2020",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/D-9.2,%20R.%2020"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "p-13.1",
+      "name_fr": "Loi sur la police",
+      "name_en": "Police Act",
+      "rlrq_cite": "RLRQ, c. P-13.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/P-13.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/P-13.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/P-13.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/P-13.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "p-13.1-r.1",
+      "name_fr": "Code de déontologie des policiers du Québec",
+      "name_en": "Code of ethics of Québec police officers",
+      "rlrq_cite": "RLRQ, c. P-13.1, r. 1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/P-13.1,%20R.%201.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/P-13.1,%20R.%201.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/P-13.1,%20R.%201",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/P-13.1,%20R.%201"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "p-13.1-r.2.02",
+      "name_fr": "Règlement sur la discipline interne des policiers et policières de la Ville de Montréal",
+      "name_en": "By-law respecting the internal discipline of police officers of Ville de Montréal",
+      "rlrq_cite": "RLRQ, c. P-13.1, r. 2.02",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/P-13.1,%20R.%202.02.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/P-13.1,%20R.%202.02.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/P-13.1,%20R.%202.02",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/P-13.1,%20R.%202.02"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "p-13.1-r.2.1",
+      "name_fr": "Règlement sur la preuve, la procédure et la pratique du Tribunal administratif de déontologie policière",
+      "name_en": "Rules of evidence, procedure and practice of the Tribunal administratif de déontologie policière",
+      "rlrq_cite": "RLRQ, c. P-13.1, r. 2.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/P-13.1,%20R.%202.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/P-13.1,%20R.%202.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/P-13.1,%20R.%202.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/P-13.1,%20R.%202.1"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Tribunal administratif de déontologie policière"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "b-1.1",
+      "name_fr": "Loi sur le bâtiment",
+      "name_en": "Building Act",
+      "rlrq_cite": "RLRQ, c. B-1.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/B-1.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/B-1.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/B-1.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/B-1.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "b-1.1-r.1",
+      "name_fr": "Règlement d’application de la Loi sur le bâtiment",
+      "name_en": "Regulation respecting the application of the Building Act",
+      "rlrq_cite": "RLRQ, c. B-1.1, r. 1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/B-1.1,%20R.%201.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/B-1.1,%20R.%201.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/B-1.1,%20R.%201",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/B-1.1,%20R.%201"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "b-1.1-r.2",
+      "name_fr": "Code de construction",
+      "name_en": "Construction Code",
+      "rlrq_cite": "RLRQ, c. B-1.1, r. 2",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/B-1.1,%20R.%202.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/B-1.1,%20R.%202.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/B-1.1,%20R.%202",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/B-1.1,%20R.%202"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "b-1.1-r.3",
+      "name_fr": "Code de sécurité",
+      "name_en": "Safety Code",
+      "rlrq_cite": "RLRQ, c. B-1.1, r. 3",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/B-1.1,%20R.%203.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/B-1.1,%20R.%203.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/B-1.1,%20R.%203",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/B-1.1,%20R.%203"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "b-1.1-r.3.1",
+      "name_fr": "Règlement sur l’encadrement des inspecteurs en bâtiments d’habitation pour les inspections en vue d’une transaction immobilière",
+      "name_en": "Regulation respecting the regulation of residential building inspectors for inspections in the context of a real estate transaction",
+      "rlrq_cite": "RLRQ, c. B-1.1, r. 3.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/B-1.1,%20R.%203.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/B-1.1,%20R.%203.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/B-1.1,%20R.%203.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/B-1.1,%20R.%203.1"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "b-1.1-r.8",
+      "name_fr": "Règlement sur le plan de garantie des bâtiments résidentiels neufs",
+      "name_en": "Regulation respecting the guarantee plan for new residential buildings",
+      "rlrq_cite": "RLRQ, c. B-1.1, r. 8",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/B-1.1,%20R.%208.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/B-1.1,%20R.%208.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/B-1.1,%20R.%208",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/B-1.1,%20R.%208"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "b-1.1-r.10",
+      "name_fr": "Règlement sur les règles de pratique de la Régie du bâtiment du Québec",
+      "name_en": "Regulation respecting the rules of practice of the Régie du bâtiment du Québec",
+      "rlrq_cite": "RLRQ, c. B-1.1, r. 10",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/B-1.1,%20R.%2010.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/B-1.1,%20R.%2010.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/B-1.1,%20R.%2010",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/B-1.1,%20R.%2010"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Régie du bâtiment du Québec"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "c-73.2-r.1",
+      "name_fr": "Règlement sur les conditions d’exercice d’une opération de courtage, sur la déontologie des courtiers et sur la publicité",
+      "name_en": "Regulation respecting brokerage requirements, professional conduct of brokers and advertising",
+      "rlrq_cite": "RLRQ, c. C-73.2, r. 1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/C-73.2,%20R.%201.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/C-73.2,%20R.%201.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/C-73.2,%20R.%201",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/C-73.2,%20R.%201"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "c-73.2-r.4",
+      "name_fr": "Règlement sur les dossiers, livres et registres, la comptabilité en fidéicommis et l’inspection des courtiers et des agences",
+      "name_en": "Regulation respecting records, books and registers, trust accounting and inspection of brokers and agencies",
+      "rlrq_cite": "RLRQ, c. C-73.2, r. 4",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/C-73.2,%20R.%204.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/C-73.2,%20R.%204.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/C-73.2,%20R.%204",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/C-73.2,%20R.%204"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "c-73.2-r.6",
+      "name_fr": "Règlement sur les instances disciplinaires de l’Organisme d’autoréglementation du courtage immobilier du Québec",
+      "name_en": "Regulation respecting disciplinary proceedings of the Organisme d’autoréglementation du courtage immobilier du Québec",
+      "rlrq_cite": "RLRQ, c. C-73.2, r. 6",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/C-73.2,%20R.%206.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/C-73.2,%20R.%206.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/C-73.2,%20R.%206",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/C-73.2,%20R.%206"
+      },
+      "fonction": "regles-procedure",
+      "forum": [
+        "Organisme d’autoréglementation du courtage immobilier du Québec"
+      ],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "e-15.1.0.1",
+      "name_fr": "Loi sur l’éthique et la déontologie en matière municipale",
+      "name_en": "Municipal Ethics and Good Conduct Act",
+      "rlrq_cite": "RLRQ, c. E-15.1.0.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/E-15.1.0.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/E-15.1.0.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/E-15.1.0.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/E-15.1.0.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "e-25",
+      "name_fr": "Loi concernant l’expropriation",
+      "name_en": "Act respecting expropriation",
+      "rlrq_cite": "RLRQ, c. E-25",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/E-25.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/E-25.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/E-25",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/E-25"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "e-6",
+      "name_fr": "Loi sur les employés publics",
+      "name_en": "Public Officers Act",
+      "rlrq_cite": "RLRQ, c. E-6",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/E-6.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/E-6.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/E-6",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/E-6"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "f-3.1",
+      "name_fr": "Loi sur la fonction publique",
+      "name_en": "Civil Service Act",
+      "rlrq_cite": "RLRQ, c. F-3.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/F-3.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/F-3.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/F-3.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/F-3.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "a-33.2.1",
+      "name_fr": "Loi sur l’Autorité des marchés publics",
+      "name_en": "Act respecting the Autorité des marchés publics",
+      "rlrq_cite": "RLRQ, c. A-33.2.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/A-33.2.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/A-33.2.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/A-33.2.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/A-33.2.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "c-65.1",
+      "name_fr": "Loi sur les contrats des organismes publics",
+      "name_en": "Act respecting contracting by public bodies",
+      "rlrq_cite": "RLRQ, c. C-65.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-65.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-65.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/C-65.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/C-65.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "c-65.01",
+      "name_fr": "Loi sur les contrats des organismes municipaux",
+      "name_en": "Act respecting contracting by municipal bodies",
+      "rlrq_cite": "RLRQ, c. C-65.01",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-65.01.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-65.01.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/C-65.01",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/C-65.01"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "c-37.01",
+      "name_fr": "Loi sur la Communauté métropolitaine de Montréal",
+      "name_en": "Act respecting the Communauté métropolitaine de Montréal",
+      "rlrq_cite": "RLRQ, c. C-37.01",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-37.01.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-37.01.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/C-37.01",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/C-37.01"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "d-11.1",
+      "name_fr": "Loi facilitant la divulgation d’actes répréhensibles à l’égard des organismes publics",
+      "name_en": "Act to facilitate the disclosure of wrongdoings relating to public bodies",
+      "rlrq_cite": "RLRQ, c. D-11.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/D-11.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/D-11.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/D-11.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/D-11.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "p-33.01",
+      "name_fr": "Loi sur la protection contre les représailles liées à la divulgation d’actes répréhensibles",
+      "name_en": "Act respecting protection against reprisals related to the disclosure of wrongdoings",
+      "rlrq_cite": "RLRQ, c. P-33.01",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/P-33.01.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/P-33.01.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/P-33.01",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/P-33.01"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "c-52.2",
+      "name_fr": "Loi sur la confiscation, l’administration et l’affectation des produits et instruments d’activités illégales",
+      "name_en": "Act respecting the forfeiture, administration and appropriation of proceeds and instruments of unlawful activity",
+      "rlrq_cite": "RLRQ, c. C-52.2",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-52.2.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-52.2.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/C-52.2",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/C-52.2"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
     }
   ]
 }

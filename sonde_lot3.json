@@ -1,0 +1,622 @@
+[
+ {
+  "id": "e-6.1-r.2",
+  "kind": "cr",
+  "chap": "E-6.1, r. 2",
+  "domaine": "financier",
+  "fr": {
+   "ok": true,
+   "ko": 361,
+   "titre": "Tarif des droits, honoraires et des frais afférents aux demandes entendues par le Tribunal administratif des marchés financiers",
+   "arts": 9,
+   "divs": 0
+  },
+  "en": {
+   "ok": true,
+   "ko": 361,
+   "titre": "Tariff of duties and fees related to applications heard by the Financial Markets Administrative Tribunal",
+   "arts": 9,
+   "divs": 0
+  }
+ },
+ {
+  "id": "e-6.1-r.0.3",
+  "kind": "cr",
+  "chap": "E-6.1, r. 0.3",
+  "domaine": "financier",
+  "fr": {
+   "ok": true,
+   "ko": 379,
+   "titre": "Règlement sur les règles de preuve et de procédure du Tribunal administratif des marchés financiers",
+   "arts": 74,
+   "divs": 43
+  },
+  "en": {
+   "ok": true,
+   "ko": 377,
+   "titre": "Rules of evidence and procedure of the Financial Markets Administrative Tribunal",
+   "arts": 74,
+   "divs": 43
+  }
+ },
+ {
+  "id": "d-9.2-r.2",
+  "kind": "cr",
+  "chap": "D-9.2, r. 2",
+  "domaine": "financier",
+  "fr": {
+   "ok": true,
+   "ko": 373,
+   "titre": "Règlement sur le cabinet, le représentant autonome et la société autonome",
+   "arts": 41,
+   "divs": 36
+  },
+  "en": {
+   "ok": true,
+   "ko": 373,
+   "titre": "Regulation respecting firms, independent representatives and independent partnerships",
+   "arts": 41,
+   "divs": 36
+  }
+ },
+ {
+  "id": "d-9.2-r.10",
+  "kind": "cr",
+  "chap": "D-9.2, r. 10",
+  "domaine": "financier",
+  "fr": {
+   "ok": true,
+   "ko": 382,
+   "titre": "Règlement sur l’exercice des activités des représentants",
+   "arts": 64,
+   "divs": 35
+  },
+  "en": {
+   "ok": true,
+   "ko": 382,
+   "titre": "Regulation respecting the pursuit of activities as a representative",
+   "arts": 64,
+   "divs": 35
+  }
+ },
+ {
+  "id": "d-9.2-r.19",
+  "kind": "cr",
+  "chap": "D-9.2, r. 19",
+  "domaine": "financier",
+  "fr": {
+   "ok": true,
+   "ko": 357,
+   "titre": "Règlement sur la tenue et la conservation des livres et registres",
+   "arts": 19,
+   "divs": 17
+  },
+  "en": {
+   "ok": true,
+   "ko": 357,
+   "titre": "Regulation respecting the keeping and preservation of books and registers",
+   "arts": 19,
+   "divs": 17
+  }
+ },
+ {
+  "id": "d-9.2-r.20",
+  "kind": "cr",
+  "chap": "D-9.2, r. 20",
+  "domaine": "financier",
+  "fr": {
+   "ok": true,
+   "ko": 354,
+   "titre": "Règlement sur les titres similaires à celui de planificateur financier",
+   "arts": 2,
+   "divs": 0
+  },
+  "en": {
+   "ok": true,
+   "ko": 354,
+   "titre": "Regulation respecting titles similar to the title of financial planner",
+   "arts": 2,
+   "divs": 0
+  }
+ },
+ {
+  "id": "p-13.1",
+  "kind": "cs",
+  "chap": "P-13.1",
+  "domaine": "policier",
+  "fr": {
+   "ok": true,
+   "ko": 499,
+   "titre": "Loi sur la police",
+   "arts": 513,
+   "divs": 266
+  },
+  "en": {
+   "ok": true,
+   "ko": 495,
+   "titre": "Police Act",
+   "arts": 513,
+   "divs": 266
+  }
+ },
+ {
+  "id": "p-13.1-r.1",
+  "kind": "cr",
+  "chap": "P-13.1, r. 1",
+  "domaine": "policier",
+  "fr": {
+   "ok": true,
+   "ko": 358,
+   "titre": "Code de déontologie des policiers du Québec",
+   "arts": 14,
+   "divs": 6
+  },
+  "en": {
+   "ok": true,
+   "ko": 357,
+   "titre": "Code of ethics of Québec police officers",
+   "arts": 14,
+   "divs": 6
+  }
+ },
+ {
+  "id": "p-13.1-r.2.02",
+  "kind": "cr",
+  "chap": "P-13.1, r. 2.02",
+  "domaine": "policier",
+  "fr": {
+   "ok": true,
+   "ko": 372,
+   "titre": "Règlement sur la discipline interne des policiers et policières de la Ville de Montréal",
+   "arts": 62,
+   "divs": 24
+  },
+  "en": {
+   "ok": true,
+   "ko": 371,
+   "titre": "By-law respecting the internal discipline of police officers of Ville de Montréal",
+   "arts": 62,
+   "divs": 24
+  }
+ },
+ {
+  "id": "p-13.1-r.2.1",
+  "kind": "cr",
+  "chap": "P-13.1, r. 2.1",
+  "domaine": "policier",
+  "fr": {
+   "ok": true,
+   "ko": 370,
+   "titre": "Règlement sur la preuve, la procédure et la pratique du Tribunal administratif de déontologie policière",
+   "arts": 43,
+   "divs": 36
+  },
+  "en": {
+   "ok": true,
+   "ko": 370,
+   "titre": "Rules of evidence, procedure and practice of the Tribunal administratif de déontologie policière",
+   "arts": 43,
+   "divs": 36
+  }
+ },
+ {
+  "id": "b-1.1",
+  "kind": "cs",
+  "chap": "B-1.1",
+  "domaine": "construction",
+  "fr": {
+   "ok": true,
+   "ko": 487,
+   "titre": "Loi sur le bâtiment",
+   "arts": 488,
+   "divs": 205
+  },
+  "en": {
+   "ok": true,
+   "ko": 484,
+   "titre": "Building Act",
+   "arts": 488,
+   "divs": 205
+  }
+ },
+ {
+  "id": "b-1.1-r.1",
+  "kind": "cr",
+  "chap": "B-1.1, r. 1",
+  "domaine": "construction",
+  "fr": {
+   "ok": true,
+   "ko": 366,
+   "titre": "Règlement d’application de la Loi sur le bâtiment",
+   "arts": 26,
+   "divs": 25
+  },
+  "en": {
+   "ok": true,
+   "ko": 366,
+   "titre": "Regulation respecting the application of the Building Act",
+   "arts": 26,
+   "divs": 25
+  }
+ },
+ {
+  "id": "b-1.1-r.2",
+  "kind": "cr",
+  "chap": "B-1.1, r. 2",
+  "domaine": "construction",
+  "fr": {
+   "ok": true,
+   "ko": 504,
+   "titre": "Code de construction",
+   "arts": 379,
+   "divs": 259
+  },
+  "en": {
+   "ok": true,
+   "ko": 497,
+   "titre": "Construction Code",
+   "arts": 379,
+   "divs": 259
+  }
+ },
+ {
+  "id": "b-1.1-r.3",
+  "kind": "cr",
+  "chap": "B-1.1, r. 3",
+  "domaine": "construction",
+  "fr": {
+   "ok": true,
+   "ko": 550,
+   "titre": "Code de sécurité",
+   "arts": 549,
+   "divs": 427
+  },
+  "en": {
+   "ok": true,
+   "ko": 540,
+   "titre": "Safety Code",
+   "arts": 549,
+   "divs": 427
+  }
+ },
+ {
+  "id": "b-1.1-r.3.1",
+  "kind": "cr",
+  "chap": "B-1.1, r. 3.1",
+  "domaine": "construction",
+  "fr": {
+   "ok": true,
+   "ko": 374,
+   "titre": "Règlement sur l’encadrement des inspecteurs en bâtiments d’habitation pour les inspections en vue d’une transaction immobilière",
+   "arts": 46,
+   "divs": 42
+  },
+  "en": {
+   "ok": true,
+   "ko": 373,
+   "titre": "Regulation respecting the regulation of residential building inspectors for inspections in the context of a real estate transaction",
+   "arts": 46,
+   "divs": 42
+  }
+ },
+ {
+  "id": "b-1.1-r.8",
+  "kind": "cr",
+  "chap": "B-1.1, r. 8",
+  "domaine": "construction",
+  "fr": {
+   "ok": true,
+   "ko": 416,
+   "titre": "Règlement sur le plan de garantie des bâtiments résidentiels neufs",
+   "arts": 176,
+   "divs": 134
+  },
+  "en": {
+   "ok": true,
+   "ko": 414,
+   "titre": "Regulation respecting the guarantee plan for new residential buildings",
+   "arts": 176,
+   "divs": 134
+  }
+ },
+ {
+  "id": "b-1.1-r.10",
+  "kind": "cr",
+  "chap": "B-1.1, r. 10",
+  "domaine": "construction",
+  "fr": {
+   "ok": true,
+   "ko": 364,
+   "titre": "Règlement sur les règles de pratique de la Régie du bâtiment du Québec",
+   "arts": 34,
+   "divs": 24
+  },
+  "en": {
+   "ok": true,
+   "ko": 363,
+   "titre": "Regulation respecting the rules of practice of the Régie du bâtiment du Québec",
+   "arts": 34,
+   "divs": 24
+  }
+ },
+ {
+  "id": "c-73.2-r.1",
+  "kind": "cr",
+  "chap": "C-73.2, r. 1",
+  "domaine": "courtage",
+  "fr": {
+   "ok": true,
+   "ko": 387,
+   "titre": "Règlement sur les conditions d’exercice d’une opération de courtage, sur la déontologie des courtiers et sur la publicité",
+   "arts": 139,
+   "divs": 85
+  },
+  "en": {
+   "ok": true,
+   "ko": 385,
+   "titre": "Regulation respecting brokerage requirements, professional conduct of brokers and advertising",
+   "arts": 139,
+   "divs": 87
+  }
+ },
+ {
+  "id": "c-73.2-r.4",
+  "kind": "cr",
+  "chap": "C-73.2, r. 4",
+  "domaine": "courtage",
+  "fr": {
+   "ok": true,
+   "ko": 376,
+   "titre": "Règlement sur les dossiers, livres et registres, la comptabilité en fidéicommis et l’inspection des courtiers et des agences",
+   "arts": 52,
+   "divs": 51
+  },
+  "en": {
+   "ok": true,
+   "ko": 375,
+   "titre": "Regulation respecting records, books and registers, trust accounting and inspection of brokers and agencies",
+   "arts": 52,
+   "divs": 51
+  }
+ },
+ {
+  "id": "c-73.2-r.6",
+  "kind": "cr",
+  "chap": "C-73.2, r. 6",
+  "domaine": "courtage",
+  "fr": {
+   "ok": true,
+   "ko": 371,
+   "titre": "Règlement sur les instances disciplinaires de l’Organisme d’autoréglementation du courtage immobilier du Québec",
+   "arts": 62,
+   "divs": 30
+  },
+  "en": {
+   "ok": true,
+   "ko": 370,
+   "titre": "Regulation respecting disciplinary proceedings of the Organisme d’autoréglementation du courtage immobilier du Québec",
+   "arts": 62,
+   "divs": 30
+  }
+ },
+ {
+  "id": "e-15.1.0.1",
+  "kind": "cs",
+  "chap": "E-15.1.0.1",
+  "domaine": "municipal",
+  "fr": {
+   "ok": true,
+   "ko": 377,
+   "titre": "Loi sur l’éthique et la déontologie en matière municipale",
+   "arts": 71,
+   "divs": 50
+  },
+  "en": {
+   "ok": true,
+   "ko": 376,
+   "titre": "Municipal Ethics and Good Conduct Act",
+   "arts": 71,
+   "divs": 50
+  }
+ },
+ {
+  "id": "e-25",
+  "kind": "cs",
+  "chap": "E-25",
+  "domaine": "municipal",
+  "fr": {
+   "ok": true,
+   "ko": 427,
+   "titre": "Loi concernant l’expropriation",
+   "arts": 249,
+   "divs": 128
+  },
+  "en": {
+   "ok": true,
+   "ko": 425,
+   "titre": "Act respecting expropriation",
+   "arts": 249,
+   "divs": 128
+  }
+ },
+ {
+  "id": "e-6",
+  "kind": "cs",
+  "chap": "E-6",
+  "domaine": "municipal",
+  "fr": {
+   "ok": true,
+   "ko": 370,
+   "titre": "Loi sur les employés publics",
+   "arts": 51,
+   "divs": 19
+  },
+  "en": {
+   "ok": true,
+   "ko": 369,
+   "titre": "Public Officers Act",
+   "arts": 51,
+   "divs": 19
+  }
+ },
+ {
+  "id": "f-3.1",
+  "kind": "cs",
+  "chap": "F-3.1",
+  "domaine": "municipal",
+  "fr": {
+   "ok": true,
+   "ko": 374,
+   "titre": "Loi sur la fonction publique",
+   "arts": 152,
+   "divs": 61
+  },
+  "en": {
+   "ok": true,
+   "ko": 373,
+   "titre": "Civil Service Act",
+   "arts": 152,
+   "divs": 61
+  }
+ },
+ {
+  "id": "a-33.2.1",
+  "kind": "cs",
+  "chap": "A-33.2.1",
+  "domaine": "municipal",
+  "fr": {
+   "ok": true,
+   "ko": 420,
+   "titre": "Loi sur l’Autorité des marchés publics",
+   "arts": 296,
+   "divs": 90
+  },
+  "en": {
+   "ok": true,
+   "ko": 418,
+   "titre": "Act respecting the Autorité des marchés publics",
+   "arts": 296,
+   "divs": 91
+  }
+ },
+ {
+  "id": "c-65.1",
+  "kind": "cs",
+  "chap": "C-65.1",
+  "domaine": "municipal",
+  "fr": {
+   "ok": true,
+   "ko": 458,
+   "titre": "Loi sur les contrats des organismes publics",
+   "arts": 242,
+   "divs": 136
+  },
+  "en": {
+   "ok": true,
+   "ko": 453,
+   "titre": "Act respecting contracting by public bodies",
+   "arts": 242,
+   "divs": 136
+  }
+ },
+ {
+  "id": "c-65.01",
+  "kind": "cs",
+  "chap": "C-65.01",
+  "domaine": "municipal",
+  "fr": {
+   "ok": true,
+   "ko": 414,
+   "titre": "Loi sur les contrats des organismes municipaux",
+   "arts": 266,
+   "divs": 137
+  },
+  "en": {
+   "ok": true,
+   "ko": 413,
+   "titre": "Act respecting contracting by municipal bodies",
+   "arts": 266,
+   "divs": 137
+  }
+ },
+ {
+  "id": "c-37.01",
+  "kind": "cs",
+  "chap": "C-37.01",
+  "domaine": "municipal",
+  "fr": {
+   "ok": true,
+   "ko": 442,
+   "titre": "Loi sur la Communauté métropolitaine de Montréal",
+   "arts": 367,
+   "divs": 91
+  },
+  "en": {
+   "ok": true,
+   "ko": 440,
+   "titre": "Act respecting the Communauté métropolitaine de Montréal",
+   "arts": 367,
+   "divs": 91
+  }
+ },
+ {
+  "id": "d-11.1",
+  "kind": "cs",
+  "chap": "D-11.1",
+  "domaine": "municipal",
+  "fr": {
+   "ok": true,
+   "ko": 387,
+   "titre": "Loi facilitant la divulgation d’actes répréhensibles à l’égard des organismes publics",
+   "arts": 76,
+   "divs": 35
+  },
+  "en": {
+   "ok": true,
+   "ko": 386,
+   "titre": "Act to facilitate the disclosure of wrongdoings relating to public bodies",
+   "arts": 76,
+   "divs": 35
+  }
+ },
+ {
+  "id": "p-33.01",
+  "kind": "cs",
+  "chap": "P-33.01",
+  "domaine": "municipal",
+  "fr": {
+   "ok": true,
+   "ko": 365,
+   "titre": "Loi sur la protection contre les représailles liées à la divulgation d’actes répréhensibles",
+   "arts": 31,
+   "divs": 37
+  },
+  "en": {
+   "ok": true,
+   "ko": 365,
+   "titre": "Act respecting protection against reprisals related to the disclosure of wrongdoings",
+   "arts": 31,
+   "divs": 37
+  }
+ },
+ {
+  "id": "c-52.2",
+  "kind": "cs",
+  "chap": "C-52.2",
+  "domaine": "autre",
+  "fr": {
+   "ok": true,
+   "ko": 376,
+   "titre": "Loi sur la confiscation, l’administration et l’affectation des produits et instruments d’activités illégales",
+   "arts": 54,
+   "divs": 22
+  },
+  "en": {
+   "ok": true,
+   "ko": 375,
+   "titre": "Act respecting the forfeiture, administration and appropriation of proceeds and instruments of unlawful activity",
+   "arts": 54,
+   "divs": 22
+  }
+ }
+]

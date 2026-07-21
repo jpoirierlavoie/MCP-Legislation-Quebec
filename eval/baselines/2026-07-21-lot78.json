@@ -1,0 +1,641 @@
+{
+  "date": "2026-07-21T17:14:26.863Z",
+  "endpoint": "https://legislation.poirierlavoie.ca/mcp",
+  "aggregates": {
+    "mean_recall_at_10": 0.975,
+    "mean_mrr": 0.8416666666666666,
+    "cases_fully_covered": 19,
+    "cases_zero": 0,
+    "mean_fr_coverage": 0.55
+  },
+  "cases": [
+    {
+      "id": 1,
+      "query": "délai réponse défendeur hors du Québec assignation",
+      "law_scope": null,
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "cpc|490"
+        ],
+        "nice_hits": 1,
+        "result_count": 10,
+        "top": [
+          "cpc|490",
+          "cpc|145",
+          "cpc|535.6",
+          "b-1-r.3.1|121",
+          "cpc|175",
+          "c-25.01-r.0.2.4|13",
+          "cpc|180",
+          "c-25.01-r.0.2.2|6",
+          "cpc|147",
+          "c-26|182.4"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 0,
+        "covered": [],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 2,
+      "query": "signification hors du Québec délai",
+      "law_scope": "cpc",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "cpc|490"
+        ],
+        "nice_hits": 0,
+        "result_count": 5,
+        "top": [
+          "cpc|490",
+          "cpc|78",
+          "cpc|652",
+          "cpc|507",
+          "cpc|697"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 0,
+        "covered": [],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 3,
+      "query": "élément d'extranéité",
+      "law_scope": null,
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "ccq|3111",
+          "cpc|490"
+        ],
+        "nice_hits": 0,
+        "result_count": 3,
+        "top": [
+          "ccq|3111",
+          "cpc|490",
+          "cpc|622"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 0,
+        "covered": [],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 4,
+      "query": "défendeur étranger cautionnement frais",
+      "law_scope": "cpc",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "cpc|492"
+        ],
+        "nice_hits": 1,
+        "result_count": 10,
+        "top": [
+          "cpc|492",
+          "cpc|493",
+          "cpc|638",
+          "cpc|364",
+          "cpc|547",
+          "cpc|344",
+          "cpc|339",
+          "cpc|674",
+          "cpc|273",
+          "cpc|672"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 0,
+        "covered": [],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 5,
+      "query": "notification internationale Convention La Haye",
+      "law_scope": "cpc",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "cpc|494"
+        ],
+        "nice_hits": 1,
+        "result_count": 4,
+        "top": [
+          "cpc|494",
+          "cpc|annexe-i",
+          "cpc|495",
+          "cpc|109"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 1,
+        "covered": [
+          "cpc|494"
+        ],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 6,
+      "query": "vice caché maison recours",
+      "law_scope": "ccq",
+      "search": {
+        "recall_at_10": 0.5,
+        "mrr": 0.3333333333333333,
+        "first_rank": 3,
+        "must_found": [
+          "ccq|1726"
+        ],
+        "nice_hits": 1,
+        "result_count": 10,
+        "top": [
+          "ccq|1081",
+          "ccq|1728",
+          "ccq|1726",
+          "ccq|2104",
+          "ccq|1727",
+          "ccq|1998",
+          "ccq|1999",
+          "ccq|1997",
+          "ccq|2055",
+          "ccq|2000"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 1,
+        "covered": [
+          "ccq|1726",
+          "ccq|1739"
+        ],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 7,
+      "query": "dénonciation vice caché délai",
+      "law_scope": "ccq",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "ccq|1739"
+        ],
+        "nice_hits": 0,
+        "result_count": 10,
+        "top": [
+          "ccq|1739",
+          "ccq|1081",
+          "ccq|1728",
+          "ccq|2654",
+          "ccq|1726",
+          "ccq|1828",
+          "ccq|2321",
+          "ccq|2362",
+          "ccq|2964",
+          "ccq|2758"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 1,
+        "covered": [
+          "ccq|1739"
+        ],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 8,
+      "query": "récusation juge motifs",
+      "law_scope": "cpc",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 0.5,
+        "first_rank": 2,
+        "must_found": [
+          "cpc|202"
+        ],
+        "nice_hits": 3,
+        "result_count": 10,
+        "top": [
+          "cpc|201",
+          "cpc|202",
+          "cpc|204",
+          "cpc|627",
+          "cpc|568",
+          "cpc|205",
+          "cpc|626",
+          "cpc|348",
+          "cpc|366",
+          "cpc|346"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 1,
+        "covered": [
+          "cpc|202"
+        ],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 9,
+      "query": "désaveu avocat",
+      "law_scope": "cpc",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "cpc|191"
+        ],
+        "nice_hits": 0,
+        "result_count": 1,
+        "top": [
+          "cpc|191"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 0,
+        "covered": [],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 10,
+      "query": "avocat cesser d'occuper",
+      "law_scope": "cpc",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "cpc|194"
+        ],
+        "nice_hits": 1,
+        "result_count": 7,
+        "top": [
+          "cpc|194",
+          "cpc|378",
+          "cpc|326",
+          "cpc|72",
+          "cpc|197",
+          "cpc|191",
+          "cpc|192"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 0,
+        "covered": [],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 11,
+      "query": "avocat conflit d'intérêts inhabile",
+      "law_scope": "cpc",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "cpc|193"
+        ],
+        "nice_hits": 0,
+        "result_count": 10,
+        "top": [
+          "cpc|193",
+          "cpc|203",
+          "cpc|316",
+          "cpc|696",
+          "cpc|699",
+          "cpc|694",
+          "cpc|305",
+          "cpc|160",
+          "cpc|194",
+          "cpc|192"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 0,
+        "covered": [],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 12,
+      "query": "responsabilité civile faute préjudice",
+      "law_scope": "ccq",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 0.16666666666666666,
+        "first_rank": 6,
+        "must_found": [
+          "ccq|1457"
+        ],
+        "nice_hits": 0,
+        "result_count": 10,
+        "top": [
+          "b-1.1-r.3|333",
+          "ccq|1474",
+          "ccq|1463",
+          "ccq|1462",
+          "ccq|1478",
+          "ccq|1457",
+          "ccq|1481",
+          "ccq|3126",
+          "ccq|1465",
+          "ccq|1480"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 1,
+        "covered": [
+          "ccq|1457"
+        ],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 13,
+      "query": "prescription trois ans action personnelle",
+      "law_scope": "ccq",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "ccq|2925"
+        ],
+        "nice_hits": 0,
+        "result_count": 10,
+        "top": [
+          "ccq|2925",
+          "ccq|2926.1",
+          "ccq|2929",
+          "ccq|2926",
+          "ccq|2928",
+          "ccq|2923",
+          "ccq|2924",
+          "ccq|330",
+          "ccq|2890",
+          "ccq|2930"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 1,
+        "covered": [
+          "ccq|2925"
+        ],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 14,
+      "query": "congédiement délai de congé raisonnable",
+      "law_scope": "ccq",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "ccq|2091"
+        ],
+        "nice_hits": 1,
+        "result_count": 10,
+        "top": [
+          "ccq|2091",
+          "ccq|2092",
+          "ccq|1675",
+          "ccq|2468",
+          "ccq|2362",
+          "ccq|2088",
+          "ccq|2572",
+          "ccq|2571",
+          "ccq|1965",
+          "ccq|1991"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 1,
+        "covered": [
+          "ccq|2091"
+        ],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 15,
+      "query": "clause non-concurrence fin d'emploi",
+      "law_scope": "ccq",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "ccq|2089",
+          "ccq|2095"
+        ],
+        "nice_hits": 0,
+        "result_count": 10,
+        "top": [
+          "ccq|2095",
+          "ccq|2089",
+          "ccq|1216",
+          "ccq|1640",
+          "ccq|758",
+          "ccq|2097",
+          "ccq|1438",
+          "ccq|2204",
+          "ccq|2263",
+          "ccq|2096"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 1,
+        "covered": [
+          "ccq|2089",
+          "ccq|2095"
+        ],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 16,
+      "query": "vente sous contrôle de justice garantie",
+      "law_scope": "ccq",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "ccq|1731"
+        ],
+        "nice_hits": 0,
+        "result_count": 10,
+        "top": [
+          "ccq|1731",
+          "ccq|2791",
+          "ccq|2793",
+          "ccq|2794",
+          "ccq|2792",
+          "ccq|1845",
+          "ccq|1723",
+          "ccq|1726",
+          "ccq|1725",
+          "ccq|1716"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 1,
+        "covered": [
+          "ccq|1731"
+        ],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 17,
+      "query": "remplacement du juge délibéré",
+      "law_scope": "cpc",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 0.5,
+        "first_rank": 2,
+        "must_found": [
+          "cpc|326"
+        ],
+        "nice_hits": 0,
+        "result_count": 10,
+        "top": [
+          "cpc|324",
+          "cpc|326",
+          "cpc|323",
+          "cpc|384",
+          "cpc|624",
+          "cpc|778",
+          "cpc|192",
+          "cpc|325",
+          "cpc|533",
+          "cpc|628"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 1,
+        "covered": [
+          "cpc|326"
+        ],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 18,
+      "query": "moyen déclinatoire compétence internationale",
+      "law_scope": "cpc",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "cpc|491"
+        ],
+        "nice_hits": 1,
+        "result_count": 2,
+        "top": [
+          "cpc|491",
+          "cpc|167"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 0,
+        "covered": [],
+        "candidate_count": 8
+      }
+    },
+    {
+      "id": 19,
+      "query": "defendant outside Quebec time to answer",
+      "law_scope": null,
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 0.3333333333333333,
+        "first_rank": 3,
+        "must_found": [
+          "cpc|490"
+        ],
+        "nice_hits": 0,
+        "result_count": 10,
+        "top": [
+          "ccq|3134",
+          "c-26|annexe-i",
+          "cpc|490",
+          "ccq|3110",
+          "c-25.1|35.1",
+          "ccq|3119",
+          "j-3-r.3.01|28",
+          "c-25.01-r.0.2.4|2",
+          "cpc|497",
+          "c-26|17"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 0,
+        "covered": [],
+        "candidate_count": 0
+      }
+    },
+    {
+      "id": 20,
+      "query": "perte de l'ouvrage cinq ans entrepreneur",
+      "law_scope": "ccq",
+      "search": {
+        "recall_at_10": 1,
+        "mrr": 1,
+        "first_rank": 1,
+        "must_found": [
+          "ccq|2118"
+        ],
+        "nice_hits": 1,
+        "result_count": 10,
+        "top": [
+          "ccq|2118",
+          "ccq|2115",
+          "ccq|2120",
+          "ccq|2083",
+          "ccq|2119",
+          "ccq|2121",
+          "ccq|2123",
+          "ccq|2122",
+          "ccq|2104",
+          "ccq|2113"
+        ]
+      },
+      "find_relevant": {
+        "coverage": 1,
+        "covered": [
+          "ccq|2118"
+        ],
+        "candidate_count": 8
+      }
+    }
+  ]
+}

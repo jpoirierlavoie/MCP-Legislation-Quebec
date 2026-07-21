@@ -24,9 +24,23 @@ export const WEIGHTS = {
  * entièrement juridique (« procédure », « contrat ») en touche des dizaines et n'apprend
  * presque rien. Sans ce correctif, « procédure TAQ » noie j-3 sous les sept règlements de
  * procédure civile déclenchés par le seul mot « procédure ».
+ *
+ * ⚠️ La pondération est CONTINUE, pas un seuil. Une falaise (« ≤ 4 entités -> ×2, sinon
+ * ×1 ») a une position qui dépend de la TAILLE DU CORPUS : en passant de 47 à 78 lois,
+ * « récusation » est passé de 4 à 5 entités touchées, a perdu son facteur d'un coup, et le
+ * chapitre de la récusation du C.p.c. s'est fait évincer du top 8 par des dizaines de
+ * simples « juge ». Décroissance douce -> le classement ne bascule plus à l'ajout d'une loi.
+ *
+ *   facteur(portée) = 1 + (FACTOR - 1) × min(1, MAX_REACH / portée)
+ *   portée ≤ 4 -> ×2,00   5 -> ×1,80   8 -> ×1,50   20 -> ×1,20   100 -> ×1,04
  */
 export const SPECIFIC_TOKEN_MAX_REACH = 4;
 export const SPECIFIC_TOKEN_FACTOR = 2;
+
+export function specificityFactor(reach: number): number {
+  if (reach <= 0) return 1;
+  return 1 + (SPECIFIC_TOKEN_FACTOR - 1) * Math.min(1, SPECIFIC_TOKEN_MAX_REACH / reach);
+}
 
 /**
  * Fusion RRF de la recherche hybride (plan v2, 2.3) : score(d) = Σ 1/(k + rang_liste(d)).
@@ -234,8 +248,7 @@ export function rank(input: RelevanceInput, limit: number): Candidate[] {
     set.add(keyOf(h.lawId, h.path));
     reach.set(h.token, set);
   }
-  const factorOf = (t: string) =>
-    (reach.get(t)?.size ?? 0) <= SPECIFIC_TOKEN_MAX_REACH ? SPECIFIC_TOKEN_FACTOR : 1;
+  const factorOf = (t: string) => specificityFactor(reach.get(t)?.size ?? 0);
 
   const cands = new Map<string, Candidate>();
   const add = (lawId: string, path: string, heading: string | null, pts: number, why: string) => {

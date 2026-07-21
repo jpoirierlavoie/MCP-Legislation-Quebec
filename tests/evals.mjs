@@ -158,14 +158,14 @@ async function smokeTests() {
   const add = (nom, ok, detail = "") => checks.push({ nom, ok, detail });
 
   const laws = await callTool("qclaw_list_laws", {});
-  add("list_laws : 47 lois", laws.structuredContent?.count === 47,
+  add("list_laws : 78 lois", laws.structuredContent?.count === 78,
     `count=${laws.structuredContent?.count}`);
   const ccq = laws.structuredContent?.laws?.find((l) => l.id === "ccq");
   add("list_laws : ccq porte ses Livres (matières)", (ccq?.mapped_divisions?.length ?? 0) >= 10,
     `${ccq?.mapped_divisions?.length ?? 0} division(s) mappée(s)`);
 
   const filtered = await callTool("qclaw_list_laws", { fonction: "tarif" });
-  add("list_laws : filtre fonction='tarif'", filtered.structuredContent?.count === 3,
+  add("list_laws : filtre fonction='tarif'", filtered.structuredContent?.count === 4,
     `count=${filtered.structuredContent?.count}`);
 
   const bySubject = await callTool("qclaw_list_laws", { subject: "louage-residentiel" });
@@ -225,7 +225,7 @@ async function smokeTests() {
     const r = await callTool("qclaw_get_articles", { law: l.id, from: "1", to: "3" });
     if (r.isError) cassees.push(l.id);
   }
-  add("get_articles : mode plage opérant sur les 47 lois", cassees.length === 0,
+  add("get_articles : mode plage opérant sur les 78 lois", cassees.length === 0,
     cassees.length ? `échec sur ${cassees.length} : ${cassees.slice(0, 6).join(", ")}…` : "");
 
   // D1 plafonne la complexité des motifs LIKE/GLOB : les chemins profonds du C.c.Q. le
@@ -251,9 +251,9 @@ async function smokeTests() {
     ccqRef.structuredContent?.resolved?.number === "1457",
     `obtenu ${ccqRef.structuredContent?.resolved?.law}/${ccqRef.structuredContent?.resolved?.number}`);
 
-  // Une source juridique sans date de consolidation n'est pas citable : les 47 doivent l'avoir.
+  // Une source juridique sans date de consolidation n'est pas citable : les 78 doivent l'avoir.
   const sansDate = toutes.filter((l) => !l.consol_date_fr).map((l) => l.id);
-  add("list_laws : date de consolidation sur les 47 lois", sansDate.length === 0,
+  add("list_laws : date de consolidation sur les 78 lois", sansDate.length === 0,
     sansDate.length ? `manquante sur ${sansDate.length} : ${sansDate.slice(0, 5).join(", ")}…` : "");
 
   // Les identifiants Irosoft sont propres à la langue : une piste rendue en anglais doit
@@ -269,12 +269,27 @@ async function smokeTests() {
     ouvrable.isError !== true && !!premier?.heading,
     premier ? `${premier.division_path} / ${premier.heading}` : "aucune division mappée");
 
-  // Un chapitre HORS corpus dont un chapitre du corpus est préfixe ne doit pas être avalé :
-  // « c. B-1.1 » (Loi sur le bâtiment) rendait du b-1 (Loi sur le Barreau), en silence.
-  const horsCorpus = await callTool("qclaw_resolve_reference", { citation: "RLRQ, c. B-1.1, art. 5" });
+  // Un chapitre HORS corpus dont un chapitre du corpus est préfixe ne doit pas être avalé.
+  // (« B-1.1 » jouait ce rôle jusqu'à son entrée au corpus — voir le contrôle suivant ;
+  // « C-73.3 » le remplace : absent, mais préfixé par c-73.2 qui est présent.)
+  const horsCorpus = await callTool("qclaw_resolve_reference", { citation: "RLRQ, c. C-73.3, art. 5" });
   add("resolve_reference : chapitre hors corpus refusé, pas rabattu sur un voisin",
     horsCorpus.isError === true,
     horsCorpus.isError ? "" : `résolu à tort en ${horsCorpus.structuredContent?.resolved?.law}`);
+
+  // DEUX chapitres du corpus dont l'un préfixe l'autre : le plus long doit gagner.
+  // b-1 = Loi sur le Barreau ; b-1.1 = Loi sur le bâtiment. e-6 = employés publics ;
+  // e-6.1 = encadrement du secteur financier. Confondre les deux serait un faux silencieux.
+  for (const [cite, attendu] of [
+    ["RLRQ, c. B-1.1, art. 5", "b-1.1"], ["RLRQ, c. B-1, art. 5", "b-1"],
+    ["RLRQ, c. E-6.1, art. 1", "e-6.1"], ["RLRQ, c. E-6, art. 1", "e-6"],
+    ["RLRQ, c. C-65.1, art. 1", "c-65.1"], ["RLRQ, c. C-65.01, art. 1", "c-65.01"],
+  ]) {
+    const r = await callTool("qclaw_resolve_reference", { citation: cite });
+    add(`resolve_reference : « ${cite.replace("RLRQ, c. ", "")} » -> ${attendu}`,
+      r.structuredContent?.resolved?.law === attendu,
+      `obtenu ${r.structuredContent?.resolved?.law ?? "(refus)"}`);
+  }
 
   // Marqueur « a. » (forme québécoise usuelle) : sans lui, le numéro du CHAPITRE était pris
   // pour l'article — « (chapitre T-16), a. 12 » rendait l'article 16.
