@@ -878,6 +878,204 @@
       "forum": [],
       "numbering": "standard",
       "kind_epub": "cs"
+    },
+    {
+      "id": "v-1.1",
+      "name_fr": "Loi sur les valeurs mobilières",
+      "name_en": "Securities Act",
+      "rlrq_cite": "RLRQ, c. V-1.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/V-1.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/V-1.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/V-1.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/V-1.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "a-2.1",
+      "name_fr": "Loi sur l’accès aux documents des organismes publics et sur la protection des renseignements personnels",
+      "name_en": "Act respecting Access to documents held by public bodies and the Protection of personal information",
+      "rlrq_cite": "RLRQ, c. A-2.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/A-2.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/A-2.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/A-2.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/A-2.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "a-32.1",
+      "name_fr": "Loi sur les assureurs",
+      "name_en": "Insurers Act",
+      "rlrq_cite": "RLRQ, c. A-32.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/A-32.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/A-32.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/A-32.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/A-32.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "f-2.1",
+      "name_fr": "Loi sur la fiscalité municipale",
+      "name_en": "Act respecting municipal taxation",
+      "rlrq_cite": "RLRQ, c. F-2.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/F-2.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/F-2.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/F-2.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/F-2.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "c-25.1",
+      "name_fr": "Code de procédure pénale",
+      "name_en": "Code of Penal Procedure",
+      "rlrq_cite": "RLRQ, c. C-25.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-25.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-25.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/C-25.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/C-25.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "c-67.3",
+      "name_fr": "Loi sur les coopératives de services financiers",
+      "name_en": "Act respecting financial services cooperatives",
+      "rlrq_cite": "RLRQ, c. C-67.3",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-67.3.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-67.3.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/C-67.3",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/C-67.3"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
+    },
+    {
+      "id": "ccq-r.8",
+      "name_fr": "Règlement sur le registre des droits personnels et réels mobiliers",
+      "name_en": "Regulation respecting the register of personal and movable real rights",
+      "rlrq_cite": "RLRQ, c. CCQ, r. 8",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/CCQ,%20R.%208.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/CCQ,%20R.%208.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/CCQ,%20R.%208",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/CCQ,%20R.%208"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "ccq-r.6",
+      "name_fr": "Règlement sur la publicité foncière",
+      "name_en": "Regulation respecting land registration",
+      "rlrq_cite": "RLRQ, c. CCQ, r. 6",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cr/CCQ,%20R.%206.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cr/CCQ,%20R.%206.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cr/CCQ,%20R.%206",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cr/CCQ,%20R.%206"
+      },
+      "fonction": "reglement",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cr"
+    },
+    {
+      "id": "a-33.01",
+      "name_fr": "Loi favorisant l’augmentation du capital des petites et moyennes entreprises",
+      "name_en": "Act to promote the capitalization of small and medium-sized businesses",
+      "rlrq_cite": "RLRQ, c. A-33.01",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/A-33.01.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/A-33.01.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/A-33.01",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/A-33.01"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
     }
   ]
 }

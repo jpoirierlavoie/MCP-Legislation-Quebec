@@ -22,7 +22,9 @@ from ..parser import (harvest_renvois, is_division_id, opf_metadata, parse_epub,
                       _ART_ID, _KIND_BY_PREFIX, _SEG_SPLIT)
 
 UA = {"User-Agent": config.USER_AGENT}
-REPORT = config.REPO_ROOT / "docs" / "reconnaissance-36.md"
+# Artefact de dry-run daté : chaque lot d'extension produit le sien (les précédents
+# vivent dans docs/archive/).
+REPORT = config.REPO_ROOT / "docs" / "reconnaissance-courante.md"
 # ids connus (hors motif de division/article) — le reste est une anomalie à signaler.
 _KNOWN_HEAD = re.compile(r"^(?:se|sc|page\d+|d\d+e\d+|header|HFContainer)$")
 _MARKERS = ("h1", "t1", "nb", "ss", "p1", "p2")
@@ -131,8 +133,14 @@ def parse_test(data: bytes, law_id: str, name_fr: str, rlrq: str, lang: str) -> 
 
 
 def base_chapter(rlrq_cite: str) -> str | None:
+    """Chapitre racine, avec le même alias que discovery/relations.py : le Code civil est
+    « c. CCQ-1991 » mais ses règlements sont « c. CCQ, r. N » — sans cela le rapport
+    afficherait « Parent : — » pour ccq-r.6 / ccq-r.8."""
     m = re.search(r"c\.\s*([^,]+)", rlrq_cite or "")
-    return m.group(1).strip() if m else None
+    if not m:
+        return None
+    chap = m.group(1).strip()
+    return "CCQ-1991" if chap.upper() == "CCQ" else chap
 
 
 def anomalies(law: dict, s: dict, pt: dict, name_en: str | None) -> list[str]:

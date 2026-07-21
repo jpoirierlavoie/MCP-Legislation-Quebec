@@ -1,6 +1,6 @@
 # CLAUDE.md — Lois du Québec (serveur MCP)
 
-Serveur MCP **en production** servant le texte officiel de 38 lois et règlements du Québec
+Serveur MCP **en production** servant le texte officiel de 47 lois et règlements du Québec
 (FR + EN) : `https://legislation.poirierlavoie.ca/mcp`. Propriétaire : Jason Poirier Lavoie
 (avocat). Lecture seule pour les usagers ; les données viennent des EPUB officiels de
 LégisQuébec. **C'est un outil juridique : un résultat faux rendu en silence est le pire
@@ -14,7 +14,7 @@ défaut possible — refuser vaut toujours mieux que deviner.**
 2. **Pipeline Python** (`pipeline/`, venv `./.venv/Scripts/python.exe`, toujours
    `PYTHONUTF8=1`) — télécharge/parse les EPUB Irosoft, charge D1 par
    staging → validation → bascule. Ne JAMAIS écrire directement en production.
-3. **Données versionnées** — `laws.config.json` (38 lois), `taxonomy.json` (28 matières
+3. **Données versionnées** — `laws.config.json` (47 lois), `taxonomy.json` (28 matières
    bilingues), `relations.json` (relations curées), `schema.sql` + `schema-decouverte.sql`
    + `migrations/` (wrangler d1 migrations).
 
@@ -117,7 +117,7 @@ balisage inconnu ; (3) `ingest --law X` local puis remote (staging→bascule, in
 scan) ; (4) `discovery/load.py` + `relations.py` (les deux cibles) ; (5) passe éditoriale
 de Jason sur `taxonomy.json` (sans mappage, la loi est invisible au signal S1) ;
 (6) backfill vecteurs (procédure §6 du rapport phase 2) ; (7) mettre à jour les contrôles
-épinglés (« 38 lois »…) ; (8) éval avant/après.
+épinglés (« 47 lois »…) ; (8) éval avant/après.
 
 **Rafraîchissement semestriel** : `ingest --all --download --refresh-dates` (76 combos),
 rechargement découverte, re-backfill vecteurs complet, éval. Le cron déclaré dans

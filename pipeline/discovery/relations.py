@@ -30,8 +30,15 @@ def _chapter(rlrq_cite: str, root: bool = False) -> str | None:
     return chap.split(",")[0].strip() if root else chap
 
 
+# Chapitres RLRQ dont la loi et ses règlements ne portent PAS le même identifiant.
+# Le Code civil est « c. CCQ-1991 » mais ses règlements sont « c. CCQ, r. N » : sans cet
+# alias, ccq-r.6 / ccq-r.8 n'auraient AUCUN parent — en silence, sans erreur.
+_ALIAS_RACINE = {"ccq": "ccq-1991"}
+
+
 def _key(chapter: str | None) -> str:
-    return re.sub(r"\s+", "", chapter or "").lower()
+    k = re.sub(r"\s+", "", chapter or "").lower()
+    return _ALIAS_RACINE.get(k, k)
 
 
 def _is_regulation(rlrq_cite: str) -> bool:

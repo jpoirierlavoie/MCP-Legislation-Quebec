@@ -1,7 +1,7 @@
 # Lois du Québec — serveur MCP
 
 Serveur [MCP](https://modelcontextprotocol.io) donnant aux assistants IA un accès **en
-lecture seule** au texte officiel de la législation québécoise : **38 lois et règlements**
+lecture seule** au texte officiel de la législation québécoise : **47 lois et règlements**
 (dont le Code civil du Québec et le Code de procédure civile), en **français et en
 anglais**, avec dates de consolidation, hiérarchie complète (Livres → Titres → Chapitres →
 articles) et recherche hybride lexicale + sémantique.
@@ -33,7 +33,7 @@ Dans Claude (connecteurs personnalisés) ou tout client MCP :
 | Règles de procédure | Règlements des cours (appel, supérieure, Québec), du TAQ et du TAL |
 | Tarifs | Tarif judiciaire, tarifs du TAQ et du TAL |
 
-Au total : **~28 000 articles** par langue, consolidés (dates affichées par l'outil
+Au total : **~36 700 articles** par langue, consolidés (dates affichées par l'outil
 `qclaw_list_laws`). Rafraîchissement semestriel.
 
 ## Les 10 outils

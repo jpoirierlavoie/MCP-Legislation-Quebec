@@ -158,7 +158,7 @@ async function smokeTests() {
   const add = (nom, ok, detail = "") => checks.push({ nom, ok, detail });
 
   const laws = await callTool("qclaw_list_laws", {});
-  add("list_laws : 38 lois", laws.structuredContent?.count === 38,
+  add("list_laws : 47 lois", laws.structuredContent?.count === 47,
     `count=${laws.structuredContent?.count}`);
   const ccq = laws.structuredContent?.laws?.find((l) => l.id === "ccq");
   add("list_laws : ccq porte ses Livres (matières)", (ccq?.mapped_divisions?.length ?? 0) >= 10,
@@ -225,7 +225,7 @@ async function smokeTests() {
     const r = await callTool("qclaw_get_articles", { law: l.id, from: "1", to: "3" });
     if (r.isError) cassees.push(l.id);
   }
-  add("get_articles : mode plage opérant sur les 38 lois", cassees.length === 0,
+  add("get_articles : mode plage opérant sur les 47 lois", cassees.length === 0,
     cassees.length ? `échec sur ${cassees.length} : ${cassees.slice(0, 6).join(", ")}…` : "");
 
   // D1 plafonne la complexité des motifs LIKE/GLOB : les chemins profonds du C.c.Q. le
@@ -251,9 +251,9 @@ async function smokeTests() {
     ccqRef.structuredContent?.resolved?.number === "1457",
     `obtenu ${ccqRef.structuredContent?.resolved?.law}/${ccqRef.structuredContent?.resolved?.number}`);
 
-  // Une source juridique sans date de consolidation n'est pas citable : les 38 doivent l'avoir.
+  // Une source juridique sans date de consolidation n'est pas citable : les 47 doivent l'avoir.
   const sansDate = toutes.filter((l) => !l.consol_date_fr).map((l) => l.id);
-  add("list_laws : date de consolidation sur les 38 lois", sansDate.length === 0,
+  add("list_laws : date de consolidation sur les 47 lois", sansDate.length === 0,
     sansDate.length ? `manquante sur ${sansDate.length} : ${sansDate.slice(0, 5).join(", ")}…` : "");
 
   // Les identifiants Irosoft sont propres à la langue : une piste rendue en anglais doit
