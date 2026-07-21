@@ -291,6 +291,62 @@ async function smokeTests() {
     !s1 || !/l_(premier|deuxieme|troisieme|quatrieme|cinquieme|sixieme)/.test(s1.division_path),
     s1 ? s1.division_path : "aucun candidat de division");
 
+  // --- phase 1 (Discovery v2) : tests d'acceptation devenus permanents ---
+
+  // 1.1 : restreinte sans résultat -> élargissement corpus étiqueté
+  const widen = await callTool("qclaw_search_text", { query: "extranéité", law: "b-9" });
+  add("v2 1.1 : élargissement corpus sur zéro résultat (étiqueté)",
+    widen.isError !== true &&
+    /Aucun résultat dans b-9/.test(widen.content?.[0]?.text ?? "") &&
+    (widen.structuredContent?.results ?? []).some((r) => r.law_id === "cpc" && r.number === "490"),
+    (widen.content?.[0]?.text ?? "").slice(0, 60));
+
+  // 1.1 : restreinte AVEC résultats -> résultats inchangés + aperçu ailleurs (post-mortem)
+  const scoped = await callTool("qclaw_search_text", { query: "extranéité", law: "ccq" });
+  add("v2 1.1 : aperçu « ailleurs au corpus » sur recherche restreinte avec résultats",
+    scoped.structuredContent?.fallback === null &&
+    (scoped.structuredContent?.results ?? []).every((r) => r.law_id === "ccq") &&
+    (scoped.structuredContent?.elsewhere?.results ?? []).some((r) => r.law_id === "cpc" && r.number === "490"));
+
+  // 1.2 : LE CAS FONDATEUR — leave-one-out place cpc 490 dans le top 5, étiqueté
+  const fond = await callTool("qclaw_search_text",
+    { query: "signification hors du Québec délai", law: "cpc" });
+  const fondTop5 = (fond.structuredContent?.results ?? []).slice(0, 5);
+  add("v2 1.2 : cas fondateur — relaxation leave-one-out trouve cpc 490",
+    /terme ignoré : « hors »/.test(fond.content?.[0]?.text ?? "") &&
+    fondTop5.some((r) => r.law_id === "cpc" && r.number === "490"),
+    fondTop5.map((r) => `${r.law_id}|${r.number}`).join(", "));
+
+  // 1.2 : requête absurde -> échec propre
+  const absurde = await callTool("qclaw_search_text", { query: "zzz qqq" });
+  add("v2 1.2 : requête absurde échoue proprement", absurde.isError === true);
+
+  // 1.3 : fils d'Ariane lisibles + ID machine + extraits élargis + groupes par loi
+  const presc = await callTool("qclaw_search_text", { query: "prescription" });
+  const prescText = presc.content?.[0]?.text ?? "";
+  add("v2 1.3 : fil d'Ariane + ID machine dans les résultats",
+    /C\.c\.Q\. — Livre HUITIÈME/.test(prescText) && /\[ga:l_huitieme/.test(prescText));
+  add("v2 1.3 : recherche corpus groupée par loi (≥ 2 groupes)",
+    (prescText.match(/^— .+ \(\d+/gm) ?? []).length >= 2,
+    `${(prescText.match(/^— .+ \(\d+/gm) ?? []).length} groupe(s)`);
+  const unSnippet = (presc.structuredContent?.results ?? [])[0]?.snippet ?? "";
+  add("v2 1.3 : extraits élargis (≥ 25 tokens)", unSnippet.split(/\s+/).length >= 25,
+    `${unSnippet.split(/\s+/).length} tokens`);
+
+  // 1.4 : plan profondeur 2 — le Titre IV du Livre V cpc est visible dans list_laws
+  const lls = await callTool("qclaw_list_laws", {});
+  add("v2 1.4 : list_laws expose Livre V + Titre IV (droit international privé) du cpc",
+    /LES DEMANDES INTÉRESSANT LE DROIT INTERNATIONAL PRIVÉ \[ga:l_v-gb:l_iv\]/.test(lls.content?.[0]?.text ?? ""));
+  const llsSans = await callTool("qclaw_list_laws", { structure: false });
+  add("v2 1.4 : structure=false coupe le plan",
+    !/▸ Livre/.test(llsSans.content?.[0]?.text ?? ""));
+
+  // 1.5 : chemin FR sous lang=en -> pont par numéros d'articles
+  const pont = await callTool("qclaw_get_division",
+    { law: "ccq", path: "ga:l_cinquieme-gb:l_deuxieme-gc:l_septieme", lang: "en", include_text: false });
+  add("v2 1.5 : chemin FR accepté sous lang=en (CONTRACT OF EMPLOYMENT)",
+    pont.isError !== true && /CONTRACT OF EMPLOYMENT/.test(pont.content?.[0]?.text ?? ""));
+
   return checks;
 }
 
