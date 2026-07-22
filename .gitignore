@@ -10,6 +10,9 @@ __pycache__/
 # Artefacts générés par le pipeline (SQL de chargement, régénérables)
 pipeline/out/
 
+# Rapport régénéré par la veille de consolidation (scripts/check-consolidation.mjs)
+consolidation-report.md
+
 # Node / Worker
 node_modules/
 .wrangler/

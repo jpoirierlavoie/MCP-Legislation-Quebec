@@ -1,0 +1,76 @@
+name: veille-consolidation
+
+# Détecteur EN LECTURE SEULE (remplace l'ancien job de rafraîchissement, retiré parce
+# qu'il écrivait en production sans faire le rafraîchissement complet — cf. l'historique
+# de .github/workflows/ et CLAUDE.md). Ici : rien n'est écrit en base.
+#
+# Compare, pour chaque loi, la date « À jour au » affichée par LégisQuébec à la date
+# consol_date_* chargée en D1 (lue via l'endpoint MCP PUBLIC, sans secret Cloudflare).
+# Si LégisQuébec a consolidé au-delà de ce qui est chargé, ouvre/actualise une issue.
+# La bascule elle-même reste la procédure manuelle et supervisée de CLAUDE.md.
+on:
+  schedule:
+    - cron: "0 12 1 * *" # 1er de chaque mois, 12:00 UTC — lecture seule, sans risque
+  workflow_dispatch: {} # déclenchement manuel à la demande
+
+permissions:
+  contents: read
+  issues: write # seul droit d'écriture : ouvrir/actualiser l'issue de veille
+
+concurrency:
+  group: veille-consolidation
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+
+      - name: Détecter la dérive de consolidation
+        id: detect
+        env:
+          MCP_URL: https://legislation.poirierlavoie.ca/mcp
+        run: node scripts/check-consolidation.mjs
+
+      - name: Ouvrir ou actualiser l'issue de veille
+        if: steps.detect.outputs.drift == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh label create veille-consolidation \
+            --description "Dérive de consolidation détectée automatiquement" \
+            --color FBCA04 --force
+          existing=$(gh issue list --label veille-consolidation --state open \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            # Issue déjà ouverte : on régénère seulement le corps (état courant complet).
+            # Pas de commentaire mensuel redondant — l'issue ouverte EST le signal persistant.
+            gh issue edit "$existing" --body-file consolidation-report.md
+            echo "Issue #$existing actualisée (corps régénéré)."
+          else
+            gh issue create \
+              --title "Veille consolidation — rafraîchissement dû ($(date -u +%Y-%m-%d))" \
+              --label veille-consolidation \
+              --body-file consolidation-report.md
+          fi
+
+      - name: Clore l'issue si la dérive est résolue
+        if: steps.detect.outputs.drift == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          existing=$(gh issue list --label veille-consolidation --state open \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            # État terminal atteint : on ferme UNE fois, on ne re-commente pas chaque mois.
+            gh issue close "$existing" \
+              --comment "Veille du $(date -u +%Y-%m-%d) : plus aucune dérive détectée. Clôture automatique."
+          fi

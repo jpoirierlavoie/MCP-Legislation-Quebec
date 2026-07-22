@@ -1,8 +1,9 @@
 name: ci
 
-# Vérifications sans réseau ni secret : type-check du Worker TypeScript.
-# (Les tests Python du parseur téléchargent les EPUB ; ils tournent en local /
-# dans le job de rafraîchissement, pas ici, pour éviter tout blocage réseau CI.)
+# Vérifications sans réseau ni secret : type-check du Worker TypeScript + tests unitaires
+# du détecteur de veille (fonctions pures, sur HTML synthétique, sans réseau).
+# (Les tests Python du parseur téléchargent les EPUB ; ils tournent en local, pas ici,
+# pour éviter tout blocage réseau CI.)
 on:
   push:
     branches: [main]
@@ -23,3 +24,4 @@ jobs:
       - run: npm ci
       - run: npx wrangler types # génère worker-configuration.d.ts (pas d'auth requise)
       - run: npx tsc --noEmit
+      - run: node --test scripts/check-consolidation.test.mjs

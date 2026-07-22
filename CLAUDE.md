@@ -34,6 +34,7 @@ npx tsc --noEmit                                   # type-check (toujours avant 
 npm run evals                                      # 57 contrôles bout-en-bout (MCP_URL=… pour cibler)
 npm run eval                                       # harnais d'éval : 20 cas, recall@10/MRR (production)
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m unittest discover -s pipeline/tests -q   # 23 tests
+node --test scripts/check-consolidation.test.mjs   # 12 contrôles du détecteur de veille (sans réseau, en CI)
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m pipeline.ingest --law X --lang fr --apply-local
 npx wrangler d1 migrations apply qclaw --local|--remote   # bookmark Time Travel AVANT --remote
 npx wrangler deploy                                # jeton requis (voir Secrets)
@@ -147,11 +148,22 @@ comptes de `subjects`/`subject_map`/`law_relations` et résolution de chaque
 
 **Rafraîchissement semestriel** : `ingest --all --download --refresh-dates` (76 combos),
 rechargement découverte, re-backfill vecteurs complet, éval. **Entièrement manuel et
-sous surveillance** : ni le cron de `wrangler.jsonc` (aucun handler `scheduled`) ni
-`.github/workflows/refresh.yml` (réduit à `workflow_dispatch`) ne le déclenchent seuls.
-Le job GitHub ne couvre QUE les articles — l'exécuter sans enchaîner la découverte et le
-re-backfill des vecteurs laisse les embeddings sur l'ancien texte, donc du droit périmé
-rendu en silence par la recherche sémantique.
+sous surveillance** : le cron de `wrangler.jsonc` n'exécute RIEN (aucun handler
+`scheduled`), et aucun workflow GitHub n'écrit plus en base — l'ancien `refresh.yml` a
+été retiré parce qu'il ne rechargeait que les articles (ni découverte ni vecteurs),
+laissant les embeddings sur l'ancien texte donc du droit périmé rendu en silence.
+
+**Veille de consolidation** (`.github/workflows/veille-consolidation.yml` +
+`scripts/check-consolidation.mjs`) : job **en LECTURE SEULE**, mensuel, qui compare la
+date « À jour au » de chaque loi sur LégisQuébec à `consol_date_*` en D1 (lue via
+`qclaw_list_laws` sur l'endpoint public — AUCUN secret Cloudflare) et ouvre/actualise une
+issue étiquetée `veille-consolidation` quand un rafraîchissement est dû (issue close
+automatiquement à la résolution). Il DÉTECTE, il ne bascule jamais. `extractConsolidation`
+est un miroir FIDÈLE de `fetch_consolidation` (portée bornée aux blocs `text-end`) ;
+une page atteinte mais illisible est un signal ACTIONNABLE (le miroir a peut-être cassé),
+jamais un null confondu avec une panne réseau — verrouillé par
+`scripts/check-consolidation.test.mjs` (12 contrôles, en CI). Défauts trouvés par revue
+adversariale (2026-07-21) et corrigés avant le premier commit.
 
 ## Où trouver quoi
 
