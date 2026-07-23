@@ -41,7 +41,15 @@ jobs:
           MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
         run: node scripts/check-consolidation.mjs
 
-      - name: Ouvrir ou actualiser l'issue de veille
+      # Deux signaux SÉPARÉS depuis le 2026-07-23 (scripts/check-consolidation.mjs) :
+      #   drift       — dérive corpus actionnable (retard, anomalie, date absente,
+      #                 page illisible, loi sans langue) ;
+      #   unreachable — blocage réseau massif (>= 25 % de pages injoignables).
+      # Le titre de l'issue dit LEQUEL a parlé (le titre unique mentait : « rafraîchissement
+      # dû » alors que seule la joignabilité posait problème). On ne clôt que si les DEUX
+      # sont éteints : une page injoignable est une loi NON VÉRIFIÉE, pas une loi à jour —
+      # clore sur le seul drift=false laisserait un blocage total masquer une vraie dérive.
+      - name: Ouvrir ou actualiser l'issue de veille (dérive corpus)
         if: steps.detect.outputs.drift == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -52,20 +60,44 @@ jobs:
             --color FBCA04 --force
           existing=$(gh issue list --label veille-consolidation --state open \
             --json number --jq '.[0].number // empty')
+          title="Veille consolidation — rafraîchissement dû ($(date -u +%Y-%m-%d))"
           if [ -n "$existing" ]; then
-            # Issue déjà ouverte : on régénère seulement le corps (état courant complet).
+            # Issue déjà ouverte : corps régénéré ET titre resynchronisé (l'issue a pu
+            # être ouverte sous le titre « vérification incomplète » le mois d'avant).
             # Pas de commentaire mensuel redondant — l'issue ouverte EST le signal persistant.
-            gh issue edit "$existing" --body-file consolidation-report.md
-            echo "Issue #$existing actualisée (corps régénéré)."
+            gh issue edit "$existing" --title "$title" --body-file consolidation-report.md
+            echo "Issue #$existing actualisée (corps + titre)."
           else
             gh issue create \
-              --title "Veille consolidation — rafraîchissement dû ($(date -u +%Y-%m-%d))" \
+              --title "$title" \
               --label veille-consolidation \
               --body-file consolidation-report.md
           fi
 
-      - name: Clore l'issue si la dérive est résolue
-        if: steps.detect.outputs.drift == 'false'
+      - name: Tenir l'issue ouverte si la vérification est incomplète (blocage réseau)
+        if: steps.detect.outputs.drift == 'false' && steps.detect.outputs.unreachable == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh label create veille-consolidation \
+            --description "Dérive de consolidation détectée automatiquement" \
+            --color FBCA04 --force
+          existing=$(gh issue list --label veille-consolidation --state open \
+            --json number --jq '.[0].number // empty')
+          title="Veille consolidation — vérification incomplète, LégisQuébec injoignable depuis le runner ($(date -u +%Y-%m-%d))"
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --title "$title" --body-file consolidation-report.md
+            echo "Issue #$existing retitrée : vérification incomplète."
+          else
+            gh issue create \
+              --title "$title" \
+              --label veille-consolidation \
+              --body-file consolidation-report.md
+          fi
+
+      - name: Clore l'issue si tout est résolu (dérive ET réseau)
+        if: steps.detect.outputs.drift == 'false' && steps.detect.outputs.unreachable == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -75,5 +107,5 @@ jobs:
           if [ -n "$existing" ]; then
             # État terminal atteint : on ferme UNE fois, on ne re-commente pas chaque mois.
             gh issue close "$existing" \
-              --comment "Veille du $(date -u +%Y-%m-%d) : plus aucune dérive détectée. Clôture automatique."
+              --comment "Veille du $(date -u +%Y-%m-%d) : plus aucune dérive détectée et toutes les pages joignables. Clôture automatique."
           fi

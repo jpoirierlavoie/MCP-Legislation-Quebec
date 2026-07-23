@@ -107,15 +107,20 @@ export function classify(checks) {
 }
 
 /**
- * Dérive = tout ce qui est ACTIONNABLE (retard, anomalie, date absente, page illisible,
- * loi sans langue) OU un taux d'injoignables réseau franchissant le seuil massif.
+ * Dérive = ce qui est ACTIONNABLE côté corpus (retard, anomalie, date absente, page
+ * illisible, loi sans langue). Le blocage réseau massif est un signal SÉPARÉ
+ * (unreachableAlert) : une page injoignable est une loi NON VÉRIFIÉE — ni fraîche ni en
+ * retard — et l'issue ne doit ni l'annoncer comme un « rafraîchissement dû » (le titre
+ * mentait : constaté le 2026-07-23, dérive résolue mais issue tenue ouverte sous ce
+ * titre par 33 % de 502), ni la laisser passer pour un corpus vérifié. Les deux drapeaux
+ * sortent séparément sur GITHUB_OUTPUT ; le workflow ne clôt que si les DEUX sont éteints.
  */
 export function computeDrift({ retard, anomalie, sansStockee, illisible, sansLangue, injoignable, total }) {
   const unreachableRatio = total ? injoignable.length / total : 0;
   const unreachableAlert = unreachableRatio >= UNREACHABLE_ALERT_RATIO;
   const actionable =
     retard.length + anomalie.length + sansStockee.length + illisible.length + sansLangue.length;
-  return { drift: actionable > 0 || unreachableAlert, unreachableRatio, unreachableAlert };
+  return { drift: actionable > 0, unreachableRatio, unreachableAlert };
 }
 
 /** Exécute `worker` sur `items` avec un parallélisme borné (politesse envers LégisQuébec). */
@@ -197,12 +202,13 @@ async function main() {
   console.log(`  page illisible     : ${illisible.length}`);
   console.log(`  loi sans langue    : ${sansLangue.length}`);
   console.log(`  injoignables réseau: ${injoignable.length} (${(unreachableRatio * 100).toFixed(0)} %)`);
-  console.log(`  => dérive          : ${drift ? "OUI" : "non"}`);
+  console.log(`  => dérive corpus   : ${drift ? "OUI" : "non"}`);
+  console.log(`  => alerte réseau   : ${unreachableAlert ? "OUI" : "non"}`);
   for (const c of retard) console.log(`    RETARD ${c.id}/${c.lang} : D1 ${c.stored} < live ${c.live}`);
   for (const c of illisible) console.log(`    ILLISIBLE ${c.id}/${c.lang} : ${c.note}`);
 
   if (process.env.GITHUB_OUTPUT) {
-    appendFileSync(process.env.GITHUB_OUTPUT, `drift=${drift}\n`);
+    appendFileSync(process.env.GITHUB_OUTPUT, `drift=${drift}\nunreachable=${unreachableAlert}\n`);
   }
   if (process.env.GITHUB_STEP_SUMMARY) {
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, report + "\n");

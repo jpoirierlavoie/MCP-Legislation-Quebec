@@ -34,7 +34,7 @@ npx tsc --noEmit                                   # type-check (toujours avant 
 npm run evals                                      # 62 contrôles bout-en-bout (MCP_URL=… pour cibler)
 npm run eval                                       # harnais d'éval : 20 cas, recall@10/MRR (production)
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m unittest discover -s pipeline/tests -q   # 23 tests
-node --test scripts/check-consolidation.test.mjs   # 12 contrôles du détecteur de veille (sans réseau, en CI)
+node --test scripts/check-consolidation.test.mjs   # 13 contrôles du détecteur de veille (sans réseau, en CI)
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m pipeline.ingest --law X --lang fr --apply-local
 npx wrangler d1 migrations apply qclaw --local|--remote   # bookmark Time Travel AVANT --remote
 npx wrangler deploy                                # jeton requis (voir Secrets)
@@ -199,7 +199,10 @@ automatiquement à la résolution). Il DÉTECTE, il ne bascule jamais. `extractC
 est un miroir FIDÈLE de `fetch_consolidation` (portée bornée aux blocs `text-end`) ;
 une page atteinte mais illisible est un signal ACTIONNABLE (le miroir a peut-être cassé),
 jamais un null confondu avec une panne réseau — verrouillé par
-`scripts/check-consolidation.test.mjs` (12 contrôles, en CI). Défauts trouvés par revue
+`scripts/check-consolidation.test.mjs` (13 contrôles, en CI). Deux signaux SÉPARÉS
+depuis le 2026-07-23 : `drift` (dérive corpus) et `unreachable` (blocage réseau) —
+le titre de l'issue dit lequel a parlé, et elle ne clôt que si les DEUX sont éteints
+(une page injoignable est une loi NON VÉRIFIÉE, pas une loi à jour). Défauts trouvés par revue
 adversariale (2026-07-21) et corrigés avant le premier commit.
 
 ## Où trouver quoi

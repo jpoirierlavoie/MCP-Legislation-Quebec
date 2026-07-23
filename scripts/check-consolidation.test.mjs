@@ -84,13 +84,26 @@ test("computeDrift : injoignables sous le seuil, sans autre signal -> pas de dé
   assert.equal(d.drift, false);
 });
 
-test("computeDrift : blocage massif injoignable -> dérive (alerte)", () => {
+test("computeDrift : blocage massif injoignable -> alerte réseau, SANS dérive corpus (séparation 2026-07-23)", () => {
+  // Dérive résolue + 33 % de 502 tenait l'issue ouverte sous le titre « rafraîchissement
+  // dû » — un titre qui mentait. Les deux signaux sont désormais séparés : le workflow
+  // retitre en « vérification incomplète » et ne clôt que si les DEUX sont éteints.
   const injoignable = Array.from({ length: 30 }, () => ({})); // 30/100 = 30 % >= seuil
   const d = computeDrift({
     retard: [], anomalie: [], sansStockee: [], illisible: [], sansLangue: [], injoignable, total: 100,
   });
   assert.equal(d.unreachableRatio >= UNREACHABLE_ALERT_RATIO, true);
+  assert.equal(d.unreachableAlert, true);
+  assert.equal(d.drift, false);
+});
+
+test("computeDrift : blocage massif + retard réel -> les DEUX drapeaux levés (le blocage ne masque pas la dérive)", () => {
+  const injoignable = Array.from({ length: 30 }, () => ({}));
+  const d = computeDrift({
+    retard: [{}], anomalie: [], sansStockee: [], illisible: [], sansLangue: [], injoignable, total: 100,
+  });
   assert.equal(d.drift, true);
+  assert.equal(d.unreachableAlert, true);
 });
 
 test("computeDrift : une loi sans langue déclarée est actionnable (finding #4/#5)", () => {
