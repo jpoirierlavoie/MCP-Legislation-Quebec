@@ -129,7 +129,14 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
 - **R2** : AUCUN nouvel outil MCP sans approbation explicite (enrichir les 10 existants).
 - **R3** : delta de description d'outil ≤ 2 phrases ; consigner le delta de tokens.
 - **R4** : ne jamais altérer le texte officiel ni son rendu ; toute aide éditoriale est
-  visiblement étiquetée non officielle.
+  visiblement étiquetée non officielle. **Corollaire structuré (décision 001, 2026-07-23) :
+  toute étiquette qui BORNE un résultat voyage DANS `structuredContent` comme champ
+  obligatoire, jamais en prose seule** — un client peut jeter la prose et garder l'objet
+  typé, et l'étiquette tomberait sans qu'aucun test n'échoue. Déjà le cas pour `fallback`
+  (R7) ; s'impose à la phase 3 v2 (headnotes, drapeau `validated`) avant toute mise en
+  service. `outputSchema` reste ABSENT à dessein (coût récurrent de tools/list + un schéma
+  qui dérive des gabarits est un contrat menti) ; ne le revisiter que pour un consommateur
+  nommé qui VALIDE.
 - **R7** : fail open, toujours DIT (étiquettes d'élargissement/relaxation/sémantique).
 - **R8** : chemins risqués derrière variables d'env (`RELAX_SEARCH`, `HYBRID_SEARCH`) —
   rollback = flip de variable, pas revert.

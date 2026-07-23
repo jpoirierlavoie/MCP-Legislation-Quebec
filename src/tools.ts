@@ -121,6 +121,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_list_laws",
     {
+      title: "Carte du corpus",
       description:
         "Carte du corpus : toutes les lois avec identifiant, noms FR/EN, citation RLRQ, langues, " +
         "date de consolidation, nombre d'articles, et les attributs de découverte (fonction, forum, " +
@@ -185,6 +186,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_list_subjects",
     {
+      title: "Matières de la taxonomie",
       description:
         "Liste les matières de la taxonomie (droit privé du C.c.Q. et matières spécialisées) : " +
         "identifiant, libellé, description, et nombre de lois / divisions rattachées. " +
@@ -229,6 +231,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_related_laws",
     {
+      title: "Lois reliées",
       description:
         "Graphe d'interconnexion d'une loi : règlements pris sous son autorité, loi habilitante, " +
         "renvois vers d'autres textes, et relations curées (met-en-oeuvre, applique, complète…). " +
@@ -288,6 +291,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_find_relevant",
     {
+      title: "Repérage de sources — heuristique",
       description: GARDE_FOU +
         " Classement déterministe sur la matière (taxonomie), les intitulés de divisions, " +
         "les noms de lois et le graphe d'interconnexion. Ex. : query='vice caché maison', " +
@@ -347,6 +351,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_get_article",
     {
+      title: "Texte officiel d'un article",
       description:
         "Retourne le texte officiel verbatim d'un article, avec citation, chemin hiérarchique, " +
         "date de consolidation et historique. Ex. : law='ccq', article='1457'. Les dispositions " +
@@ -388,6 +393,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_get_articles",
     {
+      title: "Textes officiels en lot",
       description:
         "Retourne plusieurs articles : soit une plage (from..to), soit une liste explicite (numbers). " +
         "Paginé. Ex. : law='ccq', from='1457', to='1460' ; ou numbers=['1457','1590']." + DEUX_TEMPS,
@@ -440,6 +446,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_get_structure",
     {
+      title: "Structure d'une loi (sans texte)",
       description:
         "Arbre hiérarchique des divisions (Livre → Titre → Chapitre → Section → Sous-section), " +
         "SANS texte d'article — pour explorer avant d'extraire. Chaque nœud donne kind, number, " +
@@ -478,6 +485,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_get_division",
     {
+      title: "Texte officiel d'une division",
       description:
         "Retourne une division (Livre/Titre/Chapitre/Section/…) : son intitulé, ses sous-divisions " +
         "immédiates, et les articles qu'elle contient (tout le sous-arbre, paginés). Identifier par " +
@@ -545,6 +553,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_search_text",
     {
+      title: "Recherche plein texte — replis étiquetés",
       description:
         "Recherche plein texte (FTS5) dans le texte des articles. Retourne les correspondances " +
         "classées par pertinence avec un extrait surligné. Ex. : query='prescription action', " +
@@ -687,6 +696,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_resolve_reference",
     {
+      title: "Résolution d'une citation",
       description:
         "Résout une citation en texte libre (ex. « art. 1457 C.c.Q. », « RLRQ, c. T-16, art. 12 ») " +
         "vers l'article officiel. Reconnaît le chapitre RLRQ de n'importe quelle loi du corpus, " +
