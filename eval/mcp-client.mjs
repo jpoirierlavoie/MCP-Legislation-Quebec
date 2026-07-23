@@ -5,7 +5,24 @@
 // C'est important en volume — chaque session MCP coûte des écritures au Durable Object ;
 // un processus par appel (patron Inspector CLI) a déjà épuisé un quota journalier.
 
-export function createMcpClient(url) {
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+// Jeton d'accès (src/auth.ts) : résolu ICI plutôt que chez chaque appelant, pour qu'aucun
+// des trois (tests/evals.mjs, eval/run.mjs, scripts/check-consolidation.mjs) ne puisse être
+// oublié. Ordre : option explicite -> MCP_TOKEN (la CI n'a que ça) -> mcp.token à la racine
+// (gitignoré, même convention que backfill.token). Absent = aucun en-tête, ce qui reste
+// correct tant que le secret n'est pas posé côté Worker.
+export function resolveMcpToken() {
+  const fromEnv = process.env.MCP_TOKEN?.trim();
+  if (fromEnv) return fromEnv;
+  const file = join(dirname(fileURLToPath(import.meta.url)), "..", "mcp.token");
+  return existsSync(file) ? readFileSync(file, "utf-8").trim() || null : null;
+}
+
+export function createMcpClient(url, { token } = {}) {
+  const auth = token?.trim() || resolveMcpToken();
   let sessionId = null;
   let nextId = 1;
 
@@ -31,6 +48,7 @@ export function createMcpClient(url) {
       Accept: "application/json, text/event-stream",
     };
     if (sessionId) headers["mcp-session-id"] = sessionId;
+    if (auth) headers.Authorization = `Bearer ${auth}`;
 
     const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
     const sid = res.headers.get("mcp-session-id");

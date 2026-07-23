@@ -36,6 +36,9 @@ jobs:
         id: detect
         env:
           MCP_URL: https://legislation.poirierlavoie.ca/mcp
+          # Jeton d'accès de l'endpoint MCP (src/auth.ts). Ce n'est PAS un jeton Cloudflare :
+          # il n'ouvre que la lecture MCP, aucun droit sur le compte ni sur la base.
+          MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
         run: node scripts/check-consolidation.mjs
 
       - name: Ouvrir ou actualiser l'issue de veille

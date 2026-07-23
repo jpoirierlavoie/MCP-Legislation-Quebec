@@ -31,7 +31,7 @@ fasse calculer au chargement, il est supprimé.
 ```bash
 npx wrangler dev                                   # dev local (D1 local ; PAS Vectorize)
 npx tsc --noEmit                                   # type-check (toujours avant commit)
-npm run evals                                      # 57 contrôles bout-en-bout (MCP_URL=… pour cibler)
+npm run evals                                      # 58 contrôles bout-en-bout (MCP_URL=… pour cibler)
 npm run eval                                       # harnais d'éval : 20 cas, recall@10/MRR (production)
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m unittest discover -s pipeline/tests -q   # 23 tests
 node --test scripts/check-consolidation.test.mjs   # 12 contrôles du détecteur de veille (sans réseau, en CI)
@@ -46,6 +46,13 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
   en contexte, ni le supprimer** (consigne de Jason). Chargement inline uniquement :
   `export CLOUDFLARE_API_TOKEN=$(tr -d ' \t\r\n' < cf.token)`.
 - `backfill.token` (racine, gitignoré) : Bearer de la route `/admin/backfill-vectors`.
+- `mcp.token` (racine, gitignoré) : jeton d'accès de l'endpoint MCP (`src/auth.ts`).
+  Miroir du secret Worker `MCP_TOKEN` (`wrangler secret put MCP_TOKEN`) et du secret
+  GitHub du même nom (veille CI). Les clients Node le résolvent tout seuls
+  (`eval/mcp-client.mjs` : `MCP_TOKEN` puis `mcp.token`) — rien à exporter à la main.
+  N'ouvre QUE la lecture MCP : aucun droit sur le compte Cloudflare ni sur la base.
+  **Rotation = poser le nouveau secret, puis mettre à jour les 3 copies** (fichier local,
+  secret GitHub, URL du connecteur claude.ai).
 - Commits **signés** (gpgsign actif), footer `Co-Authored-By: Claude <noreply@anthropic.com>`
   adapté au modèle courant. Un commit par sous-tâche ; arrêt pour revue humaine à chaque
   fin de phase.
@@ -136,6 +143,17 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
 ~30–60 s à recycler l'ancien code) → `npm run eval` si le comportement de recherche a
 changé — **porte : aucune régression sur les 20 cas**.
 
+**Contrôle d'accès de `/mcp`** (`src/auth.ts`) : jeton partagé accepté sous DEUX formes —
+`/mcp/<jeton>` (le connecteur claude.ai n'accepte qu'une URL, pas d'en-tête personnalisé)
+et `Authorization: Bearer` (Claude Code, évals, veille CI). Trois points à ne pas défaire :
+(1) la vérification est dans le handler de module, donc AVANT le Durable Object — c'est ce
+qui fait qu'un appel non autorisé ne coûte rien ; (2) un refus répond **404, jamais 401** —
+un 401 annonce un serveur MCP et déclenche la découverte OAuth des clients ; (3) **sans
+`MCP_TOKEN`, l'endpoint reste ouvert** (R8 : rollback = `wrangler secret delete MCP_TOKEN`,
+pas un revert ; c'est aussi ce qui garde `wrangler dev` utilisable). Ordre de bascule :
+déployer → vérifier avec le Bearer → **puis** changer l'URL du connecteur claude.ai. Poser
+le secret avant d'avoir l'URL sous la main coupe son propre accès.
+
 **Ajouter une loi** : (1) ajouter EN FIN de `laws.config.json` (+ `ORDRE_ATTENDU` du
 test) ; (2) dry-run de reconnaissance (`pipeline/discovery/recon.py`) — arrêt revue si
 balisage inconnu ; (3) `ingest --law X` local puis remote (staging→bascule, invariants de
@@ -156,7 +174,8 @@ laissant les embeddings sur l'ancien texte donc du droit périmé rendu en silen
 **Veille de consolidation** (`.github/workflows/veille-consolidation.yml` +
 `scripts/check-consolidation.mjs`) : job **en LECTURE SEULE**, mensuel, qui compare la
 date « À jour au » de chaque loi sur LégisQuébec à `consol_date_*` en D1 (lue via
-`qclaw_list_laws` sur l'endpoint public — AUCUN secret Cloudflare) et ouvre/actualise une
+`qclaw_list_laws` sur l'endpoint MCP — jeton de LECTURE `MCP_TOKEN` en secret GitHub,
+toujours AUCUN secret Cloudflare) et ouvre/actualise une
 issue étiquetée `veille-consolidation` quand un rafraîchissement est dû (issue close
 automatiquement à la résolution). Il DÉTECTE, il ne bascule jamais. `extractConsolidation`
 est un miroir FIDÈLE de `fetch_consolidation` (portée bornée aux blocs `text-end`) ;

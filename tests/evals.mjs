@@ -6,7 +6,7 @@
 //
 // Sortie : une ligne par éval, code de sortie 1 si l'une échoue.
 
-import { createMcpClient } from "../eval/mcp-client.mjs";
+import { createMcpClient, resolveMcpToken } from "../eval/mcp-client.mjs";
 
 const MCP_URL = process.env.MCP_URL ?? "http://127.0.0.1:8787/mcp";
 
@@ -414,6 +414,26 @@ async function smokeTests() {
   add("v2 2.3 : requête lexicale — le 1er résultat reste la correspondance exacte",
     (lex.structuredContent?.results ?? [])[0]?.number !== undefined &&
     ["3111", "490", "622"].includes((lex.structuredContent?.results ?? [])[0]?.number));
+
+  // Contrôle d'accès (src/auth.ts) — ne s'exécute QUE si un jeton est configuré ; sans
+  // secret côté Worker l'endpoint est légitimement ouvert (R8 : rollback = retirer le secret).
+  // On vise le point de montage nu, jamais MCP_URL : celle-ci peut déjà porter /mcp/<jeton>.
+  if (resolveMcpToken()) {
+    const bare = new URL(MCP_URL);
+    bare.pathname = "/mcp";
+    const res = await fetch(bare, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "gate", version: "1" } },
+      }),
+    });
+    // 404 et pas 401 : un 401 annoncerait un serveur MCP et lancerait la découverte OAuth.
+    add("accès : POST sans jeton -> 404 (pas 401)", res.status === 404, `status=${res.status}`);
+  }
 
   return checks;
 }
