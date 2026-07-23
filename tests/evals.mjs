@@ -418,21 +418,45 @@ async function smokeTests() {
   // Contrôle d'accès (src/auth.ts) — ne s'exécute QUE si un jeton est configuré ; sans
   // secret côté Worker l'endpoint est légitimement ouvert (R8 : rollback = retirer le secret).
   // On vise le point de montage nu, jamais MCP_URL : celle-ci peut déjà porter /mcp/<jeton>.
-  if (resolveMcpToken()) {
+  const jeton = resolveMcpToken();
+  if (jeton) {
     const bare = new URL(MCP_URL);
     bare.pathname = "/mcp";
-    const res = await fetch(bare, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "initialize",
-        params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "gate", version: "1" } },
-      }),
-    });
+    bare.search = "";
+    const probe = async (u, auth) => {
+      const res = await fetch(u, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json, text/event-stream",
+          ...(auth ? { Authorization: `Bearer ${jeton}` } : {}),
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "initialize",
+          params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "gate", version: "1" } },
+        }),
+      });
+      return res.status;
+    };
+
     // 404 et pas 401 : un 401 annoncerait un serveur MCP et lancerait la découverte OAuth.
-    add("accès : POST sans jeton -> 404 (pas 401)", res.status === 404, `status=${res.status}`);
+    const refus = await probe(bare, false);
+    add("accès : POST sans jeton -> 404 (pas 401)", refus === 404, `status=${refus}`);
+
+    // Les trois porteurs acceptés. Le SLASH FINAL est le cas qui a réellement cassé le
+    // connecteur claude.ai (2026-07-23) : son 404 poussait le client vers la découverte
+    // OAuth, qui échouait ensuite sur l'enregistrement dynamique.
+    for (const [nom, u, auth] of [
+      ["en-tête Bearer", `${bare}`, true],
+      ["segment de chemin", `${bare}/${jeton}`, false],
+      ["segment + slash final", `${bare}/${jeton}/`, false],
+      ["paramètre ?key=", `${bare}?key=${jeton}`, false],
+    ]) {
+      const code = await probe(u, auth);
+      add(`accès : ${nom} -> 200`, code === 200, `status=${code}`);
+    }
   }
 
   return checks;

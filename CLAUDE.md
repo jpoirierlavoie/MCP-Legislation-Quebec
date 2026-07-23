@@ -31,7 +31,7 @@ fasse calculer au chargement, il est supprimé.
 ```bash
 npx wrangler dev                                   # dev local (D1 local ; PAS Vectorize)
 npx tsc --noEmit                                   # type-check (toujours avant commit)
-npm run evals                                      # 58 contrôles bout-en-bout (MCP_URL=… pour cibler)
+npm run evals                                      # 62 contrôles bout-en-bout (MCP_URL=… pour cibler)
 npm run eval                                       # harnais d'éval : 20 cas, recall@10/MRR (production)
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m unittest discover -s pipeline/tests -q   # 23 tests
 node --test scripts/check-consolidation.test.mjs   # 12 contrôles du détecteur de veille (sans réseau, en CI)
@@ -143,9 +143,14 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
 ~30–60 s à recycler l'ancien code) → `npm run eval` si le comportement de recherche a
 changé — **porte : aucune régression sur les 20 cas**.
 
-**Contrôle d'accès de `/mcp`** (`src/auth.ts`) : jeton partagé accepté sous DEUX formes —
-`/mcp/<jeton>` (le connecteur claude.ai n'accepte qu'une URL, pas d'en-tête personnalisé)
-et `Authorization: Bearer` (Claude Code, évals, veille CI). Trois points à ne pas défaire :
+**Contrôle d'accès de `/mcp`** (`src/auth.ts`) : jeton partagé accepté sous TROIS formes —
+`/mcp/<jeton>` (le connecteur claude.ai n'accepte qu'une URL, pas d'en-tête personnalisé),
+`Authorization: Bearer` (Claude Code, évals, veille CI) et `?key=` en dernier recours.
+**Le slash final DOIT être toléré** : `/mcp/<jeton>/` renvoyait 404, et ce 404 poussait le
+connecteur claude.ai vers la découverte OAuth, qui échouait ensuite sur l'enregistrement
+dynamique (« Impossible de s'inscrire auprès du service de connexion »). Un refus n'est
+donc jamais neutre pour un client MCP — épinglé par les 5 contrôles `accès :` des évals.
+Trois points à ne pas défaire :
 (1) la vérification est dans le handler de module, donc AVANT le Durable Object — c'est ce
 qui fait qu'un appel non autorisé ne coûte rien ; (2) un refus répond **404, jamais 401** —
 un 401 annonce un serveur MCP et déclenche la découverte OAuth des clients ; (3) **sans

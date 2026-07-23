@@ -24,6 +24,22 @@ interface EnvWithMcpToken extends Env {
 
 const MOUNT = "/mcp";
 const PREFIX = `${MOUNT}/`;
+/**
+ * Paramètre de requête accepté en DERNIER recours. Certains clients ne gardent ni en-tête
+ * personnalisé ni segment de chemin ; celui-ci laisse une troisième forme d'URL à essayer
+ * sans redéployer. Retiré de l'URL avant de servir.
+ */
+const QUERY_KEY = "key";
+
+/**
+ * Slash final purement cosmétique : les clients en ajoutent (le connecteur claude.ai
+ * normalise l'URL saisie). `/mcp/` et `/mcp/<jeton>/` DOIVENT se comporter comme leurs
+ * formes sans slash — sinon le refus 404 pousse le client vers la découverte OAuth,
+ * qui échoue ensuite sur l'enregistrement dynamique (constaté en production, 2026-07-23).
+ */
+function trimTrailingSlash(pathname: string): string {
+  return pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+}
 
 /**
  * Comparaison à temps constant. `===` sur des chaînes sort au premier octet différent,
@@ -53,24 +69,30 @@ function bearerOf(request: Request): string | null {
  */
 export function gateMcp(request: Request, url: URL, env: Env): Request | null {
   const secret = (env as EnvWithMcpToken).MCP_TOKEN?.trim();
-  const onMount = url.pathname === MOUNT;
+  const path = trimTrailingSlash(url.pathname);
+  const onMount = path === MOUNT;
   // Un SEUL segment après le point de montage : /mcp/<jeton>, rien de plus profond.
   const segment =
-    url.pathname.startsWith(PREFIX) && !url.pathname.slice(PREFIX.length).includes("/")
-      ? url.pathname.slice(PREFIX.length)
+    path.startsWith(PREFIX) && !path.slice(PREFIX.length).includes("/")
+      ? path.slice(PREFIX.length)
       : null;
 
   // Sans secret : comportement d'avant — ouvert, et sur le point de montage seul.
   if (!secret) return onMount ? request : null;
 
   const bearer = bearerOf(request);
+  const query = url.searchParams.get(QUERY_KEY);
   const authorized =
     (bearer !== null && safeEqual(bearer, secret)) ||
-    (segment !== null && safeEqual(decodeURIComponent(segment), secret));
+    (segment !== null && safeEqual(decodeURIComponent(segment), secret)) ||
+    (query !== null && safeEqual(query, secret));
   if (!authorized) return null;
 
-  if (onMount) return request;
+  // Normalisation : le point de montage exact, sans le jeton — McpAgent.serve("/mcp")
+  // n'apparie que ce chemin, et le secret n'a rien à faire dans l'URL transmise ensuite.
+  if (onMount && query === null) return request;
   const normalized = new URL(url);
   normalized.pathname = MOUNT;
+  normalized.searchParams.delete(QUERY_KEY);
   return new Request(normalized.toString(), request);
 }
