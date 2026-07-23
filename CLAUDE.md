@@ -52,7 +52,7 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
   (`eval/mcp-client.mjs` : `MCP_TOKEN` puis `mcp.token`) — rien à exporter à la main.
   N'ouvre QUE la lecture MCP : aucun droit sur le compte Cloudflare ni sur la base.
   **Rotation = poser le nouveau secret, puis mettre à jour les 3 copies** (fichier local,
-  secret GitHub, URL du connecteur claude.ai).
+  secret GitHub, URL du connecteur claude.ai — forme `…/mcp?key=<jeton>`).
 - Commits **signés** (gpgsign actif), footer `Co-Authored-By: Claude <noreply@anthropic.com>`
   adapté au modèle courant. Un commit par sous-tâche ; arrêt pour revue humaine à chaque
   fin de phase.
@@ -143,13 +143,26 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
 ~30–60 s à recycler l'ancien code) → `npm run eval` si le comportement de recherche a
 changé — **porte : aucune régression sur les 20 cas**.
 
-**Contrôle d'accès de `/mcp`** (`src/auth.ts`) : jeton partagé accepté sous TROIS formes —
-`/mcp/<jeton>` (le connecteur claude.ai n'accepte qu'une URL, pas d'en-tête personnalisé),
-`Authorization: Bearer` (Claude Code, évals, veille CI) et `?key=` en dernier recours.
-**Le slash final DOIT être toléré** : `/mcp/<jeton>/` renvoyait 404, et ce 404 poussait le
-connecteur claude.ai vers la découverte OAuth, qui échouait ensuite sur l'enregistrement
-dynamique (« Impossible de s'inscrire auprès du service de connexion »). Un refus n'est
-donc jamais neutre pour un client MCP — épinglé par les 5 contrôles `accès :` des évals.
+**Contrôle d'accès de `/mcp`** (`src/auth.ts`) : jeton partagé accepté sous TROIS formes.
+**La forme du connecteur claude.ai est `?key=<jeton>`** — mesurée, pas supposée : le
+segment de chemin `/mcp/<jeton>` a ÉCHOUÉ en pratique (« Impossible de joindre ») alors
+qu'une session complète y passe en curl, tandis que `?key=` a fonctionné du premier coup.
+`Authorization: Bearer` reste la forme des clients maîtrisés (Claude Code, évals, veille CI) ;
+le segment de chemin est conservé, testé, mais n'est la forme de personne aujourd'hui.
+
+Deux constats de production à ne pas réapprendre à la dure (2026-07-23) :
+- **Le slash final DOIT être toléré.** `/mcp/<jeton>/` renvoyait 404 et ce 404 poussait le
+  connecteur vers la découverte OAuth, qui échouait sur l'enregistrement dynamique
+  (« Impossible de s'inscrire auprès du service de connexion »). Pour un client MCP un refus
+  n'est JAMAIS neutre : il est lu comme « ce serveur demande une authentification ».
+- **Le connecteur émet des `GET /mcp` SANS aucun porteur** (constaté au `wrangler tail` :
+  les POST portent `?key=`, les GET arrivent nus). Ces GET — le flux SSE serveur→client,
+  optionnel dans le transport streamable — sont donc refusés en 404 et le connecteur
+  retombe en POST seul, sans perte pour les 10 outils (aucune notification serveur→client).
+  Ne pas « réparer » ça en ouvrant les GET : ce serait un trou. L'option propre, si un jour
+  le flux devient utile, est d'accepter le `mcp-session-id` (64 hex émis par le DO) comme
+  preuve sur les GET seulement.
+
 Trois points à ne pas défaire :
 (1) la vérification est dans le handler de module, donc AVANT le Durable Object — c'est ce
 qui fait qu'un appel non autorisé ne coûte rien ; (2) un refus répond **404, jamais 401** —
