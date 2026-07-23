@@ -190,7 +190,7 @@ async function smokeTests() {
   const add = (nom, ok, detail = "") => checks.push({ nom, ok, detail });
 
   const laws = await callTool("qclaw_list_laws", {});
-  add("list_laws : 78 lois", laws.structuredContent?.count === 78,
+  add("list_laws : 79 lois", laws.structuredContent?.count === 79,
     `count=${laws.structuredContent?.count}`);
   const ccq = laws.structuredContent?.laws?.find((l) => l.id === "ccq");
   add("list_laws : ccq porte ses Livres (matières)", (ccq?.mapped_divisions?.length ?? 0) >= 10,
@@ -206,15 +206,15 @@ async function smokeTests() {
     `count=${bySubject.structuredContent?.count}`);
 
   const subs = await callTool("qclaw_list_subjects", {});
-  add("list_subjects : 33 matières", subs.structuredContent?.count === 33,
+  add("list_subjects : 34 matières", subs.structuredContent?.count === 34,
     `count=${subs.structuredContent?.count}`);
 
-  // Les 33 matières doivent être traduites : c'est la surface d'appariement du signal S1,
+  // Les 34 matières doivent être traduites : c'est la surface d'appariement du signal S1,
   // sans quoi le routeur reste muet en anglais.
   const subsEn = await callTool("qclaw_list_subjects", { lang: "en" });
   const sansEn = (subsEn.structuredContent?.subjects ?? [])
     .filter((s) => !s.label_en || !s.description_en).map((s) => s.id);
-  add("list_subjects (lang=en) : les 33 matières traduites", sansEn.length === 0,
+  add("list_subjects (lang=en) : les 34 matières traduites", sansEn.length === 0,
     sansEn.length ? `sans traduction : ${sansEn.slice(0, 5).join(", ")}…` : "");
   // Contrôler les ENTRÉES, pas seulement les en-têtes de groupe : une première version
   // traduisait « Private law (C.C.Q.) » tout en listant « biens — Biens » et sa description
@@ -257,7 +257,7 @@ async function smokeTests() {
     const r = await callTool("qclaw_get_articles", { law: l.id, from: "1", to: "3" });
     if (r.isError) cassees.push(l.id);
   }
-  add("get_articles : mode plage opérant sur les 78 lois", cassees.length === 0,
+  add("get_articles : mode plage opérant sur les 79 lois", cassees.length === 0,
     cassees.length ? `échec sur ${cassees.length} : ${cassees.slice(0, 6).join(", ")}…` : "");
 
   // D1 plafonne la complexité des motifs LIKE/GLOB : les chemins profonds du C.c.Q. le
@@ -285,7 +285,7 @@ async function smokeTests() {
 
   // Une source juridique sans date de consolidation n'est pas citable : les 78 doivent l'avoir.
   const sansDate = toutes.filter((l) => !l.consol_date_fr).map((l) => l.id);
-  add("list_laws : date de consolidation sur les 78 lois", sansDate.length === 0,
+  add("list_laws : date de consolidation sur les 79 lois", sansDate.length === 0,
     sansDate.length ? `manquante sur ${sansDate.length} : ${sansDate.slice(0, 5).join(", ")}…` : "");
 
   // Les identifiants Irosoft sont propres à la langue : une piste rendue en anglais doit

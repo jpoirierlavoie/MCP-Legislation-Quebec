@@ -1,7 +1,7 @@
 # Lois du Québec — serveur MCP
 
 Serveur [MCP](https://modelcontextprotocol.io) donnant aux assistants IA un accès **en
-lecture seule** au texte officiel de la législation québécoise : **78 lois et règlements**
+lecture seule** au texte officiel de la législation québécoise : **79 lois et règlements**
 (dont le Code civil du Québec et le Code de procédure civile), en **français et en
 anglais**, avec dates de consolidation, hiérarchie complète (Livres → Titres → Chapitres →
 articles) et recherche hybride lexicale + sémantique.
@@ -46,7 +46,7 @@ Le patron d'usage est en deux temps : **s'orienter** (découverte), puis **extra
 |---|---|---|
 | `qclaw_find_relevant` | Le routeur : d'un problème en langage libre vers les lois et chapitres candidats, avec le *pourquoi* de chaque rapprochement | `« vice caché »` → C.c.Q. Livre 5 (Obligations) + L.p.c. |
 | `qclaw_list_laws` | Carte du corpus : noms FR/EN, citation RLRQ, dates, matières, loi habilitante, plan des grands codes ; filtres `fonction`/`forum`/`subject` | `fonction=tarif` → les 3 tarifs |
-| `qclaw_list_subjects` | Les 33 matières de la taxonomie (droit privé du C.c.Q. + matières spécialisées), bilingues | — |
+| `qclaw_list_subjects` | Les 34 matières de la taxonomie (droit privé du C.c.Q. + matières spécialisées), bilingues | — |
 | `qclaw_related_laws` | Graphe d'une loi : règlements pris sous elle, loi habilitante, renvois, relations curées | `law=cpc` → ses 6 règlements de cour |
 
 ### Extraction
