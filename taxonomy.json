@@ -197,8 +197,8 @@
       "label_fr": "Droit municipal",
       "label_en": "Municipal Law",
       "kind": "specialise",
-      "description_fr": "Cités et villes, municipalités locales, municipalités régionales de comté (MRC), communautés métropolitaines : Code municipal du Québec, pouvoirs et compétences municipales, contrats et responsabilité municipale, éthique et déontologie des élus municipaux, fiscalité municipale et évaluation foncière, expropriation.",
-      "description_en": "Cities and towns, local municipalities, regional county municipalities (RCM), metropolitan communities: Municipal Code of Québec, municipal powers and jurisdiction, municipal contracts and liability, ethics and professional conduct of municipal officers, municipal taxation and property assessment, expropriation."
+      "description_fr": "Cités et villes, municipalités locales, municipalités régionales de comté (MRC), communautés métropolitaines : Code municipal du Québec, pouvoirs et compétences municipales, organisation municipale, contrats et responsabilité municipale, éthique et déontologie des élus municipaux.",
+      "description_en": "Cities and towns, local municipalities, regional county municipalities (RCM), metropolitan communities: Municipal Code of Québec, municipal powers and jurisdiction, municipal organization, municipal contracts and liability, ethics and professional conduct of municipal officers."
     },
     {
       "id": "immobilier-courtage",
@@ -263,6 +263,14 @@
       "kind": "specialise",
       "description_fr": "Emploi dans la fonction publique et les organismes publics : dotation, nomination, classement, promotion, éthique et discipline des fonctionnaires, employés publics, divulgation d'actes répréhensibles et protection contre les représailles.",
       "description_en": "Employment in the public service and public bodies: staffing, appointment, classification, promotion, ethics and discipline of public servants, public employees, disclosure of wrongdoings and protection against reprisals."
+    },
+    {
+      "id": "fiscalite-municipale",
+      "label_fr": "Fiscalité municipale",
+      "label_en": "Municipal Taxation",
+      "kind": "specialise",
+      "description_fr": "Fiscalité municipale, évaluation foncière et expropriation : taxe foncière, taxation municipale, évaluation foncière des immeubles, tenant lieu de taxes, expropriation d'un immeuble, exproprié, réserve foncière.",
+      "description_en": "Municipal taxation, property assessment and expropriation: property tax, municipal taxation, property assessment of immovables, payments in lieu of taxes, expropriation of an immovable, expropriated party, land reserve."
     }
   ],
   "mappings": [
@@ -574,7 +582,7 @@
       "law": "c-25.1"
     },
     {
-      "subject": "droit-municipal",
+      "subject": "fiscalite-municipale",
       "law": "f-2.1"
     },
     {
@@ -694,7 +702,7 @@
       "law": "e-15.1.0.1"
     },
     {
-      "subject": "droit-municipal",
+      "subject": "fiscalite-municipale",
       "law": "e-25"
     },
     {
