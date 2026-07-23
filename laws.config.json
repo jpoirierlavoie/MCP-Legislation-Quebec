@@ -1768,6 +1768,28 @@
       "forum": [],
       "numbering": "standard",
       "kind_epub": "cs"
+    },
+    {
+      "id": "c-27.1",
+      "name_fr": "Code municipal du Québec",
+      "name_en": "Municipal Code of Québec",
+      "rlrq_cite": "RLRQ, c. C-27.1",
+      "epub": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/epub/cs/C-27.1.epub",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/epub/cs/C-27.1.epub"
+      },
+      "consolidation": {
+        "fr": "2026-04-01",
+        "en": "2026-04-01"
+      },
+      "consolidation_source": {
+        "fr": "https://www.legisquebec.gouv.qc.ca/fr/document/cs/C-27.1",
+        "en": "https://www.legisquebec.gouv.qc.ca/en/document/cs/C-27.1"
+      },
+      "fonction": "loi",
+      "forum": [],
+      "numbering": "standard",
+      "kind_epub": "cs"
     }
   ]
 }
