@@ -197,8 +197,8 @@
       "label_fr": "Droit municipal",
       "label_en": "Municipal Law",
       "kind": "specialise",
-      "description_fr": "Cités et villes, communautés métropolitaines : pouvoirs et compétences municipales, contrats et responsabilité municipale, éthique et déontologie des élus municipaux, fiscalité municipale et évaluation foncière, expropriation.",
-      "description_en": "Cities and towns, metropolitan communities: municipal powers and jurisdiction, municipal contracts and liability, ethics and professional conduct of municipal officers, municipal taxation and property assessment, expropriation."
+      "description_fr": "Cités et villes, municipalités locales, municipalités régionales de comté (MRC), communautés métropolitaines : Code municipal du Québec, pouvoirs et compétences municipales, contrats et responsabilité municipale, éthique et déontologie des élus municipaux, fiscalité municipale et évaluation foncière, expropriation.",
+      "description_en": "Cities and towns, local municipalities, regional county municipalities (RCM), metropolitan communities: Municipal Code of Québec, municipal powers and jurisdiction, municipal contracts and liability, ethics and professional conduct of municipal officers, municipal taxation and property assessment, expropriation."
     },
     {
       "id": "immobilier-courtage",
@@ -728,6 +728,10 @@
     {
       "subject": "droit-municipal",
       "law": "c-37.01"
+    },
+    {
+      "subject": "droit-municipal",
+      "law": "c-27.1"
     },
     {
       "subject": "fonction-publique",
