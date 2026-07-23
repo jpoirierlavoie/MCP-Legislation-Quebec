@@ -414,7 +414,6 @@ def parse_epub(epub_path: str | Path, law: Law, lang: str) -> tuple[list[Divisio
     Bilingue : `lang` sélectionne les mots de niveau et les intitulés de disposition.
     """
     cfg = _LANG.get(lang, _LANG["fr"])
-    consol = law.consol_date_fr if lang == "fr" else law.consol_date_en
     divisions: list[Division] = []
     articles: list[Article] = []
     sort_order = 0
@@ -431,7 +430,6 @@ def parse_epub(epub_path: str | Path, law: Law, lang: str) -> tuple[list[Divisio
         div.law_id = art.law_id = law.id
         div.lang = art.lang = lang
         div.sort_order = sort_order
-        art.consol_date = consol
         # sort_key des pseudo-articles : préliminaire avant tout, finales/annexes après le
         # corpus, dans l'ordre du document (le parseur le fixe ; load.prepare le respecte).
         if art.number == "préliminaire":
@@ -465,7 +463,7 @@ def parse_epub(epub_path: str | Path, law: Law, lang: str) -> tuple[list[Divisio
                     articles.append(Article(
                         law_id=law.id, lang=lang, number=number_from_article_id(eid),
                         text=text, html=art_html, history=history, repealed=repealed,
-                        division_path=current_div_path or "", consol_date=consol,
+                        division_path=current_div_path or "",
                     ))
 
             # 2) blocs spéciaux : disposition préliminaire, puis TOUS les blocs sc-nb:N

@@ -50,7 +50,6 @@ export interface ArticleRow {
   html: string | null;
   history: string | null;
   repealed: number;
-  consol_date: string | null;
 }
 
 export type Lang = "fr" | "en";

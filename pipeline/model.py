@@ -43,7 +43,6 @@ class Article:
     html: str | None = None      # HTML nettoyé (integrity:* retirés, liens absolus, historique retiré)
     history: str | None = None   # ligne d'historique : '1991, c. 64, a. 1457; ...'
     repealed: int = 0            # 1 si '(Abrogé).'
-    consol_date: str | None = None
     # rempli au chargement :
     id: int | None = None
     sort_key: int = 0

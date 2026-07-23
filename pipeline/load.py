@@ -46,7 +46,7 @@ def _q(v) -> str:
 
 
 _DIV_COLS = ["id", "law_id", "lang", "kind", "number", "heading", "history", "path", "repealed", "parent_id", "sort_order", "heading_norm"]
-_ART_COLS = ["id", "law_id", "lang", "number", "sort_key", "division_id", "division_path", "text", "html", "history", "repealed", "consol_date"]
+_ART_COLS = ["id", "law_id", "lang", "number", "sort_key", "division_id", "division_path", "text", "html", "history", "repealed"]
 # name_norm est recalculé ici ; fonction/forum/scope_fr/parent_law_id restent préservés par l'UPSERT.
 _LAW_COLS = ["id", "name_fr", "name_en", "rlrq_cite", "consol_date_fr", "consol_date_en", "name_norm"]
 # langue « opposée », pour préserver ses colonnes lors d'un chargement monolingue

@@ -144,7 +144,6 @@ def run(law_id: str, lang: str, download: bool, apply_local: bool, apply_remote:
         print(f"\n===== ARTICLE {a.number} (loi={a.law_id}, lang={a.lang}, abrogé={a.repealed}) =====")
         print(f"division_path : {a.division_path}")
         print(f"historique    : {a.history}")
-        print(f"consolidation : {a.consol_date}")
         print("--- texte ---")
         print(a.text)
 

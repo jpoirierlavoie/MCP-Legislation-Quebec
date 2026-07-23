@@ -41,8 +41,9 @@ CREATE TABLE articles (
   text          TEXT NOT NULL,              -- verbatim (numéro, historique et notes A.M. EXCLUS)
   html          TEXT,                       -- HTML nettoyé (integrity:* retirés, liens en absolu)
   history       TEXT,                       -- ligne d'historique : '1991, c. 64, a. 1457; ...'
-  repealed      INTEGER NOT NULL DEFAULT 0, -- 1 si '(Abrogé).' (68 cas)
-  consol_date   TEXT
+  repealed      INTEGER NOT NULL DEFAULT 0  -- 1 si '(Abrogé).' (68 cas)
+  -- consol_date : retirée (migration 0002) — constante par (law_id, lang) par
+  -- construction, jamais lue ; la date authentique vit dans laws.consol_date_fr/en.
 );
 
 CREATE INDEX idx_art_lookup   ON articles(law_id, lang, number);
