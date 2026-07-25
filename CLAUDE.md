@@ -176,8 +176,21 @@ qui fait qu'un appel non autorisé ne coûte rien ; (2) un refus répond **404, 
 un 401 annonce un serveur MCP et déclenche la découverte OAuth des clients ; (3) **sans
 `MCP_TOKEN`, l'endpoint reste ouvert** (R8 : rollback = `wrangler secret delete MCP_TOKEN`,
 pas un revert ; c'est aussi ce qui garde `wrangler dev` utilisable). Ordre de bascule :
-déployer → vérifier avec le Bearer → **puis** changer l'URL du connecteur claude.ai. Poser
-le secret avant d'avoir l'URL sous la main coupe son propre accès.
+**mettre le connecteur claude.ai sur son URL FINALE (`…/mcp?key=<jeton>`) AVANT de poser le
+secret**, puis déployer, puis `wrangler secret put`. Cet ordre est contre-intuitif mais
+c'est le seul sûr : `?key=` répond 200 AVEC ET SANS secret (vérifié), donc l'URL finale
+fonctionne déjà pendant que l'endpoint est ouvert, et le connecteur ne voit JAMAIS de 404.
+
+**Pourquoi (incident du 2026-07-25, une demi-journée perdue)** : l'ordre inverse — armer
+d'abord, corriger l'URL ensuite — a exposé le connecteur à une fenêtre de 404. Pour un
+client MCP un 404 n'est pas « pas trouvé » mais « ce serveur exige une authentification » :
+il est parti en découverte OAuth, a échoué à l'enregistrement dynamique, et s'est retrouvé
+COINCÉ avec un enregistrement à moitié créé — plus modifiable, plus déplaçable, plus
+supprimable, plus connectable depuis l'interface claude.ai. Aucune manipulation côté client
+n'en venait à bout. Le SEUL déblocage a été `wrangler secret delete MCP_TOKEN` : l'endpoint
+rouvert, le connecteur s'est réparé tout seul au retry suivant. Retenir : une fenêtre de
+404, même de quelques minutes, peut détruire un connecteur de façon irréversible côté
+client.
 
 **Ajouter une loi** : (1) ajouter EN FIN de `laws.config.json` (+ `ORDRE_ATTENDU` du
 test) ; (2) dry-run de reconnaissance (`pipeline/discovery/recon.py`) — arrêt revue si
