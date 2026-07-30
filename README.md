@@ -6,8 +6,8 @@ lecture seule** au texte officiel de la législation québécoise : **79 lois et
 anglais**, avec dates de consolidation, hiérarchie complète (Livres → Titres → Chapitres →
 articles) et recherche hybride lexicale + sémantique.
 
-**Page publique :** <https://legislation.poirierlavoie.ca/> — corpus, outils et aides au
-repérage, en français et en anglais, avec les décomptes lus en base.
+**Page publique :** <https://legislation.poirierlavoie.ca/> — outils, aides au repérage,
+corpus et matières, en français et en anglais, avec les décomptes lus en base.
 
 **Point d'accès MCP :** `https://legislation.poirierlavoie.ca/mcp` (HTTP streamable) —
 **instance privée, sous jeton** : une requête sans jeton reçoit 404.

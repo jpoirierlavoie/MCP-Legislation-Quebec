@@ -66,27 +66,34 @@ const nb = (n: number) => n.toLocaleString("fr-CA").replace(/ /g, " ");
 
 /**
  * Sections de premier niveau, dans l'ORDRE d'affichage. Source unique : le `<h2>` de
- * chaque section ET l'entrée correspondante de la table des matières sortent d'ici, donc
- * un titre renommé ne peut pas laisser la TDM mentir. Le titre de `limites` vient de
- * catalogue.json — c'est déjà la source unique de l'avertissement (R10).
+ * chaque section, son entrée de table des matières ET l'ordre du corps de la page sortent
+ * d'ici — un titre renommé ou déplacé ne peut donc pas laisser la TDM mentir.
+ *
+ * `as const` n'est pas décoratif : il donne des types LITTÉRAUX aux `id`, d'où `SectionId`,
+ * d'où le `Record<SectionId, …>` de `renderSite` qui exige — À LA COMPILATION, dans les
+ * deux sens — une fonction de rendu par section et rien de plus. Avant, `SECTIONS` et le
+ * tableau du corps étaient deux listes indépendantes que RIEN ne comparait : une section
+ * pouvait quitter la page en restant au sommaire, ou l'ordre des deux diverger, sans qu'un
+ * seul test bouge.
  */
-const SECTIONS: { id: string; fr: string; en: string }[] = [
+const SECTIONS = [
   { id: "outils", fr: "Les outils", en: "The tools" },
-  { id: "corpus", fr: "Le corpus", en: "The corpus" },
   { id: "reperage", fr: "Les aides au repérage", en: "Retrieval aids" },
-  { id: "limites", fr: catalogue.avertissement.titre_fr, en: catalogue.avertissement.titre_en },
+  { id: "corpus", fr: "Le corpus", en: "The corpus" },
+  { id: "matieres", fr: "Les matières", en: "Subject areas" },
   { id: "acces", fr: "Accès", en: "Access" },
-];
+] as const;
 
-function sectionDe(id: string): { id: string; fr: string; en: string } {
-  const s = SECTIONS.find((x) => x.id === id);
-  if (!s) throw new Error(`section inconnue : ${id}`);
-  return s;
-}
+type SectionId = (typeof SECTIONS)[number]["id"];
 
-/** `<h2>` d'une section — jamais écrit en dur, toujours tiré de SECTIONS. */
-function h2(id: string): string {
-  const s = sectionDe(id);
+/**
+ * `<h2>` d'une section — jamais écrit en dur, toujours tiré de SECTIONS. Le paramètre est
+ * typé `SectionId` : un titre de section qui n'est pas au sommaire ne compile pas. C'est
+ * volontairement plus strict qu'une erreur à l'exécution, `renderSite` étant appelé sans
+ * filet (src/index.ts) et la page servie d'un cache de 900 s qu'on ne peut pas purger.
+ */
+function h2(id: SectionId): string {
+  const s = SECTIONS.find((x) => x.id === id) as (typeof SECTIONS)[number];
   return `<h2>${bi(s.fr, s.en)}</h2>`;
 }
 
@@ -115,16 +122,23 @@ export async function renderSite(db: D1Database): Promise<string> {
   const dates = laws.map((l) => l.consol_date_fr).filter(Boolean).sort();
   const consol = dates[dates.length - 1] ?? "—";
 
-  // L'ordre des sections suit SECTIONS : les outils AVANT le corpus (79 lignes de tableau
-  // + 34 matières dépliables reléguaient les outils très loin dans la page).
+  // L'ordre du corps est DÉRIVÉ de SECTIONS, il n'est plus recopié à côté. `Record<
+  // SectionId, …>` refuse à la compilation une section sans rendu (TS2741) comme un rendu
+  // sans section (TS2353) — le seul garde possible ici, puisqu'un `throw` à l'exécution
+  // rendrait 500 sur une page qu'aucune purge de cache ne peut rattraper.
+  // `limites` n'y figure pas : l'avertissement est rendu DANS `reperage()`.
+  const RENDU: Record<SectionId, () => string> = {
+    outils: () => outils(),
+    reperage: () => reperage(),
+    corpus: () => corpus(laws),
+    matieres: () => matieres(subjects, parMatiere, parId),
+    acces: () => acces(),
+  };
+
   const corps = [
     entete(),
     chiffres(laws.length, subjects.length, totalArticles, consol),
-    outils(),
-    corpus(laws, subjects, parMatiere, parId),
-    reperage(),
-    limites(),
-    acces(),
+    ...SECTIONS.map((s) => RENDU[s.id]()),
     pied(consol),
   ].join("\n");
 
@@ -145,6 +159,7 @@ ${tdm()}
 ${corps}
 </main>
 </div>
+${haut()}
 <script>${jsClient()}</script>
 </body>
 </html>`;
@@ -169,6 +184,23 @@ function tdm(): string {
 }
 
 /**
+ * Pastille de retour en haut, dernier enfant de `<body>`.
+ *
+ * `href="#top"` est le repli SPÉCIFIÉ par HTML : sans élément portant cet id, le fragment
+ * « top » désigne le haut du document. Le lien fonctionne donc sans une ligne de
+ * JavaScript — celui-ci ne fait que le masquer tant qu'on n'a pas défilé.
+ *
+ * La flèche est `aria-hidden` et le nom accessible vient du libellé `.sr` : pour un `<a>`,
+ * le CONTENU prime sur `title` dans le calcul du nom, donc une flèche seule donnerait un
+ * lien non étiqueté. La langue non retenue étant masquée en `display:none`, les lecteurs
+ * d'écran n'en annoncent qu'une.
+ */
+function haut(): string {
+  return `<a href="#top" class="haut"><span aria-hidden="true">${FLECHE}</span>` +
+    `<span class="sr">${bi("Haut de page", "Back to top")}</span></a>`;
+}
+
+/**
  * Un état du bouton de thème. L'état est porté par `data-t` sur un span EXTÉRIEUR, la
  * langue par `data-l` sur les spans intérieurs : deux dimensions, deux éléments, donc
  * aucune collision de spécificité avec la règle de masquage bilingue (qui a déjà fait
@@ -178,9 +210,11 @@ function etat(t: string, fr: string, en: string): string {
   return `<span data-t="${t}">${bi(fr, en)}</span>`;
 }
 
-// U+FE0E force la présentation TEXTE : sans lui, ☀ bascule en émoji couleur sur plusieurs
-// plateformes et détonne au milieu d'une page en serif. ◐ et ☾ n'ont pas de variante émoji.
+// U+FE0E force la présentation TEXTE : sans lui, ☀ et ↑ basculent en émoji couleur sur
+// plusieurs plateformes et détonnent au milieu d'une page en serif. ◐ et ☾ n'ont pas de
+// variante émoji.
 const SOLEIL = "☀︎";
+const FLECHE = "↑︎";
 
 function entete(): string {
   return `<header>
@@ -210,10 +244,7 @@ function chiffres(nLois: number, nMat: number, nArt: number, consol: string): st
 </section>`;
 }
 
-function corpus(
-  laws: LawSummary[], subjects: SubjectSummary[],
-  parMatiere: Map<string, string[]>, parId: Map<string, LawSummary>,
-): string {
+function corpus(laws: LawSummary[]): string {
   const lignes = laws.map((l) => {
     const [ffr, fen] = FONCTION[l.fonction ?? ""] ?? [l.fonction ?? "", l.fonction ?? ""];
     const src = SOURCES.get(l.id);
@@ -229,23 +260,6 @@ function corpus(
       <td class="n">${esc(l.consol_date_fr ?? "—")}</td>
     </tr>`;
   }).join("\n");
-
-  const groupe = (kind: string, tfr: string, ten: string) => {
-    const items = subjects.filter((s) => s.kind === kind).map((s) => {
-      const ids = parMatiere.get(s.id) ?? [];
-      const lois = ids.map((id) => parId.get(id)).filter(Boolean).map((x) => {
-        const l = x as LawSummary;
-        return `<li>${bi(l.name_fr, l.name_en)} <span class="m">${esc(l.rlrq_cite)} · ${
-          nb(l.article_count ?? 0)}&nbsp;art.</span></li>`;
-      }).join("");
-      return `<details>
-        <summary>${bi(s.label_fr, s.label_en || s.label_fr)} <span class="m">(${ids.length})</span></summary>
-        ${biP([s.description_fr ?? ""], [s.description_en ?? ""])}
-        <ul class="lois">${lois}</ul>
-      </details>`;
-    }).join("\n");
-    return `<h4>${bi(tfr, ten)}</h4>${items}`;
-  };
 
   return `<section id="corpus">
   ${h2("corpus")}
@@ -274,8 +288,43 @@ function corpus(
     </tr></thead>
     <tbody>${lignes}</tbody>
   </table></div>
+</section>`;
+}
 
-  <h3>${bi("Par matière", "By subject")}</h3>
+/**
+ * Les matières — section autonome depuis ce commit, auparavant un `<h3>` en queue du
+ * corpus. Le paragraphe et les deux groupes sont déplacés À L'IDENTIQUE : rien n'est
+ * réécrit, seul le niveau de titre change.
+ *
+ * Les puces de lois ne portent VOLONTAIREMENT pas `data-law-id` : cet attribut n'existe que
+ * pour le contrôle d'éval qui compte les lignes du tableau, et l'ajouter ici doublerait
+ * silencieusement le décompte.
+ */
+function matieres(
+  subjects: SubjectSummary[],
+  parMatiere: Map<string, string[]>, parId: Map<string, LawSummary>,
+): string {
+  // <h3> et non <h4> : le titre parent est passé de <h3> à <h2> en devenant une section,
+  // et un niveau sauté s'entend dans la navigation par titres d'un lecteur d'écran.
+  const groupe = (kind: string, tfr: string, ten: string) => {
+    const items = subjects.filter((s) => s.kind === kind).map((s) => {
+      const ids = parMatiere.get(s.id) ?? [];
+      const lois = ids.map((id) => parId.get(id)).filter(Boolean).map((x) => {
+        const l = x as LawSummary;
+        return `<li>${bi(l.name_fr, l.name_en)} <span class="m">${esc(l.rlrq_cite)} · ${
+          nb(l.article_count ?? 0)}&nbsp;art.</span></li>`;
+      }).join("");
+      return `<details>
+        <summary>${bi(s.label_fr, s.label_en || s.label_fr)} <span class="m">(${ids.length})</span></summary>
+        ${biP([s.description_fr ?? ""], [s.description_en ?? ""])}
+        <ul class="lois">${lois}</ul>
+      </details>`;
+    }).join("\n");
+    return `<h3>${bi(tfr, ten)}</h3>${items}`;
+  };
+
+  return `<section id="matieres">
+  ${h2("matieres")}
   ${biP(
     ["La taxonomie range les textes en matières de droit privé, calquées sur les Livres du Code civil, et en matières spécialisées. Un même texte peut relever de plusieurs matières."],
     ["The taxonomy sorts texts into private-law subjects, mapped onto the Books of the Civil Code, and specialized subjects. A single text may belong to several subjects."],
@@ -334,13 +383,27 @@ function reperage(): string {
   ${cal}
   ${sec(r.echelle)}
   ${sec(r.hybride)}
+  ${limites()}
 </section>`;
 }
 
+/**
+ * L'avertissement — sous-section des aides au repérage depuis ce commit.
+ *
+ * Le `<h3>` est construit DIRECTEMENT depuis catalogue.json et non par `h2()` : `limites`
+ * ne figure plus dans SECTIONS, donc `h2("limites")` ne compilerait pas. `<section>`
+ * imbriquée plutôt que `<div>` pour garder l'ancre `#limites` vivante (un lien externe
+ * existant ne casse pas) et conserver `section[id]{scroll-margin-top}`.
+ *
+ * À SAVOIR : sur les trois paragraphes, un seul porte sur le repérage ; les deux autres
+ * portent sur le service entier. En descendant d'un niveau, ce bloc perd aussi son entrée
+ * de sommaire. C'est pourquoi la clause de non-conseil est reprise au pied de page, qui est
+ * sur tous les écrans (décision de Jason, 2026-07-30).
+ */
 function limites(): string {
   const a = catalogue.avertissement;
   return `<section id="limites" class="avert">
-  ${h2("limites")}
+  <h3>${bi(a.titre_fr, a.titre_en)}</h3>
   ${biP(a.corps_fr, a.corps_en)}
 </section>`;
 }
@@ -362,8 +425,11 @@ function pied(consol: string): string {
   return `<footer>
   <p><b>Jason Poirier Lavoie</b>, ${bi("avocat", "attorney")} · <a href="mailto:${CONTACT}">${CONTACT}</a></p>
   ${biP(
-    [`Données : EPUB officiels de LégisQuébec (Éditeur officiel du Québec) ; consolidation la plus récente chargée : ${consol}. La version officielle fait foi.`],
-    [`Data: official LégisQuébec EPUBs (Québec Official Publisher); most recent consolidation loaded: ${consol}. The official version prevails.`],
+    // « Aucun conseil juridique » vit AUSSI ici, et pas seulement dans l'avertissement :
+    // celui-ci est désormais une sous-section des aides au repérage, alors que la clause
+    // porte sur tout le service. Le pied, lui, est sous chaque écran de la page.
+    [`Données : EPUB officiels de LégisQuébec (Éditeur officiel du Québec) ; consolidation la plus récente chargée : ${consol}. La version officielle fait foi. Aucun conseil juridique.`],
+    [`Data: official LégisQuébec EPUBs (Québec Official Publisher); most recent consolidation loaded: ${consol}. The official version prevails. No legal advice.`],
   )}
   <p><a href="${LEGISQUEBEC}" rel="noopener">legisquebec.gouv.qc.ca</a> · <a href="${DEPOT}" rel="noopener">GitHub</a></p>
 </footer>`;
@@ -451,6 +517,22 @@ summary{cursor:pointer;font-weight:700}
   display:flex;justify-content:space-between;gap:.5rem}
 .avert{background:var(--avert-bg);border:1px solid var(--avert-b);border-radius:6px;padding:.25rem 1.25rem 1rem}
 footer{margin-top:3.5rem;padding-top:1.25rem;border-top:2px solid var(--b);font-size:.9rem;color:var(--m)}
+/* Libellé réservé aux lecteurs d'écran : retiré de l'affichage sans display:none, qui le
+   retirerait AUSSI de l'arbre d'accessibilité — la pastille redeviendrait un lien anonyme. */
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;border:0}
+.haut{position:fixed;right:1.25rem;bottom:1.25rem;z-index:10;width:2.6rem;height:2.6rem;
+  display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.1rem;
+  background:var(--card);color:var(--m);border:1px solid var(--b);border-radius:999px}
+.haut:hover{color:var(--a);border-color:var(--a)}
+/* Sans JavaScript la classe js n'est jamais posée : la pastille reste simplement visible.
+   Le masquage et le code qui démasque vivent dans le MÊME script (voir JS). */
+html.js .haut{opacity:0;visibility:hidden}
+html.js .haut.on{opacity:1;visibility:visible}
+@media(prefers-reduced-motion:no-preference){
+  html{scroll-behavior:smooth}
+  .haut{transition:opacity .2s,visibility .2s,color .2s,border-color .2s}
+}
 html.l-fr [data-l=en],html.l-en [data-l=fr]{display:none}
 @media(min-width:${LARGE}){
   .wrap{grid-template-columns:13rem minmax(0,60rem);gap:2.5rem;align-items:start}
@@ -530,6 +612,25 @@ const JS = String.raw`
         }
       },{rootMargin:'0px 0px -70% 0px'});
       for(var n=0;n<cibles.length;n++) if(cibles[n]) io.observe(cibles[n]);
+    }catch(e){}
+  }
+
+  // Pastille de retour en haut. La classe 'js' est posée ICI et pas dans BOOT : c'est elle
+  // qui AUTORISE le masquage, et si ce script ne s'exécutait jamais (throw en amont), une
+  // classe posée dans BOOT masquerait la pastille pour toujours, sans erreur visible.
+  // if(ht){...} et JAMAIS if(!ht) return; — un return sort de toute l'IIFE et emporterait
+  // le filtre, le compteur et le tri du tableau.
+  var ht=d.querySelector('.haut');
+  if(ht){
+    try{
+      h.classList.add('js');
+      var seuil=function(){return (window.innerHeight||600)*0.8;};
+      var maj=function(){
+        var y=window.pageYOffset||d.documentElement.scrollTop||0;
+        if(y>seuil()) ht.classList.add('on'); else ht.classList.remove('on');
+      };
+      maj();
+      window.addEventListener('scroll',maj,{passive:true});
     }catch(e){}
   }
 

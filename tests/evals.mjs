@@ -517,6 +517,32 @@ async function smokeTests() {
     add("page : aucune forme de jeton dans le HTML",
       !/Bearer\s|[?&]key=|[0-9a-f]{32,}/i.test(html),
       "motif de jeton détecté dans la page publique");
+
+    // Sommaire <-> document, sur le HTML RÉELLEMENT SERVI. Les gardes de
+    // tests/page-client.test.mjs scannent le TEXTE de src/site.ts : ils ne peuvent pas voir
+    // un mauvais aiguillage (une entrée du sommaire câblée sur le rendu d'une autre
+    // section), une section rendue deux fois, ni un sommaire qui ment sur l'ORDRE. Ici,
+    // c'est la page finale qu'on interroge. `top` est l'ancre de la pastille de retour en
+    // haut, pas une section : elle est exclue.
+    const ancres = [...html.matchAll(/href="#([a-z]+)"/g)].map((m) => m[1])
+      .filter((a) => a !== "top");
+    const sections = [...html.matchAll(/<section id="([a-z]+)"/g)].map((m) => m[1]);
+    const orphelines = ancres.filter((a) => !sections.includes(a));
+    add("page : chaque entrée du sommaire pointe vers une section qui existe",
+      ancres.length > 0 && orphelines.length === 0,
+      `ancres=${ancres.length} sans cible=[${orphelines}]`);
+
+    const dansLOrdre = sections.filter((s) => ancres.includes(s));
+    add("page : l'ordre du sommaire est celui du document",
+      JSON.stringify(ancres) === JSON.stringify(dansLOrdre),
+      `sommaire=[${ancres}] document=[${dansLOrdre}]`);
+
+    // L'avertissement a perdu son entrée de sommaire en devenant une sous-section : plus
+    // rien d'autre ne signalerait sa disparition de la page.
+    add("page : l'avertissement et la clause de non-conseil sont rendus",
+      /<section id="limites"/.test(html) &&
+      /Aucun conseil juridique/.test(html) && /No legal advice/.test(html),
+      "avertissement ou clause de non-conseil absent du HTML servi");
   }
 
   return checks;

@@ -104,6 +104,34 @@ test("les constantes de calibration citées existent et ne sont PAS recopiées",
   }
 });
 
+test("l'avertissement est complet et bilingue", () => {
+  // `catalogue.avertissement` n'était vérifié NULLE PART, alors que c'est la seule clause
+  // de non-conseil juridique du dépôt et que R4 en exige la visibilité. Depuis qu'il est
+  // rendu en sous-section des aides au repérage, il n'a plus d'entrée au sommaire : rien
+  // ne signalerait qu'on l'a vidé. Sur un outil juridique c'est le pire cas.
+  const a = catalogue.avertissement;
+  assert.ok(a, "catalogue.avertissement a disparu");
+  for (const cle of ["titre_fr", "titre_en"]) {
+    assert.ok(typeof a[cle] === "string" && a[cle].trim(), `avertissement.${cle} vide`);
+  }
+  for (const cle of ["corps_fr", "corps_en"]) {
+    assert.ok(Array.isArray(a[cle]) && a[cle].length > 0, `avertissement.${cle} vide`);
+    assert.ok(a[cle].every((p) => typeof p === "string" && p.trim().length > 20),
+      `avertissement.${cle} contient un paragraphe vide ou tronqué`);
+  }
+  assert.equal(a.corps_fr.length, a.corps_en.length,
+    "les deux langues n'énoncent pas le même nombre de réserves");
+
+  // La substance, pas seulement la forme : une reformulation qui perdrait l'une de ces
+  // trois réserves passerait tous les contrôles structurels ci-dessus.
+  const fr = a.corps_fr.join(" ").toLowerCase();
+  const en = a.corps_en.join(" ").toLowerCase();
+  assert.ok(fr.includes("heuristique") && en.includes("heuristic"), "réserve sur le repérage perdue");
+  assert.ok(fr.includes("fait foi") && en.includes("authoritative"), "réserve sur le texte officiel perdue");
+  assert.ok(fr.includes("aucun conseil juridique") && en.includes("no legal advice"),
+    "la clause de non-conseil juridique a disparu de l'avertissement");
+});
+
 test("le catalogue ne contient aucune chaîne en forme de jeton", () => {
   // Paranoïa à coût nul : la page publique ne doit jamais transporter de secret.
   const brut = lire("catalogue.json");
