@@ -12,6 +12,13 @@ import {
 } from "./lib";
 import { WEIGHTS, rank, tokenize } from "./relevance";
 
+// SOURCE UNIQUE des titres (R10) : le titre servi par tools/list et celui affiche sur la
+// page publique sont la MEME valeur, pas deux copies. catalogue.json porte en outre la
+// prose longue de la page. Parite outils <-> catalogue epinglee par tests/catalogue.test.mjs.
+import catalogue from "../catalogue.json";
+
+const titre = (nom: keyof typeof catalogue.tools): string => catalogue.tools[nom].title_fr;
+
 /**
  * Garde-fou imposé par le plan (§4.4) — repris TEL QUEL, à ne pas reformuler.
  * Il rappelle que la découverte est heuristique et ne décide pas du droit applicable.
@@ -78,7 +85,7 @@ export function registerTools(server: McpServer, env: Env): void {
   //
   // Écart au plan v2 (1.4), consigné au rapport : le critère « toute loi dont les
   // divisions comportent le kind livre » rate sa cible — le parseur classe
-  // POSITIONNELLEMENT (ga: = livre), donc 36 lois sur 38 ont des « livres », et le plan
+  // POSITIONNELLEMENT (ga: = livre) — mesuré à 38 lois : 36 en avaient — et le plan
   // complet pèserait ~22 K tokens par appel. Le budget annoncé (+1,2–1,5 K) correspond
   // exactement à ccq + cpc (93 nœuds) : c'est l'intention. Liste extensible au besoin.
   const OUTLINE_LAWS = ["ccq", "cpc"];
@@ -121,7 +128,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_list_laws",
     {
-      title: "Carte du corpus",
+      title: titre("qclaw_list_laws"),
       description:
         "Carte du corpus : toutes les lois avec identifiant, noms FR/EN, citation RLRQ, langues, " +
         "date de consolidation, nombre d'articles, et les attributs de découverte (fonction, forum, " +
@@ -186,7 +193,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_list_subjects",
     {
-      title: "Matières de la taxonomie",
+      title: titre("qclaw_list_subjects"),
       description:
         "Liste les matières de la taxonomie (droit privé du C.c.Q. et matières spécialisées) : " +
         "identifiant, libellé, description, et nombre de lois / divisions rattachées. " +
@@ -231,7 +238,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_related_laws",
     {
-      title: "Lois reliées",
+      title: titre("qclaw_related_laws"),
       description:
         "Graphe d'interconnexion d'une loi : règlements pris sous son autorité, loi habilitante, " +
         "renvois vers d'autres textes, et relations curées (met-en-oeuvre, applique, complète…). " +
@@ -291,7 +298,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_find_relevant",
     {
-      title: "Repérage de sources — heuristique",
+      title: titre("qclaw_find_relevant"),
       description: GARDE_FOU +
         " Classement déterministe sur la matière (taxonomie), les intitulés de divisions, " +
         "les noms de lois et le graphe d'interconnexion. Ex. : query='vice caché maison', " +
@@ -351,7 +358,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_get_article",
     {
-      title: "Texte officiel d'un article",
+      title: titre("qclaw_get_article"),
       description:
         "Retourne le texte officiel verbatim d'un article, avec citation, chemin hiérarchique, " +
         "date de consolidation et historique. Ex. : law='ccq', article='1457'. Les dispositions " +
@@ -393,7 +400,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_get_articles",
     {
-      title: "Textes officiels en lot",
+      title: titre("qclaw_get_articles"),
       description:
         "Retourne plusieurs articles : soit une plage (from..to), soit une liste explicite (numbers). " +
         "Paginé. Ex. : law='ccq', from='1457', to='1460' ; ou numbers=['1457','1590']." + DEUX_TEMPS,
@@ -446,7 +453,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_get_structure",
     {
-      title: "Structure d'une loi (sans texte)",
+      title: titre("qclaw_get_structure"),
       description:
         "Arbre hiérarchique des divisions (Livre → Titre → Chapitre → Section → Sous-section), " +
         "SANS texte d'article — pour explorer avant d'extraire. Chaque nœud donne kind, number, " +
@@ -485,7 +492,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_get_division",
     {
-      title: "Texte officiel d'une division",
+      title: titre("qclaw_get_division"),
       description:
         "Retourne une division (Livre/Titre/Chapitre/Section/…) : son intitulé, ses sous-divisions " +
         "immédiates, et les articles qu'elle contient (tout le sous-arbre, paginés). Identifier par " +
@@ -553,7 +560,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_search_text",
     {
-      title: "Recherche plein texte — replis étiquetés",
+      title: titre("qclaw_search_text"),
       description:
         "Recherche plein texte (FTS5) dans le texte des articles. Retourne les correspondances " +
         "classées par pertinence avec un extrait surligné. Ex. : query='prescription action', " +
@@ -696,7 +703,7 @@ export function registerTools(server: McpServer, env: Env): void {
   server.registerTool(
     "qclaw_resolve_reference",
     {
-      title: "Résolution d'une citation",
+      title: titre("qclaw_resolve_reference"),
       description:
         "Résout une citation en texte libre (ex. « art. 1457 C.c.Q. », « RLRQ, c. T-16, art. 12 ») " +
         "vers l'article officiel. Reconnaît le chapitre RLRQ de n'importe quelle loi du corpus, " +
@@ -715,8 +722,9 @@ export function registerTools(server: McpServer, env: Env): void {
         return err(
           parsed.chapitre_inconnu
             ? `Le chapitre « ${parsed.chapitre_inconnu} » n'est pas au corpus — aucune loi n'a été ` +
-              "résolue (il n'est PAS rabattu sur un chapitre voisin). Voir les 38 textes " +
-              `disponibles avec qclaw_list_laws. Article détecté : ${parsed.article ?? "aucun"}.`
+              "résolue (il n'est PAS rabattu sur un chapitre voisin). " +
+              `Voir les ${all.length} textes disponibles avec qclaw_list_laws. ` +
+              `Article détecté : ${parsed.article ?? "aucun"}.`
             : `Loi non reconnue dans « ${citation} ». Précisez le chapitre RLRQ (ex. « RLRQ, c. T-16 ») ` +
               "ou une abréviation connue (C.c.Q., C.p.c.), ou utilisez qclaw_get_article avec law=… " +
               `(voir qclaw_list_laws). Article détecté : ${parsed.article ?? "aucun"}.`,

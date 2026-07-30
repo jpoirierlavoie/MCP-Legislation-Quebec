@@ -3,6 +3,7 @@ import { McpAgent } from "agents/mcp";
 
 import { gateMcp } from "./auth";
 import { handleBackfill } from "./backfill";
+import { renderSite } from "./site";
 import { registerTools } from "./tools";
 
 /**
@@ -33,12 +34,55 @@ export class QclawMCP extends McpAgent {
   }
 }
 
+/**
+ * Sert la page publique, avec cache d'arête.
+ *
+ * La CLÉ DE CACHE EST FIXE ET SYNTHÉTIQUE : sans cela, `/?utm_source=…` ou tout autre
+ * paramètre arbitraire créerait une entrée distincte — donc un rendu D1 de plus — pour
+ * chaque variante d'URL croisée par un robot. Le corpus ne bouge que deux fois l'an ;
+ * le cache n'est pas un confort mais la protection du coût de lecture (le décompte
+ * d'articles balaie toute la table).
+ */
+const CACHE_KEY = "https://legislation.poirierlavoie.ca/__page";
+
+async function servePage(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const cache = caches.default;
+  const cached = await cache.match(CACHE_KEY);
+  if (cached) {
+    return request.method === "HEAD"
+      ? new Response(null, { status: cached.status, headers: cached.headers })
+      : cached;
+  }
+  const html = await renderSite(env.DB);
+  const res = new Response(html, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "public, max-age=300, s-maxage=900, stale-while-revalidate=3600",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      // Rien n'est chargé depuis un tiers : CSS et JS sont en ligne, aucune police, aucun CDN.
+      "Content-Security-Policy":
+        "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; " +
+        "img-src data:; base-uri 'none'; form-action 'none'",
+    },
+  });
+  ctx.waitUntil(cache.put(CACHE_KEY, res.clone()));
+  return request.method === "HEAD"
+    ? new Response(null, { status: res.status, headers: res.headers })
+    : res;
+}
+
 export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const url = new URL(request.url);
     if (url.pathname === "/") {
-      // Pas d'annonce du chemin MCP : une fois MCP_TOKEN posé, il répond 404 sans jeton.
-      return new Response("qclaw-mcp", { status: 200 });
+      // Page publique (src/site.ts). Posture assumée : elle décrit le corpus, les outils
+      // et les aides au repérage. Elle ne contient JAMAIS le jeton et n'appelle jamais
+      // /mcp — elle ne le pourrait pas, src/auth.ts refusant en 404 sans porteur.
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        return new Response("Method not allowed", { status: 405, headers: { Allow: "GET, HEAD" } });
+      }
+      return servePage(request, env, ctx);
     }
     // Accès sous jeton partagé (src/auth.ts). Vérifié ICI, donc avant toute instanciation
     // du Durable Object : un appel non autorisé ne coûte ni session DO, ni D1, ni Workers AI.

@@ -6,35 +6,39 @@ lecture seule** au texte officiel de la législation québécoise : **79 lois et
 anglais**, avec dates de consolidation, hiérarchie complète (Livres → Titres → Chapitres →
 articles) et recherche hybride lexicale + sémantique.
 
-**Point d'accès :** `https://legislation.poirierlavoie.ca/mcp` (HTTP streamable)
+**Page publique :** <https://legislation.poirierlavoie.ca/> — corpus, outils et aides au
+repérage, en français et en anglais, avec les décomptes lus en base.
+
+**Point d'accès MCP :** `https://legislation.poirierlavoie.ca/mcp` (HTTP streamable) —
+**instance privée, sous jeton** : une requête sans jeton reçoit 404.
 
 Source des données : les EPUB officiels de [LégisQuébec](https://www.legisquebec.gouv.qc.ca)
 (Éditeur officiel du Québec). Le texte des articles est restitué **verbatim** — le serveur
 n'altère jamais le contenu officiel.
 
-## Se connecter
+## Accès
 
-Dans Claude (connecteurs personnalisés) ou tout client MCP :
+Ce serveur est une **instance privée**. L'endpoint MCP exige un jeton d'accès ; une
+requête sans jeton reçoit 404 (jamais 401 — un 401 annoncerait un serveur MCP et
+déclencherait la découverte OAuth des clients, ce qui a déjà coincé un connecteur).
 
-```json
-{
-  "mcpServers": {
-    "legislation-quebec": { "url": "https://legislation.poirierlavoie.ca/mcp" }
-  }
-}
-```
+Pour en demander l'accès : <jason@poirierlavoie.ca>. Le code source est public et le
+corpus reproductible — pipeline d'ingestion, taxonomie et données de configuration sont
+tous versionnés ici.
 
 ## Le corpus
 
 | Catégorie | Textes |
 |---|---|
-| Codes | Code civil du Québec (3 525 art.), Code de procédure civile (878 art.) |
+| Codes | Code civil du Québec, Code de procédure civile |
 | Lois sectorielles | Charte des droits et libertés, protection du consommateur, normes du travail, renseignements personnels (Loi 25) et accès aux documents publics, valeurs mobilières, assureurs, coopératives de services financiers, police et déontologie policière, bâtiment (Code de construction, Code de sécurité), courtage immobilier, cités et villes, fiscalité et éthique municipales, expropriation, contrats des organismes publics et municipaux, fonction publique, procédure pénale… |
 | Règles de procédure | Règlements des cours (appel, supérieure, Québec), du TAQ, du TAL, du TAMF, de la déontologie policière et de la Régie du bâtiment |
 | Tarifs | Tarif judiciaire, tarifs du TAQ, du TAL et du TAMF |
 
-Au total : **~46 000 articles** par langue, consolidés (dates affichées par l'outil
-`qclaw_list_laws`). Rafraîchissement semestriel.
+Les décomptes exacts (nombre d'articles par langue, dates de consolidation) sont calculés
+en base et affichés sur la [page publique](https://legislation.poirierlavoie.ca/) ainsi que
+par l'outil `qclaw_list_laws` — ils ne sont pas recopiés ici (R10). Rafraîchissement
+semestriel.
 
 ## Les 10 outils
 
@@ -45,7 +49,7 @@ Le patron d'usage est en deux temps : **s'orienter** (découverte), puis **extra
 | Outil | Rôle | Exemple |
 |---|---|---|
 | `qclaw_find_relevant` | Le routeur : d'un problème en langage libre vers les lois et chapitres candidats, avec le *pourquoi* de chaque rapprochement | `« vice caché »` → C.c.Q. Livre 5 (Obligations) + L.p.c. |
-| `qclaw_list_laws` | Carte du corpus : noms FR/EN, citation RLRQ, dates, matières, loi habilitante, plan des grands codes ; filtres `fonction`/`forum`/`subject` | `fonction=tarif` → les 3 tarifs |
+| `qclaw_list_laws` | Carte du corpus : noms FR/EN, citation RLRQ, dates, matières, loi habilitante, plan des grands codes ; filtres `fonction`/`forum`/`subject` | `fonction=tarif` → les 4 tarifs |
 | `qclaw_list_subjects` | Les 34 matières de la taxonomie (droit privé du C.c.Q. + matières spécialisées), bilingues | — |
 | `qclaw_related_laws` | Graphe d'une loi : règlements pris sous elle, loi habilitante, renvois, relations curées | `law=cpc` → ses 6 règlements de cour |
 
@@ -94,7 +98,7 @@ src/            Worker Cloudflare (TypeScript) : outils MCP, recherche, D1/Vecto
 pipeline/       Ingestion Python : EPUB LégisQuébec -> D1 (staging -> validation -> bascule)
 laws.config.json, taxonomy.json, relations.json   Données versionnées (corpus, matières, graphe)
 migrations/     Migrations D1 (wrangler d1 migrations)
-tests/, eval/   57 contrôles bout-en-bout + harnais d'évaluation (20 cas, recall@10/MRR)
+tests/, eval/   contrôles bout-en-bout + harnais d'évaluation (20 cas, recall@10/MRR)
 docs/           Notes d'architecture, rapports de phase, format EPUB ; archive des plans
 ```
 

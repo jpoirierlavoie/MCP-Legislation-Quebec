@@ -459,6 +459,33 @@ async function smokeTests() {
     }
   }
 
+  // --- page publique (R10) ---------------------------------------------------
+  // Ces trois contrôles opposent la PAGE et l'OUTIL sur le serveur réel. Le deuxième est
+  // le plus profond du lot : il aurait attrapé « 38 textes » servis pendant que le corpus
+  // en comptait 79. Requêtes brutes, aucune session MCP supplémentaire (invariant 10).
+  {
+    const racine = new URL(MCP_URL);
+    racine.pathname = "/";
+    racine.search = "";
+    const res = await fetch(racine, { headers: { Accept: "text/html" } });
+    const html = await res.text();
+    add("page : GET / -> 200 text/html",
+      res.status === 200 && /text\/html/.test(res.headers.get("content-type") ?? ""),
+      `status=${res.status} type=${res.headers.get("content-type")}`);
+
+    // Parité page <-> outil : autant de lignes de loi que qclaw_list_laws n'annonce de lois.
+    const rows = (html.match(/data-law-id="/g) ?? []).length;
+    add("page : autant de lois affichées que list_laws en déclare",
+      rows === laws.structuredContent?.count,
+      `page=${rows} list_laws=${laws.structuredContent?.count}`);
+
+    // Le HTML public ne doit transporter AUCUN secret. Testé par MOTIF, jamais par
+    // comparaison au jeton — le contrôle doit valoir même sans jeton sous la main.
+    add("page : aucune forme de jeton dans le HTML",
+      !/Bearer\s|[?&]key=|[0-9a-f]{32,}/i.test(html),
+      "motif de jeton détecté dans la page publique");
+  }
+
   return checks;
 }
 

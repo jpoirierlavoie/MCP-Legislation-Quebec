@@ -1,6 +1,6 @@
 """Lecture de laws.config.json (JSON strict) — voir PLAN.md §8.
 
-Fichier UNIQUE décrivant les 38 textes du corpus. Les 36 ajouts de la couche découverte
+Fichier UNIQUE décrivant le corpus. Les ajouts de la couche découverte
 y ont été fusionnés (plan-couche-decouverte §5 : « laws.config.additions.json fusionne
 dans laws.config.json »), le fichier séparé n'était qu'un véhicule de livraison.
 

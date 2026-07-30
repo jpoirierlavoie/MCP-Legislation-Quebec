@@ -1,0 +1,235 @@
+{
+  "_comment": "SOURCE UNIQUE de la documentation publique (R10). Consommé par src/tools.ts (les title_fr sont les titres MCP servis par tools/list) et par src/site.ts (la page publique). Épinglé par tests/catalogue.test.mjs, qui exige la parité stricte avec les outils enregistrés et la concordance des constantes de calibration citées ici avec src/relevance.ts. NE JAMAIS y recopier un décompte (lois, matières, articles) : ces chiffres se lisent en base au rendu.",
+
+  "tools": {
+    "qclaw_find_relevant": {
+      "title_fr": "Repérage de sources — heuristique",
+      "title_en": "Source discovery — heuristic",
+      "groupe": "orientation",
+      "page_fr": [
+        "Le point d'entrée quand on part d'un problème plutôt que d'une loi. On décrit la situation en langage libre — « vice caché maison », « congédiement sans préavis », « bail commercial » — et l'outil rend une liste de lois et de chapitres candidats, chacun accompagné du motif de son rapprochement.",
+        "Le classement est entièrement déterministe : aucun modèle de langue n'intervient. Quatre signaux se cumulent — la matière de la taxonomie, l'intitulé des divisions, le nom des lois, et le voisinage dans le graphe des textes. Chaque candidat expose ses preuves, de sorte que le rapprochement est vérifiable plutôt que devinable.",
+        "C'est une aide au repérage, pas une réponse juridique : elle ne détermine pas le droit applicable. Le résultat sert à choisir où lire, puis on extrait le texte avec les outils de structure et d'article."
+      ],
+      "page_en": [
+        "The entry point when you start from a problem rather than from a statute. You describe the situation in free language — “latent defect house”, “dismissal without notice”, “commercial lease” — and the tool returns candidate statutes and chapters, each with the reason it was matched.",
+        "Ranking is entirely deterministic: no language model is involved. Four signals accumulate — the taxonomy subject, division headings, statute names, and adjacency in the graph of related texts. Every candidate exposes its evidence, so a match can be checked rather than guessed.",
+        "This is a retrieval aid, not a legal answer: it does not determine the applicable law. Its output tells you where to read; you then extract the text with the structure and article tools."
+      ]
+    },
+
+    "qclaw_list_laws": {
+      "title_fr": "Carte du corpus",
+      "title_en": "Corpus map",
+      "groupe": "orientation",
+      "page_fr": [
+        "La carte complète du corpus : chaque loi avec son identifiant, ses titres français et anglais, sa citation RLRQ, les langues disponibles, sa date de consolidation et son nombre d'articles.",
+        "S'y ajoutent les attributs de découverte : la fonction du texte (loi, règlement, règles de procédure, tarif), le forum devant lequel il s'applique, les matières auxquelles il est rattaché, et la loi habilitante lorsqu'il s'agit d'un règlement. Pour les deux grands codes, le plan des Livres et de leurs Titres est inclus.",
+        "Trois filtres permettent de restreindre la carte : par fonction, par forum, ou par matière. C'est le point de départ pour explorer le corpus lorsqu'on sait ce qu'on cherche ; pour partir d'un problème concret, l'outil de repérage est plus direct."
+      ],
+      "page_en": [
+        "The full map of the corpus: each statute with its identifier, French and English titles, RLRQ citation, available languages, consolidation date and article count.",
+        "Discovery attributes come with it: the text's function (statute, regulation, rules of procedure, tariff), the forum it governs, the subjects it belongs to, and the enabling statute where the text is a regulation. For the two major codes, the outline of Books and their Titles is included.",
+        "Three filters narrow the map: by function, by forum, or by subject. This is where to start when exploring a known corpus; to start from a concrete problem, the discovery tool is more direct."
+      ]
+    },
+
+    "qclaw_list_subjects": {
+      "title_fr": "Matières de la taxonomie",
+      "title_en": "Taxonomy subjects",
+      "groupe": "orientation",
+      "page_fr": [
+        "La taxonomie qui organise le corpus, en deux familles : les matières du droit privé, calquées sur les Livres du Code civil du Québec, et les matières spécialisées, qui regroupent les lois sectorielles et leurs règlements.",
+        "Chaque matière porte un libellé et une description bilingues, ainsi que le nombre de lois et de divisions qui lui sont rattachées. Elle sert à choisir un domaine, puis à filtrer la carte du corpus.",
+        "La description d'une matière n'est pas de la prose d'agrément : c'est la surface sur laquelle s'apparient les termes d'une requête. Le vocabulaire qu'elle contient est celui que l'on veut voir reconnu — ce qui en fait le principal levier de calibrage éditorial du repérage."
+      ],
+      "page_en": [
+        "The taxonomy that organizes the corpus, in two families: private-law subjects, mapped onto the Books of the Civil Code of Québec, and specialized subjects, which group sectoral statutes with their regulations.",
+        "Each subject carries a bilingual label and description, along with the number of statutes and divisions attached to it. It is used to pick a domain, then to filter the corpus map.",
+        "A subject's description is not decorative prose: it is the surface against which query terms are matched. The vocabulary it contains is the vocabulary meant to be recognized — which makes it the main editorial lever for tuning discovery."
+      ]
+    },
+
+    "qclaw_related_laws": {
+      "title_fr": "Lois reliées",
+      "title_en": "Related statutes",
+      "groupe": "orientation",
+      "page_fr": [
+        "Le graphe d'interconnexion d'une loi : les règlements pris sous son autorité, la loi qui l'habilite, les renvois qu'elle fait vers d'autres textes, et les relations curées à la main lorsqu'un lien juridique mérite d'être qualifié — met en œuvre, applique, complète, encadré par, connexe.",
+        "Les arêtes peuvent être suivies dans les deux sens, filtrées par type, et limitées en nombre. Chaque relation indique si elle a été dérivée automatiquement ou curée, et les relations curées portent une note expliquant le lien.",
+        "L'outil signale explicitement les cibles qui ne sont pas au corpus : un renvoi vers une loi non chargée est affiché comme tel plutôt que passé sous silence. Ces cibles absentes sont autant de candidats d'acquisition."
+      ],
+      "page_en": [
+        "A statute's interconnection graph: regulations made under its authority, the statute that enables it, cross-references it makes to other texts, and hand-curated relations where a legal link deserves to be characterized — implements, applies, supplements, governed by, related.",
+        "Edges can be followed in either direction, filtered by type, and capped in number. Each relation states whether it was derived automatically or curated, and curated relations carry a note explaining the link.",
+        "The tool explicitly flags targets that are not in the corpus: a reference to a statute that has not been loaded is shown as such rather than silently dropped. Those absent targets are acquisition candidates."
+      ]
+    },
+
+    "qclaw_get_article": {
+      "title_fr": "Texte officiel d'un article",
+      "title_en": "Official text of an article",
+      "groupe": "extraction",
+      "page_fr": [
+        "Le texte officiel d'un article, restitué verbatim, avec sa citation, sa position dans la hiérarchie du texte, sa date de consolidation et sa ligne d'historique législatif. Les articles abrogés sont rendus et signalés comme tels.",
+        "Les numéros décimaux du Code civil et des lois modernes sont pris en charge, de même que les dispositions qui n'ont pas de numéro — la disposition préliminaire et les dispositions finales se demandent par leur nom.",
+        "Si le numéro demandé n'existe pas, l'outil ne devine pas : il propose les articles voisins. Un article manquant est signalé, jamais remplacé par son plus proche parent."
+      ],
+      "page_en": [
+        "The official text of an article, returned verbatim, with its citation, its position in the text's hierarchy, its consolidation date and its legislative history line. Repealed articles are returned and flagged as such.",
+        "Decimal numbering used by the Civil Code and modern statutes is supported, as are provisions without a number — the preliminary provision and the final provisions are requested by name.",
+        "If the requested number does not exist, the tool does not guess: it offers the neighbouring articles. A missing article is reported, never substituted with its nearest sibling."
+      ]
+    },
+
+    "qclaw_get_articles": {
+      "title_fr": "Textes officiels en lot",
+      "title_en": "Official texts in bulk",
+      "groupe": "extraction",
+      "page_fr": [
+        "Plusieurs articles en une seule demande, soit par plage continue, soit par liste explicite de numéros. La réponse est paginée, ce qui permet de parcourir un chapitre entier sans saturer le contexte.",
+        "Le mode plage respecte l'ordre réel des articles du texte, y compris les numéros décimaux insérés entre deux articles entiers — les bornes sont lues en base plutôt que recalculées, ce qui rend la plage insensible aux particularités de numérotation d'un texte donné."
+      ],
+      "page_en": [
+        "Several articles in a single request, either as a continuous range or as an explicit list of numbers. The response is paginated, which makes it possible to walk through an entire chapter without flooding the context.",
+        "Range mode follows the text's real article order, including decimal numbers inserted between two whole ones — the bounds are read from the database rather than recomputed, which makes ranges immune to a given text's numbering quirks."
+      ]
+    },
+
+    "qclaw_get_structure": {
+      "title_fr": "Structure d'une loi (sans texte)",
+      "title_en": "Structure of a statute (no text)",
+      "groupe": "extraction",
+      "page_fr": [
+        "L'arbre hiérarchique d'une loi — Livre, Titre, Chapitre, Section, Sous-section — sans le texte des articles. C'est l'outil qui permet de comprendre l'économie d'un texte avant d'en extraire quoi que ce soit.",
+        "Chaque nœud donne son type, son numéro, son intitulé et son chemin. Le chemin est la clé qui sert ensuite à demander une division précise. La profondeur d'affichage se règle, et l'on peut se restreindre à un sous-arbre.",
+        "Les chemins sont propres à chaque langue, puisqu'ils dérivent du balisage officiel. Un chemin obtenu en français reste néanmoins utilisable en anglais : il est traduit automatiquement par le pont des numéros d'articles."
+      ],
+      "page_en": [
+        "The hierarchical tree of a statute — Book, Title, Chapter, Division, Subsection — without article text. This is the tool for understanding how a text is organized before extracting anything from it.",
+        "Each node gives its kind, number, heading and path. The path is the key used afterwards to request a specific division. Display depth is adjustable, and you can restrict the view to a subtree.",
+        "Paths are language-specific, since they derive from the official markup. A path obtained in French nonetheless remains usable in English: it is translated automatically through the article-number bridge."
+      ]
+    },
+
+    "qclaw_get_division": {
+      "title_fr": "Texte officiel d'une division",
+      "title_en": "Official text of a division",
+      "groupe": "extraction",
+      "page_fr": [
+        "Une division entière — un Livre, un Titre, un Chapitre, une Section — avec son intitulé, ses sous-divisions immédiates et les articles qu'elle contient, tout son sous-arbre compris. La réponse est paginée.",
+        "On peut ne demander que les numéros d'articles, sans leur texte, pour arpenter un gros chapitre à faible coût avant de cibler.",
+        "Lorsqu'un intitulé n'existe que dans une langue, celui de l'autre langue est rendu et marqué comme tel, plutôt que d'afficher un vide silencieux."
+      ],
+      "page_en": [
+        "A whole division — a Book, Title, Chapter or Division — with its heading, its immediate subdivisions and the articles it contains, across its entire subtree. The response is paginated.",
+        "You can request article numbers only, without their text, to survey a large chapter cheaply before narrowing down.",
+        "Where a heading exists in only one language, the other language's heading is returned and marked as such, rather than displaying a silent blank."
+      ]
+    },
+
+    "qclaw_search_text": {
+      "title_fr": "Recherche plein texte — replis étiquetés",
+      "title_en": "Full-text search — labelled fallbacks",
+      "groupe": "extraction",
+      "page_fr": [
+        "La recherche dans le texte même des articles, insensible aux accents, combinant un moteur lexical et un moteur sémantique. Chaque résultat arrive avec son fil d'Ariane complet et un extrait surligné, de sorte qu'on sait d'où il vient sans avoir à le demander.",
+        "Le trait déterminant de cet outil est qu'il dit toujours comment il a obtenu ses résultats. Si la correspondance exacte échoue, il élargit, relâche ou bascule au sémantique — mais il annonce lequel de ces chemins a produit la réponse, en prose comme dans les données structurées. Un résultat approché n'est jamais présenté comme une correspondance exacte.",
+        "Une recherche restreinte à une loi qui ne donne rien est automatiquement étendue au corpus ; une recherche restreinte qui donne des résultats signale tout de même ce qui existe ailleurs. Les résultats à l'échelle du corpus sont regroupés par loi, avec un plafond par loi, pour qu'un texte volumineux ne monopolise pas le classement."
+      ],
+      "page_en": [
+        "Search within the article text itself, accent-insensitive, combining a lexical engine and a semantic one. Each result arrives with its full breadcrumb and a highlighted excerpt, so you know where it comes from without having to ask.",
+        "The defining trait of this tool is that it always states how it obtained its results. When exact matching fails, it widens, relaxes, or falls back to semantic retrieval — but it announces which of those paths produced the answer, in prose and in the structured payload alike. An approximate result is never presented as an exact match.",
+        "A search restricted to one statute that returns nothing is automatically widened to the corpus; a restricted search that does return results still reports what exists elsewhere. Corpus-wide results are grouped by statute, with a per-statute cap, so that a voluminous text cannot monopolize the ranking."
+      ]
+    },
+
+    "qclaw_resolve_reference": {
+      "title_fr": "Résolution d'une citation",
+      "title_en": "Citation resolution",
+      "groupe": "extraction",
+      "page_fr": [
+        "D'une citation écrite en langage libre vers l'article officiel qu'elle désigne. L'outil reconnaît le chapitre RLRQ de n'importe quelle loi du corpus, ainsi que les abréviations usuelles des deux grands codes.",
+        "Il indique par quelle voie la citation a été reconnue, ce qui permet de vérifier la résolution plutôt que de la prendre pour acquise.",
+        "Un chapitre RLRQ absent du corpus n'est jamais rabattu sur un chapitre voisin : l'outil refuse explicitement de résoudre plutôt que de rendre l'article d'une autre loi. Dans un outil juridique, un résultat faux rendu en silence est le pire défaut possible."
+      ],
+      "page_en": [
+        "From a citation written in free form to the official article it designates. The tool recognizes the RLRQ chapter of any statute in the corpus, as well as the usual abbreviations of the two major codes.",
+        "It reports how the citation was recognized, which lets you verify the resolution rather than take it on trust.",
+        "An RLRQ chapter absent from the corpus is never rounded to a neighbouring chapter: the tool explicitly declines to resolve rather than return an article from a different statute. In a legal tool, a wrong result delivered silently is the worst possible defect."
+      ]
+    }
+  },
+
+  "retrieval": {
+    "intro_fr": [
+      "Le repérage ne devine pas. Il combine un classement déterministe, une recherche lexicale et une recherche sémantique — et chacun de ces chemins est annoncé dans la réponse. On peut donc toujours savoir pourquoi un texte a été proposé, et à quel titre."
+    ],
+    "intro_en": [
+      "Discovery does not guess. It combines deterministic ranking, lexical search and semantic search — and every one of those paths is announced in the response. You can always tell why a text was proposed, and on what basis."
+    ],
+
+    "signaux": {
+      "titre_fr": "Les quatre signaux du classement",
+      "titre_en": "The four ranking signals",
+      "corps_fr": [
+        "Le classement des candidats est une somme de signaux, sans aucun appel de modèle de langue. Le même texte, interrogé deux fois par les mêmes termes, rend le même classement.",
+        "La matière pèse le plus lourd : lorsqu'un terme de la requête se retrouve dans le libellé ou la description d'une matière de la taxonomie, toutes les lois rattachées à cette matière deviennent candidates. Viennent ensuite l'intitulé des divisions et le nom des lois, à poids égal. Enfin, un saut dans le graphe des relations ajoute un appoint : une loi voisine d'un bon candidat gagne un point, une seule fois, et seulement par une relation curée ou par un lien de règlement à loi habilitante.",
+        "Deux correctifs empêchent ce cumul de dériver. Un terme qui ne touche que quelques textes pèse davantage qu'un terme générique — dans un corpus entièrement juridique, « procédure » ou « contrat » n'apprennent presque rien, tandis que « courtage » ou « expropriation » désignent. Cette pondération est continue et non par seuil, précisément pour que le classement ne bascule pas le jour où une loi de plus est ajoutée au corpus. Et une même matière ne peut fournir qu'un nombre borné de candidats, faute de quoi une matière riche en textes remplirait à elle seule la liste et en évincerait le code applicable."
+      ],
+      "corps_en": [
+        "Candidate ranking is a sum of signals, with no language-model call anywhere. The same query, run twice with the same terms, yields the same ranking.",
+        "Subject matter carries the most weight: when a query term appears in the label or description of a taxonomy subject, every statute attached to that subject becomes a candidate. Division headings and statute names follow, at equal weight. Finally, one hop through the relations graph adds a small bonus: a statute adjacent to a strong candidate gains a point, once only, and only through a curated relation or a regulation-to-enabling-statute link.",
+        "Two corrections keep that accumulation from drifting. A term that touches only a few texts weighs more than a generic one — in a corpus that is entirely legal, “procedure” or “contract” teach almost nothing, whereas “brokerage” or “expropriation” designate. That weighting is continuous rather than threshold-based, precisely so the ranking does not tip the day one more statute is added to the corpus. And a single subject may contribute only a bounded number of candidates, failing which a text-rich subject would fill the list on its own and crowd out the governing code."
+      ],
+      "constantes": ["S1_SUBJECT", "S2_DIVISION_HEADING", "S3_LAW_NAME", "S4_GRAPH_NEIGHBOUR", "MAX_PER_SUBJECT", "MAX_SUFFIX"]
+    },
+
+    "echelle": {
+      "titre_fr": "L'échelle de recherche, et ses étiquettes",
+      "titre_en": "The search ladder, and its labels",
+      "corps_fr": [
+        "La recherche plein texte descend une échelle, du plus exact au plus approximatif, et s'arrête au premier barreau qui donne quelque chose.",
+        "Elle tente d'abord la correspondance exacte dans la portée demandée. Si une recherche restreinte à une loi ne donne rien, elle est élargie au corpus. Si l'exact échoue partout, elle réessaie en retirant un terme à la fois, puis en acceptant qu'un seul des termes suffise. En dernier recours seulement, elle propose des articles trouvés par proximité de sens.",
+        "Chaque barreau pose une étiquette qui voyage avec la réponse — dans le texte rendu et dans les données structurées. On sait donc toujours si l'on regarde une correspondance exacte, un résultat obtenu en ignorant un terme, ou un rapprochement purement sémantique. Le repli est permis ; le repli silencieux ne l'est pas."
+      ],
+      "corps_en": [
+        "Full-text search walks down a ladder, from most exact to most approximate, and stops at the first rung that yields anything.",
+        "It first attempts an exact match within the requested scope. If a search restricted to one statute returns nothing, it is widened to the corpus. If exact matching fails everywhere, it retries by dropping one term at a time, then by accepting that a single term suffices. Only as a last resort does it offer articles found by closeness of meaning.",
+        "Every rung sets a label that travels with the response — in the rendered text and in the structured payload alike. You can therefore always tell whether you are looking at an exact match, a result obtained by ignoring a term, or a purely semantic association. Falling back is permitted; falling back silently is not."
+      ],
+      "constantes": []
+    },
+
+    "hybride": {
+      "titre_fr": "Lexical et sémantique, fusionnés",
+      "titre_en": "Lexical and semantic, fused",
+      "corps_fr": [
+        "Les deux moteurs ne se remplacent pas : ils se fusionnent. La liste lexicale et la liste sémantique sont combinées par un rang réciproque, ce qui évite d'avoir à comparer des échelles de score incommensurables. Un article trouvé par les deux voies remonte naturellement.",
+        "Le moteur sémantique repose sur des plongements multilingues, ce qui lui donne deux usages précis : franchir l'écart de vocabulaire — une recherche sur « congédiement » atteint « délai de congé » — et franchir la barrière de langue, une requête en anglais atteignant le texte français.",
+        "Un plancher de similarité est appliqué, et il est calibré par mesure et non au jugé. Sans lui, une requête en charabia recevrait quand même ses plus proches voisins, présentés comme des résultats. Sous ce plancher, l'outil préfère ne rien rendre."
+      ],
+      "corps_en": [
+        "The two engines do not replace one another: they are fused. The lexical list and the semantic list are combined by reciprocal rank, which avoids having to compare incommensurable score scales. An article found by both routes naturally rises.",
+        "The semantic engine rests on multilingual embeddings, which gives it two precise uses: bridging the vocabulary gap — a search for “dismissal” reaches “notice of termination” — and bridging the language barrier, an English query reaching the French text.",
+        "A similarity floor is applied, and it is calibrated by measurement rather than by judgement. Without it, a gibberish query would still receive its nearest neighbours, presented as results. Below that floor, the tool prefers to return nothing."
+      ],
+      "constantes": ["RRF_K", "SEMANTIC_MIN_SCORE", "VECTOR_TOP_K"]
+    }
+  },
+
+  "avertissement": {
+    "titre_fr": "Limites",
+    "titre_en": "Limits",
+    "corps_fr": [
+      "L'aide au repérage est heuristique. Elle propose où lire ; elle ne détermine pas le droit applicable.",
+      "Le texte des articles est restitué verbatim depuis les EPUB officiels de LégisQuébec, sans altération. Il n'en demeure pas moins que la version officielle est celle publiée par l'Éditeur officiel du Québec, et c'est elle qui fait foi.",
+      "Ce service ne fournit aucun conseil juridique. Les dates de consolidation affichées indiquent l'état du corpus chargé ici, qui peut accuser un retard sur la publication officielle."
+    ],
+    "corps_en": [
+      "The retrieval aid is heuristic. It suggests where to read; it does not determine the applicable law.",
+      "Article text is returned verbatim from the official LégisQuébec EPUBs, unaltered. That said, the official version is the one published by the Québec Official Publisher, and it is the authoritative one.",
+      "This service provides no legal advice. The consolidation dates shown reflect the state of the corpus loaded here, which may lag the official publication."
+    ]
+  }
+}

@@ -14,14 +14,17 @@ défaut possible — refuser vaut toujours mieux que deviner.**
 2. **Pipeline Python** (`pipeline/`, venv `./.venv/Scripts/python.exe`, toujours
    `PYTHONUTF8=1`) — télécharge/parse les EPUB Irosoft, charge D1 par
    staging → validation → bascule. Ne JAMAIS écrire directement en production.
-3. **Données versionnées** — `laws.config.json` (79 lois), `taxonomy.json` (34 matières
+3. **Données versionnées** — `laws.config.json` (79 lois), `catalogue.json` (doc publique
+   des outils et des aides au repérage, bilingue — R10), `taxonomy.json` (34 matières
    bilingues), `relations.json` (relations curées), `schema.sql` + `schema-decouverte.sql`
    + `migrations/` (wrangler d1 migrations).
 
 Fichiers clés : `src/tools.ts` (outils MCP), `src/lib.ts` (requêtes D1, échelle de
 recherche, fusion RRF), `src/relevance.ts` (TOUTES les constantes de calibration : poids
-S1–S4, RRF_K, SEMANTIC_MIN_SCORE…), `src/backfill.ts` (route admin vecteurs),
-`pipeline/ingest.py` (orchestrateur), `pipeline/discovery/` (recon/migrate/load/relations/verify).
+S1–S4, RRF_K, SEMANTIC_MIN_SCORE…), `src/backfill.ts` (route admin vecteurs), `src/site.ts` (page publique servie à `/` — ses
+décomptes sont LUS en D1, jamais recopiés ; elle ne contient JAMAIS le jeton et n'appelle
+jamais `/mcp`), `pipeline/ingest.py` (orchestrateur),
+`pipeline/discovery/` (recon/migrate/load/relations/verify).
 Un seul « backfill » subsiste, celui des VECTEURS (`src/backfill.ts` + `scripts/backfill-vectors.mjs`) :
 l'homonyme Python remplissait `name_norm`/`heading_norm` avant que l'invariant n° 3 ne les
 fasse calculer au chargement, il est supprimé.
@@ -35,6 +38,7 @@ npm run evals                                      # 62 contrôles bout-en-bout 
 npm run eval                                       # harnais d'éval : 20 cas, recall@10/MRR (production)
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m unittest discover -s pipeline/tests -q   # 23 tests
 node --test scripts/check-consolidation.test.mjs   # 13 contrôles du détecteur de veille (sans réseau, en CI)
+node --test tests/catalogue.test.mjs               # garde anti-dérive doc (R10 ; sans réseau, en CI)
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m pipeline.ingest --law X --lang fr --apply-local
 npx wrangler d1 migrations apply qclaw --local|--remote   # bookmark Time Travel AVANT --remote
 npx wrangler deploy                                # jeton requis (voir Secrets)
@@ -137,6 +141,26 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
   service. `outputSchema` reste ABSENT à dessein (coût récurrent de tools/list + un schéma
   qui dérive des gabarits est un contrat menti) ; ne le revisiter que pour un consommateur
   nommé qui VALIDE.
+- **R10 — TROIS SURFACES, UNE VÉRITÉ (dérive de documentation).** Un outil ou une aide au
+  repérage vit à trois endroits : `src/tools.ts` (ce que le modèle reçoit), `catalogue.json`
+  (ce que le public lit sur la page) et `README.md`. Tout changement de nom, de titre, de
+  sémantique, de signal, de barreau de repli ou de constante de calibration se répercute
+  sur les TROIS, dans le même commit.
+  **Aucun fait vivant écrit à la main** : un décompte (lois, matières, articles, contrôles)
+  se CALCULE (D1, JSON versionné) ou s'IMPORTE (`WEIGHTS`, `SEMANTIC_MIN_SCORE`) — jamais
+  recopié dans de la prose. Un fait *historique daté* reste licite AVEC sa date
+  (« mesuré à 38 lois : 36 en avaient », « recall@10 40 % → 88 % → 98 % »).
+  **Preuve que la consigne seule ne suffit pas** : `qclaw_resolve_reference` a servi aux
+  modèles « Voir les 38 textes disponibles » alors que le corpus en comptait 79 ; le README
+  annonçait 3 tarifs sur 4 ; `docs/ARCHITECTURE-NOTES.md` est resté à 38 lois / 28 matières.
+  Tout cela sans qu'aucun test n'échoue. Garde : `tests/catalogue.test.mjs` (hors réseau,
+  en CI) — parité outils ↔ catalogue dans les deux sens, bilinguisme réel, interdiction des
+  titres en dur et des valeurs de calibration recopiées, décomptes du README épinglés sur
+  les JSON versionnés. **Ce que RIEN n'attrape** : une description reformulée dont la prose
+  de page devient fausse sans qu'aucune clé ne bouge — seule la relecture humaine le voit.
+  R3 et R9 ne s'appliquent PAS à `catalogue.json` (il n'entre dans aucune réponse MCP) ;
+  R4 si (aide éditoriale, visiblement non officielle). L'invariant 13 non plus : la prose de
+  page n'est pas une surface d'appariement, contrairement aux descriptions de `taxonomy.json`.
 - **R7** : fail open, toujours DIT (étiquettes d'élargissement/relaxation/sémantique).
 - **R8** : chemins risqués derrière variables d'env (`RELAX_SEARCH`, `HYBRID_SEARCH`) —
   rollback = flip de variable, pas revert.
@@ -146,7 +170,7 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
 ## Procédures sûres
 
 **Modifier le Worker** : coder → `tsc` → `wrangler dev` + contrôles locaux →
-`npm run evals` (55) → deploy → re-vérifier en production (les Durable Objects mettent
+`npm run evals` → deploy → re-vérifier en production (les Durable Objects mettent
 ~30–60 s à recycler l'ancien code) → `npm run eval` si le comportement de recherche a
 changé — **porte : aucune régression sur les 20 cas**.
 

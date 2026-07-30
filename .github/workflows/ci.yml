@@ -25,3 +25,4 @@ jobs:
       - run: npx wrangler types # génère worker-configuration.d.ts (pas d'auth requise)
       - run: npx tsc --noEmit
       - run: node --test scripts/check-consolidation.test.mjs
+      - run: node --test tests/catalogue.test.mjs # garde anti-dérive de la documentation (R10)

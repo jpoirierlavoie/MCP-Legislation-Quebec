@@ -758,8 +758,8 @@ export interface RelevanceData {
 }
 
 /**
- * Charge le nécessaire au classement. Les tables de découverte sont petites (28 sujets,
- * 67 mappages, 38 lois) : on les lit en entier. Seules les divisions (5 000+) sont
+ * Charge le nécessaire au classement. Les tables de découverte sont petites (quelques
+ * dizaines de matières et de mappages, moins de deux cents lois) : on les lit en entier. Seules les divisions (5 000+) sont
  * PRÉFILTRÉES en SQL par sous-chaîne ; l'ancrage au début de mot se fait ensuite en mémoire.
  */
 export async function loadRelevanceData(
@@ -820,7 +820,7 @@ export async function loadRelevanceData(
     }
   }
 
-  // En anglais, on apparie le NOM ANGLAIS (présent en base pour les 38) : sinon le signal S3
+  // En anglais, on apparie le NOM ANGLAIS (présent en base pour tout le corpus) : sinon le signal S3
   // était muet dès qu'une requête anglaise nommait la loi en anglais.
   const lawsLite: LawLite[] = laws.results.map((l) => ({
     id: l.id,
