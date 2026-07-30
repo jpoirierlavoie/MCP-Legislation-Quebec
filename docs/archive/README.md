@@ -14,6 +14,7 @@ invalidées en cours de route (les écarts sont consignés dans `../reports/`).
 | `reconnaissance-lot-2026-07-21.md` | Dry-run du lot 2 — 9 textes (38 → 47 lois) | Ingestion faite (commit `7c08c73`) |
 | `reconnaissance-lot3-2026-07-21.json` | Dry-run du lot 3 — 31 textes (47 → 78 lois), sortie brute de la sonde | Ingestion faite (commit `0c1418f`) |
 
-**Références vivantes :** `/CLAUDE.md` (invariants et procédures), `../ARCHITECTURE-NOTES.md`
+**Références vivantes :** `/CLAUDE.md` (invariants et procédures), `/README.md`, les JSON
+versionnés et la page publique. `../ARCHITECTURE-NOTES.md`
 (état réel constaté), `../reports/phase-{0,1,2}.md` (écarts, décisions, mesures),
 `../phase0-structure-epub.md` (format EPUB Irosoft — toujours la référence du parseur).

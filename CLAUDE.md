@@ -46,6 +46,16 @@ dépôt refuse : faux, servi, silencieux.
 
 Détail des mécanismes et de ce qu'ils n'attrapent pas : **R10**, plus bas.
 
+**`docs/` est une ARCHIVE PAR DÉFAUT — il n'est PAS une sixième surface.** Tout document
+qui s'y trouve porte une date et **ne fait jamais foi sur l'état courant** : ce sont des
+instantanés, des rapports de phase, des plans exécutés. L'état vivant est D1, les JSON
+versionnés, `CLAUDE.md`, `README.md` et la page publique — rien d'autre.
+C'est délibérément une politique et non une discipline de plus : un document daté ne dérive
+pas, il vieillit. `docs/ARCHITECTURE-NOTES.md` a traversé QUATRE agrandissements du corpus
+en se déclarant « état réel » sans qu'aucun test n'échoue, précisément parce qu'il
+prétendait au présent. Corollaire de rédaction : dans `docs/`, écrire au passé et dater ;
+ne jamais y recopier un décompte vivant en le présentant comme actuel.
+
 ## Architecture (3 morceaux)
 
 1. **Worker Cloudflare** (`src/`, TypeScript) — McpAgent (Durable Object) + 10 outils
@@ -74,7 +84,7 @@ fasse calculer au chargement, il est supprimé.
 ```bash
 npx wrangler dev                                   # dev local (D1 local ; PAS Vectorize)
 npx tsc --noEmit                                   # type-check (toujours avant commit)
-npm run evals                                      # 62 contrôles bout-en-bout (MCP_URL=… pour cibler)
+npm run evals                                      # contrôles bout-en-bout (le harnais imprime son total ; MCP_URL=… pour cibler)
 npm run eval                                       # harnais d'éval : 20 cas, recall@10/MRR (production)
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m unittest discover -s pipeline/tests -q   # 23 tests
 node --test scripts/check-consolidation.test.mjs   # 13 contrôles du détecteur de veille (sans réseau, en CI)
@@ -311,7 +321,9 @@ adversariale (2026-07-21) et corrigés avant le premier commit.
 
 ## Où trouver quoi
 
-- `docs/ARCHITECTURE-NOTES.md` — état réel constaté (schéma D1, FTS, sondes, écarts).
+- `docs/ARCHITECTURE-NOTES.md` — **instantané daté du 2026-07-20**, ne fait PLUS foi sur
+  l'état courant ; conservé pour ses mesures (DDL de `articles_fts`, sondes FTS5,
+  procédure Time Travel).
 - `docs/reports/phase-{0,1,2}.md` — mesures, décisions, coûts réels de Discovery v2.
 - `docs/phase0-structure-epub.md` — format EPUB Irosoft (référence du parseur).
 - `docs/archive/` — plans exécutés (la **phase 3 v2 — curation ⛔ — y reste à faire** :

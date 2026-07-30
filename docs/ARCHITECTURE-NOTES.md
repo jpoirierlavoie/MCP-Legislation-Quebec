@@ -1,10 +1,29 @@
-# Notes d'architecture — état réel du dépôt (Discovery v2, phase 0)
+# Notes d'architecture — INSTANTANÉ DATÉ du 2026-07-20
+
+> ⚠️ **CE DOCUMENT NE FAIT PLUS FOI SUR L'ÉTAT COURANT.** C'est un instantané pris le
+> 2026-07-20, quand le corpus comptait 38 lois. Il en compte davantage depuis, et
+> plusieurs de ses affirmations structurelles sont périmées (voir l'encadré ci-dessous).
+> **L'état vivant** : D1 lui-même, les JSON versionnés (`laws.config.json`,
+> `taxonomy.json`, `relations.json`, `catalogue.json`), `CLAUDE.md`, `README.md` et la
+> [page publique](https://legislation.poirierlavoie.ca/), qui calcule ses décomptes en
+> base à chaque rendu.
+>
+> Conservé pour ses **MESURES**, que rien d'autre ne porte intégralement : DDL réel de
+> `articles_fts`, sondes FTS5 (tokenizer, équivalence diacritique, scores bm25 bruts),
+> contrainte de la colonne unique indexée (les headnotes exigeront de recréer la table
+> FTS avec une seconde colonne, donc une migration), et la procédure Time Travel
+> avec sa fenêtre de 30 jours. Un document daté ne dérive pas : il vieillit.
+>
+> **Affirmations structurelles à ne PAS reprendre** : le répertoire `migrations/` EXISTE
+> désormais (0001, 0002) ; `pipeline/discovery/backfill.py` a été SUPPRIMÉ le 2026-07-21
+> (les colonnes `name_norm`/`heading_norm` sont recalculées À CHAQUE chargement,
+> invariant 3 — il n'y a plus de rattrapage possible ni nécessaire) ; le bogue `lang=en`
+> décrit comme « toujours réel » est CORRIGÉ et épinglé par une éval.
 
 Constaté le 2026-07-20 contre la base D1 **distante** (`qclaw`,
 b707af5a-8807-4a02-805d-13e5b0de033e) et le code en production
 (legislation.poirierlavoie.ca). Référentiel : `qclaw-discovery-v2-implementation-plan.md`
-(§0.1–0.3). Les écarts entre ce document et le plan v2 §2 sont récapitulés en fin de
-document — **c'est ce document qui fait foi**.
+(§0.1–0.3).
 
 ---
 
@@ -66,11 +85,12 @@ tests/evals.mjs            36 contrôles bout-en-bout contre le serveur réel (c
 docs/                      phase0-structure-epub.md (format Irosoft), reconnaissance-36.md.
 ```
 
-**Il n'existe PAS de répertoire `migrations/`** : les migrations passées sont
-`schema.sql` (initial) + `schema-decouverte.sql` appliqué par
-`pipeline/discovery/migrate.py` (idempotent par PRAGMA). La convention
-`wrangler d1 migrations` (R11 du plan v2) sera introduite à la première migration de la
-phase 1 (`search_log`, tâche 1.6).
+~~**Il n'existe PAS de répertoire `migrations/`**~~ — **PÉRIMÉ** : il existe depuis la
+phase 1 (`0001_search_log.sql`, puis `0002_drop_articles_consol_date.sql`).
+État à la date de l'instantané : les migrations passaient par `schema.sql` (initial) +
+`schema-decouverte.sql` appliqué par `pipeline/discovery/migrate.py` (idempotent par
+PRAGMA). Aujourd'hui `schema.sql` décrit l'ÉTAT INITIAL et les migrations `wrangler`
+s'appliquent PAR-DESSUS — procédure de bootstrap complète dans `CLAUDE.md`.
 
 ---
 
