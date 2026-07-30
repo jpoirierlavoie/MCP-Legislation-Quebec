@@ -17,7 +17,10 @@
 // détecteur (le miroir a peut-être cassé), donc un signal ACTIONNABLE — jamais un null
 // silencieux. Contrat : ne JAMAIS produire de faux négatif silencieux.
 //
-// Sortie : consolidation-report.md (corps d'issue) + `drift=true|false` sur GITHUB_OUTPUT.
+// Sortie : consolidation-report.md (corps d'issue) + DEUX drapeaux séparés sur
+// GITHUB_OUTPUT : `drift` (dérive corpus actionnable) et `unreachable` (blocage réseau
+// massif). Le workflow ne clot l'issue que si les DEUX sont éteints — une page
+// injoignable est une loi NON VÉRIFIÉE, pas une loi à jour.
 // Code de sortie : 0 même en cas de dérive (la dérive est le signal attendu, pas une
 // erreur) ; ≠ 0 seulement si le détecteur lui-même n'a rien pu vérifier.
 

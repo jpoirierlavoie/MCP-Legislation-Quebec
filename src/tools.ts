@@ -12,9 +12,9 @@ import {
 } from "./lib";
 import { WEIGHTS, rank, tokenize } from "./relevance";
 
-// SOURCE UNIQUE des titres (R10) : le titre servi par tools/list et celui affiche sur la
-// page publique sont la MEME valeur, pas deux copies. catalogue.json porte en outre la
-// prose longue de la page. Parite outils <-> catalogue epinglee par tests/catalogue.test.mjs.
+// SOURCE UNIQUE des titres (R10) : le titre servi par tools/list et celui affiché sur la
+// page publique sont la MÊME valeur, pas deux copies. catalogue.json porte en outre la
+// prose longue de la page. Parité outils <-> catalogue épinglée par tests/catalogue.test.mjs.
 import catalogue from "../catalogue.json";
 
 const titre = (nom: keyof typeof catalogue.tools): string => catalogue.tools[nom].title_fr;

@@ -10,11 +10,14 @@ import { EMBED_MODEL, breadcrumbChains } from "./lib";
 /** Fenêtre bge-m3 : 60 K tokens PAR REQUÊTE, consommés comme lot × (texte le plus
  * long) — le moteur REMBOURRE tous les textes à la longueur du plus long (constaté :
  * « Max context reached 60850 » pour 50 textes de 1 217 tokens max). Contrainte réelle :
- * n × tokens(max) <= 60 000. Estimation prudente : 3,5 caractères/token (réel ~4,9). */
+ * n × tokens(max) <= 60 000. */
 const EMBED_BATCH = 50;
 const EMBED_TOKEN_BUDGET = 55_000;
-/** Estimation d'empaquetage seulement : la vérité vient du modèle (scission sur 3030).
- * 2,0 car./token — des textes denses (énumérations d'i-16) descendent à ~2,4 réels. */
+/** Estimation d'empaquetage seulement : la VÉRITÉ vient du modèle (scission sur l'erreur
+ * 3030), jamais de ce chiffre — invariant 8. Mesuré le 2026-07-21 : les textes les plus
+ * denses du corpus (énumérations d'i-16) descendent à ~2,4 car./token ; on empaquette à
+ * 2,0 pour rester SOUS la mesure. Ne pas y substituer une moyenne du corpus : c'est le
+ * pire cas qui décide si le lot passe. */
 const estTokens = (chars: number) => Math.ceil(chars / 2.0);
 /** Plafond du texte embeddé (~1 500 tokens — plan 2.2) ; dépassements comptés. */
 const MAX_CHARS = 6000;
@@ -150,7 +153,7 @@ async function handleBackfillInner(request: Request, env: Env): Promise<Response
 
   // Embed AUTO-ADAPTATIF : l'estimation ne fait que pré-empaqueter ; si le modèle
   // répond « Max context reached » (3030), on scinde le lot en deux et on recommence —
-  // jusqu'au texte seul, qui tient toujours (6 000 car. « 2 car./token = 3 000 tokens).
+  // jusqu'au texte seul, qui tient toujours (6 000 car. ÷ 2 car./token = 3 000 tokens).
   async function embedSplit(texts: string[]): Promise<number[][]> {
     try {
       const res = (await env.AI.run(EMBED_MODEL as Parameters<Ai["run"]>[0], {

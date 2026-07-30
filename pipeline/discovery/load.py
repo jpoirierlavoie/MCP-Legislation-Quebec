@@ -39,7 +39,7 @@ def _insert_rows(db, table: str, cols: list[str], rows: list[list], or_ignore: b
 
 def seed_laws(db) -> int:
     """Enregistre les lois de la configuration (métadonnées) et pose les attributs de
-    découverte sur TOUTES — pas seulement sur les 36 ajouts, sans quoi ccq/cpc restaient
+    découverte sur TOUTES — pas seulement sur les textes ajoutés, sans quoi ccq/cpc restaient
     sans `fonction` et échappaient au filtre correspondant."""
     laws = config.load_all_laws()
     rows = [[l["id"], l["name_fr"], l.get("name_en") or l["name_fr"], l["rlrq_cite"]]
@@ -49,7 +49,7 @@ def seed_laws(db) -> int:
         forum = " ; ".join(l.get("forum") or []) or None
         consol = l.get("consolidation") or {}
         # Les métadonnées de loi issues de la CONFIG sont synchronisées ici : c'est bien
-        # moins coûteux que de réingérer les 76 combinaisons pour deux colonnes de date.
+        # moins coûteux que de réingérer tous les couples (loi, langue) pour deux dates.
         # (name_en n'y figure PAS : il vient de l'OPF anglais, pas de la config — §5.)
         db.run(f"UPDATE laws SET fonction = {q(l.get('fonction'))}, forum = {q(forum)}, "
                f"name_fr = {q(l['name_fr'])}, name_norm = {q(normalize(l['name_fr']))}, "

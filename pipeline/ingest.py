@@ -174,7 +174,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Pipeline d'ingestion Lois du Québec (EPUB -> D1).")
     p.add_argument("--law", default="ccq")
     p.add_argument("--lang", default="fr", choices=["fr", "en"])
-    p.add_argument("--all", action="store_true", help="Traiter les 38 lois × langues.")
+    p.add_argument("--all", action="store_true", help="Traiter TOUTES les lois de laws.config.json × les deux langues.")
     p.add_argument("--download", action="store_true", help="Retélécharger l'EPUB depuis LégisQuébec.")
     p.add_argument("--refresh-dates", action="store_true",
                    help="Capter la date de consolidation live sur la page de la loi.")

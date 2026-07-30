@@ -1,7 +1,7 @@
-"""DRY-RUN de reconnaissance des 36 textes additionnels (plan §5, §9 phase B).
+"""DRY-RUN de reconnaissance des textes du corpus hors ccq/cpc (plan §5, §9 phase B).
 
 Télécharge (FR + EN tolérant), scanne la structure, teste le parseur, moissonne les renvois,
-détecte les anomalies — et écrit docs/reconnaissance-36.md. NE CHARGE RIEN en base.
+détecte les anomalies — et écrit docs/reconnaissance-courante.md. NE CHARGE RIEN en base.
 
     python -m pipeline.discovery.recon
 """
@@ -197,7 +197,7 @@ def build_report(results: list[dict]) -> str:
                   for r in ok if r["parse"]["ok"] and r["parse"]["empty_disp"]}
     empty_real = [r["law"]["id"] for r in ok if r["parse"]["ok"] and r["parse"]["empty_real"]]
     notes = [r["law"]["id"] for r in ok if "Note" in r["scan"]["unknown_ids"]]
-    L = ["# Reconnaissance des 36 textes additionnels (dry-run, phase B)",
+    L = [f"# Reconnaissance de {len(results)} textes (dry-run, phase B)",
          "",
          "Généré par `python -m pipeline.discovery.recon` — **aucune écriture en base**. "
          "Télécharge FR + EN (tolérant), scanne la structure, teste le parseur existant, "
@@ -222,7 +222,7 @@ def build_report(results: list[dict]) -> str:
          f"  - **id `Note`** (note éditoriale, à exclure du `text` comme les notes A.M.) : {notes or '—'}.",
          f"  - **Articles réels au texte vide** : {empty_real or '—'}.",
          "  - **p-44.1** : numérotation atypique (article « 0 » / renumérotation par partie).",
-         "- Format Irosoft confirmé pour les 36 (ids `se:`/`ga:`…). name_en lisible depuis "
+         f"- Format Irosoft confirmé pour les {len(results)} (ids `se:`/`ga:`…). name_en lisible depuis "
          "l'OPF anglais ; parent_law_id dérivable via rlrq_cite (voir détail).",
          "",
          "## Synthèse", "",

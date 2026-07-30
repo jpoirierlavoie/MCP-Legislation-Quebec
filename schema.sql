@@ -35,7 +35,13 @@ CREATE TABLE articles (
   law_id        TEXT NOT NULL REFERENCES laws(id),
   lang          TEXT NOT NULL,              -- 'fr' | 'en'
   number        TEXT NOT NULL,              -- '1457', '2926.1', '132.0.1' (chaîne : décimaux à 1-2 niveaux)
-  sort_key      INTEGER NOT NULL,           -- clé 64 bits : n*10^6 + d1*10^3 + d2 (PLAN §12)
+  -- Clé de tri 64 bits : empaquetage en BASE 1000 de l'entier et de jusqu'à 4 niveaux
+  -- décimaux, normalisé à 5 composantes (132 < 132.0.1 < 133). Dispositions à 9e15.
+  -- MIROIR EXACT de sort_key() (pipeline/model.py) et sortKeyOf() (src/lib.ts) —
+  -- invariant 2. Ce commentaire a décrit pendant longtemps une TROISIÈME échelle
+  -- (n*10^6+d1*10^3+d2) qui n'a jamais existé nulle part : qui vérifiait le miroir
+  -- contre le schéma concluait que LES DEUX côtés étaient faux.
+  sort_key      INTEGER NOT NULL,
   division_id   INTEGER REFERENCES divisions(id),
   division_path TEXT NOT NULL,              -- id Irosoft de la division feuille (dénormalisé)
   text          TEXT NOT NULL,              -- verbatim (numéro, historique et notes A.M. EXCLUS)

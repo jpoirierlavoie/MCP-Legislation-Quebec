@@ -225,7 +225,7 @@ async function smokeTests() {
   const ligneFr = texteEn.split("\n").find((l) =>
     /^\s+•/.test(l) && /— (Biens|Personnes|Famille|Preuve|Assurances)\b/.test(l));
   add("list_subjects (lang=en) : les ENTRÉES rendues en anglais",
-    !ligneFr && /— Property\b/.test(texteEn) && /law\(s\)|law\(s\)/.test(texteEn.replace(/ law\(s\)/g, " law(s)")),
+    !ligneFr && /— Property\b/.test(texteEn) && /law\(s\)/.test(texteEn),
     ligneFr ? `entrée restée en français : ${ligneFr.trim().slice(0, 60)}` : "");
   add("list_subjects (lang=en) : descriptions rendues en anglais",
     /Ownership, co-ownership/.test(texteEn) && !/Propriété, copropriété/.test(texteEn));
@@ -281,7 +281,8 @@ async function smokeTests() {
   // --- extraction : garde-fous contre les régressions trouvées en phase E ---
 
   // Le mode plage (from/to) dépend de l'échelle de articles.sort_key. Une divergence entre
-  // le pipeline (Python) et le serveur (TS) l'avait vidé silencieusement sur 36 lois / 38.
+  // le pipeline (Python) et le serveur (TS) l'avait vidé silencieusement sur 36 lois sur 38
+  // — mesuré à l'époque où le corpus comptait 38 textes.
   // On l'exerce donc sur TOUTES les lois, pas seulement sur ccq.
   const toutes = laws.structuredContent?.laws ?? [];
   const cassees = [];

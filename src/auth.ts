@@ -1,9 +1,13 @@
 // Contrôle d'accès de l'endpoint MCP — jeton partagé, vérifié AVANT le Durable Object.
 //
-// DEUX porteurs acceptés, parce qu'aucun ne couvre tous les clients :
-//   - segment de chemin `/mcp/<jeton>` — le connecteur claude.ai ne prend qu'une URL,
-//     son formulaire n'a pas de champ d'en-tête personnalisé ;
-//   - `Authorization: Bearer <jeton>` — Claude Code, les évals, la veille CI.
+// TROIS porteurs acceptés, parce qu'aucun ne couvre tous les clients :
+//   - `?key=<jeton>` — LA FORME DU CONNECTEUR claude.ai. Mesurée, pas supposée : le
+//     segment de chemin a ÉCHOUÉ en pratique (« Impossible de joindre ») alors qu'une
+//     session complète y passe en curl, tandis que `?key=` a fonctionné du premier coup ;
+//   - `Authorization: Bearer <jeton>` — clients maîtrisés : Claude Code, évals, veille CI ;
+//   - segment de chemin `/mcp/<jeton>` — conservé et testé, mais la forme de PERSONNE
+//     aujourd'hui. Le slash final DOIT rester toléré : son 404 a déjà poussé le
+//     connecteur vers la découverte OAuth, où il s'est coincé irréversiblement.
 // Le segment de chemin est retiré avant de servir : McpAgent.serve("/mcp") n'apparie
 // que le chemin de montage exact.
 //
@@ -25,9 +29,11 @@ interface EnvWithMcpToken extends Env {
 const MOUNT = "/mcp";
 const PREFIX = `${MOUNT}/`;
 /**
- * Paramètre de requête accepté en DERNIER recours. Certains clients ne gardent ni en-tête
- * personnalisé ni segment de chemin ; celui-ci laisse une troisième forme d'URL à essayer
- * sans redéployer. Retiré de l'URL avant de servir.
+ * Paramètre de requête : c'est LA forme employée par le connecteur claude.ai en
+ * production (les autres n'ont pas survécu à son formulaire). Retiré de l'URL avant de
+ * servir. Ordre de bascule impératif : poser cette URL sur le connecteur AVANT d'armer
+ * le secret — elle répond 200 avec ET sans secret, donc le connecteur ne voit jamais
+ * de 404 (l'ordre inverse en a détruit un le 2026-07-25).
  */
 const QUERY_KEY = "key";
 

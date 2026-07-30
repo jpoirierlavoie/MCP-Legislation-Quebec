@@ -189,7 +189,7 @@ function corpus(
   <div class="ctl">
     <input id="q" type="search" placeholder="Filtrer / Filter">
     <select id="f">
-      <option value="">${"Toutes fonctions · All functions"}</option>
+      <option value="">Toutes fonctions · All functions</option>
       <option value="loi">Loi · Statute</option>
       <option value="reglement">Règlement · Regulation</option>
       <option value="regles-procedure">Règles de procédure · Rules</option>

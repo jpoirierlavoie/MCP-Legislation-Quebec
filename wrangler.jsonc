@@ -40,6 +40,12 @@
   "ai": { "binding": "AI" },
   "vectorize": [{ "binding": "VECTORS", "index_name": "qclaw-articles" }],
 
-  // Rafraîchissement semestriel (PLAN §5) : 5 janvier et 5 juillet, 09:00 UTC.
+  // DÉCLENCHEUR INERTE : aucun handler `scheduled` n'existe dans src/ — ce cron ne
+  // lance RIEN. Le rafraîchissement semestriel est VOLONTAIREMENT manuel et supervisé
+  // (cf. CLAUDE.md) : l'ancien workflow automatique a été retiré parce qu'il rechargeait
+  // les articles sans les vecteurs, laissant du droit périmé rendu en silence.
+  // NE PAS retirer ce bloc pour « faire le ménage » : sans clé `crons`, wrangler n'émet
+  // aucun PUT /schedules, donc le horaire resterait ARMÉ chez Cloudflare et déclaré
+  // nulle part. Pour désarmer : déployer `"crons": []` d'abord, vérifier, puis retirer.
   "triggers": { "crons": ["0 9 5 1,7 *"] }
 }

@@ -42,5 +42,5 @@ def get_law(law_id: str, path: Path | None = None) -> dict:
 
 # Rétrocompatibilité : avant la fusion, get_law() ne voyait que ccq/cpc et get_law_any()
 # voyait tout — une distinction qui n'a plus lieu d'être (et qui faisait échouer get_law()
-# sur les 36 ajouts).
+# sur les textes ajoutés par la couche découverte).
 get_law_any = get_law
