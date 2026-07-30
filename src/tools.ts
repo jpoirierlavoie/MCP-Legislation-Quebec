@@ -52,6 +52,38 @@ const KIND_LABEL: Record<Lang, Record<string, string>> = {
   },
 };
 
+// Libellés de qclaw_related_laws, par langue. Même motif que KIND_LABEL : l'outil
+// déclarait `lang` sans l'honorer — un client qui demandait l'anglais recevait du français
+// sans la moindre étiquette, ce qui est « faux, servi, silencieux ».
+const REL_LABEL: Record<Lang, {
+  inconnue: (l: string) => string; dispo: string; aucune: string;
+  aucuneRel: (l: string) => string; deType: (t: string) => string;
+  enDirection: (d: string) => string; essayez: string;
+  horsCorpus: string; renvois: string; relations: string;
+  affichees: (n: number) => string; dontHors: (n: number) => string;
+}> = {
+  fr: {
+    inconnue: (l) => `Loi '${l}' inconnue.`, dispo: "Lois disponibles :", aucune: "aucune",
+    aucuneRel: (l) => `Aucune relation pour '${l}'`,
+    deType: (t) => ` de type '${t}'`,
+    enDirection: (d) => ` en direction '${d}'`,
+    essayez: "Essayez sans filtre, ou qclaw_list_laws pour la carte du corpus.",
+    horsCorpus: "NON disponible au corpus (candidat d'acquisition)",
+    renvois: "renvoi(s)", relations: "relation(s) pour",
+    affichees: (n) => ` (${n} affichées)`, dontHors: (n) => ` — dont ${n} hors corpus`,
+  },
+  en: {
+    inconnue: (l) => `Unknown statute '${l}'.`, dispo: "Available statutes:", aucune: "none",
+    aucuneRel: (l) => `No relation for '${l}'`,
+    deType: (t) => ` of type '${t}'`,
+    enDirection: (d) => ` in direction '${d}'`,
+    essayez: "Try without a filter, or qclaw_list_laws for the corpus map.",
+    horsCorpus: "NOT available in the corpus (acquisition candidate)",
+    renvois: "reference(s)", relations: "relation(s) for",
+    affichees: (n) => ` (${n} shown)`, dontHors: (n) => ` — ${n} outside the corpus`,
+  },
+};
+
 type ToolResult = {
   content: { type: "text"; text: string }[];
   structuredContent?: Record<string, unknown>;
@@ -254,18 +286,18 @@ export function registerTools(server: McpServer, env: Env): void {
       },
       annotations: READONLY,
     },
-    async ({ law, rel_type, direction, limit }) => {
+    async ({ law, rel_type, direction, limit, lang }) => {
+      const L = REL_LABEL[lang as Lang] ?? REL_LABEL.fr;
       if (!(await getLaw(db, law))) {
         const all = (await listLaws(db)).map((l) => l.id).join(", ");
-        return err(`Loi '${law}' inconnue. Lois disponibles : ${all || "aucune"}.`);
+        return err(`${L.inconnue(law)} ${L.dispo} ${all || L.aucune}.`);
       }
-      const all = await relatedLaws(db, law, rel_type, direction);
+      const all = await relatedLaws(db, law, rel_type, direction, lang as Lang);
       if (all.length === 0) {
         return err(
-          `Aucune relation pour '${law}'` +
-          `${rel_type ? ` de type '${rel_type}'` : ""}` +
-          `${direction !== "both" ? ` en direction '${direction}'` : ""}. ` +
-          "Essayez sans filtre, ou qclaw_list_laws pour la carte du corpus.",
+          `${L.aucuneRel(law)}` +
+          `${rel_type ? L.deType(rel_type) : ""}` +
+          `${direction !== "both" ? L.enDirection(direction) : ""}. ${L.essayez}`,
         );
       }
       const page = paginate(limit, 0, 50, 200);
@@ -274,21 +306,28 @@ export function registerTools(server: McpServer, env: Env): void {
         const arrow = e.direction === "out" ? "→" : "←";
         const dispo = e.in_corpus
           ? (e.other_name ? ` — ${e.other_name}` : "")
-          : " — NON disponible au corpus (candidat d'acquisition)";
-        const w = e.rel_type === "renvoie-a" ? ` ; ${e.weight} renvoi(s)` : "";
+          : ` — ${L.horsCorpus}`;
+        const w = e.rel_type === "renvoie-a" ? ` ; ${e.weight} ${L.renvois}` : "";
+        // Les notes curées n'existent QU'EN FRANÇAIS (law_relations n'a pas de colonne
+        // note_en) : sous lang='en' on les rend marquées [fr] plutôt que de laisser croire
+        // à une traduction. Même motif que l'intitulé emprunté de get_division.
+        const note = e.note ? `${e.note}${lang === "en" ? " [fr]" : ""}` : null;
         return `  ${arrow} ${e.other_id} [${e.rel_type}, ${e.source}${w}]${dispo}` +
-          `${e.note ? `\n      ${e.note}` : ""}`;
+          `${note ? `\n      ${note}` : ""}`;
       });
       const hors = edges.filter((e) => !e.in_corpus).length;
-      const head = `${all.length} relation(s) pour '${law}'` +
-        `${edges.length < all.length ? ` (${edges.length} affichées)` : ""}` +
-        `${hors ? ` — dont ${hors} hors corpus` : ""} :`;
+      const head = `${all.length} ${L.relations} '${law}'` +
+        `${edges.length < all.length ? L.affichees(edges.length) : ""}` +
+        `${hors ? L.dontHors(hors) : ""} :`;
       return ok(`${head}\n${lines.join("\n")}`, {
-        law, rel_type: rel_type ?? null, direction, total: all.length, count: edges.length,
+        law, lang, rel_type: rel_type ?? null, direction, total: all.length, count: edges.length,
         relations: edges.map((e) => ({
           direction: e.direction, other_id: e.other_id, other_name: e.other_name,
           rel_type: e.rel_type, source: e.source, weight: e.weight,
           in_corpus: !!e.in_corpus, note: e.note,
+          // La langue de la note est DANS la charge utile (corollaire structuré de R4) :
+          // un client qui jette la prose garde l'information que la note n'est pas traduite.
+          note_lang: e.note ? "fr" : null,
         })),
       });
     },

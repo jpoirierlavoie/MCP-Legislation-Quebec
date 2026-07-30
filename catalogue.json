@@ -1,6 +1,5 @@
 {
   "_comment": "SOURCE UNIQUE de la documentation publique (R10). Consommé par src/tools.ts (les title_fr sont les titres MCP servis par tools/list) et par src/site.ts (la page publique). Épinglé par tests/catalogue.test.mjs, qui exige la parité stricte avec les outils enregistrés et la concordance des constantes de calibration citées ici avec src/relevance.ts. NE JAMAIS y recopier un décompte (lois, matières, articles) : ces chiffres se lisent en base au rendu.",
-
   "tools": {
     "qclaw_find_relevant": {
       "title_fr": "Repérage de sources — heuristique",
@@ -17,7 +16,6 @@
         "This is a retrieval aid, not a legal answer: it does not determine the applicable law. Its output tells you where to read; you then extract the text with the structure and article tools."
       ]
     },
-
     "qclaw_list_laws": {
       "title_fr": "Carte du corpus",
       "title_en": "Corpus map",
@@ -33,7 +31,6 @@
         "Three filters narrow the map: by function, by forum, or by subject. This is where to start when exploring a known corpus; to start from a concrete problem, the discovery tool is more direct."
       ]
     },
-
     "qclaw_list_subjects": {
       "title_fr": "Matières de la taxonomie",
       "title_en": "Taxonomy subjects",
@@ -49,7 +46,6 @@
         "A subject's description is not decorative prose: it is the surface against which query terms are matched. The vocabulary it contains is the vocabulary meant to be recognized — which makes it the main editorial lever for tuning discovery."
       ]
     },
-
     "qclaw_related_laws": {
       "title_fr": "Lois reliées",
       "title_en": "Related statutes",
@@ -57,15 +53,16 @@
       "page_fr": [
         "Le graphe d'interconnexion d'une loi : les règlements pris sous son autorité, la loi qui l'habilite, les renvois qu'elle fait vers d'autres textes, et les relations curées à la main lorsqu'un lien juridique mérite d'être qualifié — met en œuvre, applique, complète, encadré par, connexe.",
         "Les arêtes peuvent être suivies dans les deux sens, filtrées par type, et limitées en nombre. Chaque relation indique si elle a été dérivée automatiquement ou curée, et les relations curées portent une note expliquant le lien.",
-        "L'outil signale explicitement les cibles qui ne sont pas au corpus : un renvoi vers une loi non chargée est affiché comme tel plutôt que passé sous silence. Ces cibles absentes sont autant de candidats d'acquisition."
+        "L'outil signale explicitement les cibles qui ne sont pas au corpus : un renvoi vers une loi non chargée est affiché comme tel plutôt que passé sous silence. Ces cibles absentes sont autant de candidats d'acquisition.",
+        "Les noms de lois suivent la langue demandée. Les notes des relations curées, elles, n'existent qu'en français : sous une demande anglaise elles sont rendues MARQUÉES [fr] plutôt que maquillées en traduction, et l'étiquette voyage aussi dans les données structurées."
       ],
       "page_en": [
         "A statute's interconnection graph: regulations made under its authority, the statute that enables it, cross-references it makes to other texts, and hand-curated relations where a legal link deserves to be characterized — implements, applies, supplements, governed by, related.",
         "Edges can be followed in either direction, filtered by type, and capped in number. Each relation states whether it was derived automatically or curated, and curated relations carry a note explaining the link.",
-        "The tool explicitly flags targets that are not in the corpus: a reference to a statute that has not been loaded is shown as such rather than silently dropped. Those absent targets are acquisition candidates."
+        "The tool explicitly flags targets that are not in the corpus: a reference to a statute that has not been loaded is shown as such rather than silently dropped. Those absent targets are acquisition candidates.",
+        "Statute names follow the requested language. The notes attached to curated relations, however, exist only in French: under an English request they are returned MARKED [fr] rather than passed off as a translation, and the label travels in the structured payload as well."
       ]
     },
-
     "qclaw_get_article": {
       "title_fr": "Texte officiel d'un article",
       "title_en": "Official text of an article",
@@ -81,7 +78,6 @@
         "If the requested number does not exist, the tool does not guess: it offers the neighbouring articles. A missing article is reported, never substituted with its nearest sibling."
       ]
     },
-
     "qclaw_get_articles": {
       "title_fr": "Textes officiels en lot",
       "title_en": "Official texts in bulk",
@@ -95,7 +91,6 @@
         "Range mode follows the text's real article order, including decimal numbers inserted between two whole ones — the bounds are read from the database rather than recomputed, which makes ranges immune to a given text's numbering quirks."
       ]
     },
-
     "qclaw_get_structure": {
       "title_fr": "Structure d'une loi (sans texte)",
       "title_en": "Structure of a statute (no text)",
@@ -111,7 +106,6 @@
         "Paths are language-specific, since they derive from the official markup. A path obtained in French nonetheless remains usable in English: it is translated automatically through the article-number bridge."
       ]
     },
-
     "qclaw_get_division": {
       "title_fr": "Texte officiel d'une division",
       "title_en": "Official text of a division",
@@ -127,7 +121,6 @@
         "Where a heading exists in only one language, the other language's heading is returned and marked as such, rather than displaying a silent blank."
       ]
     },
-
     "qclaw_search_text": {
       "title_fr": "Recherche plein texte — replis étiquetés",
       "title_en": "Full-text search — labelled fallbacks",
@@ -143,7 +136,6 @@
         "A search restricted to one statute that returns nothing is automatically widened to the corpus; a restricted search that does return results still reports what exists elsewhere. Corpus-wide results are grouped by statute, with a per-statute cap, so that a voluminous text cannot monopolize the ranking."
       ]
     },
-
     "qclaw_resolve_reference": {
       "title_fr": "Résolution d'une citation",
       "title_en": "Citation resolution",
@@ -160,7 +152,6 @@
       ]
     }
   },
-
   "retrieval": {
     "intro_fr": [
       "Le repérage ne devine pas. Il combine un classement déterministe, une recherche lexicale et une recherche sémantique — et chacun de ces chemins est annoncé dans la réponse. On peut donc toujours savoir pourquoi un texte a été proposé, et à quel titre."
@@ -168,7 +159,6 @@
     "intro_en": [
       "Discovery does not guess. It combines deterministic ranking, lexical search and semantic search — and every one of those paths is announced in the response. You can always tell why a text was proposed, and on what basis."
     ],
-
     "signaux": {
       "titre_fr": "Les quatre signaux du classement",
       "titre_en": "The four ranking signals",
@@ -182,9 +172,15 @@
         "Subject matter carries the most weight: when a query term appears in the label or description of a taxonomy subject, every statute attached to that subject becomes a candidate. Division headings and statute names follow, at equal weight. Finally, one hop through the relations graph adds a small bonus: a statute adjacent to a strong candidate gains a point, once only, and only through a curated relation or a regulation-to-enabling-statute link.",
         "Two corrections keep that accumulation from drifting. A term that touches only a few texts weighs more than a generic one — in a corpus that is entirely legal, “procedure” or “contract” teach almost nothing, whereas “brokerage” or “expropriation” designate. That weighting is continuous rather than threshold-based, precisely so the ranking does not tip the day one more statute is added to the corpus. And a single subject may contribute only a bounded number of candidates, failing which a text-rich subject would fill the list on its own and crowd out the governing code."
       ],
-      "constantes": ["S1_SUBJECT", "S2_DIVISION_HEADING", "S3_LAW_NAME", "S4_GRAPH_NEIGHBOUR", "MAX_PER_SUBJECT", "MAX_SUFFIX"]
+      "constantes": [
+        "S1_SUBJECT",
+        "S2_DIVISION_HEADING",
+        "S3_LAW_NAME",
+        "S4_GRAPH_NEIGHBOUR",
+        "MAX_PER_SUBJECT",
+        "MAX_SUFFIX"
+      ]
     },
-
     "echelle": {
       "titre_fr": "L'échelle de recherche, et ses étiquettes",
       "titre_en": "The search ladder, and its labels",
@@ -200,7 +196,6 @@
       ],
       "constantes": []
     },
-
     "hybride": {
       "titre_fr": "Lexical et sémantique, fusionnés",
       "titre_en": "Lexical and semantic, fused",
@@ -214,10 +209,13 @@
         "The semantic engine rests on multilingual embeddings, which gives it two precise uses: bridging the vocabulary gap — a search for “dismissal” reaches “notice of termination” — and bridging the language barrier, an English query reaching the French text.",
         "A similarity floor is applied, and it is calibrated by measurement rather than by judgement. Without it, a gibberish query would still receive its nearest neighbours, presented as results. Below that floor, the tool prefers to return nothing."
       ],
-      "constantes": ["RRF_K", "SEMANTIC_MIN_SCORE", "VECTOR_TOP_K"]
+      "constantes": [
+        "RRF_K",
+        "SEMANTIC_MIN_SCORE",
+        "VECTOR_TOP_K"
+      ]
     }
   },
-
   "avertissement": {
     "titre_fr": "Limites",
     "titre_en": "Limits",

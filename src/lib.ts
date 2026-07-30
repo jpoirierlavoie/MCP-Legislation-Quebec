@@ -182,13 +182,16 @@ export async function listLaws(
     .all<{ law_id: string; lang: string; n: number }>()).results;
   const maps = (await db
     .prepare(
-      `SELECT sm.law_id, sm.division_path, s.label_fr, d.heading
+      `SELECT sm.law_id, sm.division_path, s.label_fr, s.label_en, d.heading
        FROM subject_map sm
        JOIN subjects s ON s.id = sm.subject_id
        LEFT JOIN divisions d ON d.law_id = sm.law_id AND d.path = sm.division_path AND d.lang = 'fr'
        ORDER BY sm.law_id, sm.division_path`,
     )
-    .all<{ law_id: string; division_path: string; label_fr: string; heading: string | null }>()).results;
+    .all<{
+      law_id: string; division_path: string;
+      label_fr: string; label_en: string | null; heading: string | null;
+    }>()).results;
 
   // subject_map ne contient que des chemins FR : on les traduit si une autre langue est demandée
   const traduits = new Map<string, Map<string, TranslatedPath>>();
@@ -200,6 +203,9 @@ export async function listLaws(
     }
   }
 
+  const libelle = (m: { label_fr: string; label_en: string | null }) =>
+    (lang === "en" ? m.label_en : m.label_fr) || m.label_fr;
+
   return laws.map((law) => {
     const mine = counts.filter((c) => c.law_id === law.id);
     const mapped = maps.filter((m) => m.law_id === law.id);
@@ -209,7 +215,10 @@ export async function listLaws(
       // décompte de la LANGUE DEMANDÉE (jamais la somme, ni le maximum des deux : quelques
       // textes ont une division de plus d'un côté, ce qui surévaluait l'autre langue).
       article_count: mine.find((r) => r.lang === lang)?.n ?? Math.max(0, ...mine.map((r) => r.n)),
-      subjects: [...new Set(mapped.map((m) => m.label_fr))],
+      // Libellé de matière DANS LA LANGUE DEMANDéE : listLaws reçoit lang et s'en sert
+      // déjà pour les chemins et le décompte d'articles ; il rendait pourtant toujours le
+      // libellé français. Repli sur le français, patron retenu pour list_subjects.
+      subjects: [...new Set(mapped.map(libelle))],
       mapped_divisions: mapped
         .filter((m) => m.division_path)
         .map((m) => {
@@ -217,7 +226,7 @@ export async function listLaws(
           return {
             division_path: t?.path ?? m.division_path,
             heading: t ? t.heading : m.heading,
-            subject: m.label_fr,
+            subject: libelle(m),
           };
         }),
     };
@@ -440,6 +449,7 @@ export interface RelationEdge extends RelationRow {
 
 export async function relatedLaws(
   db: D1Database, lawId: string, relType: string | undefined, direction: "out" | "in" | "both",
+  lang: Lang = "fr",
 ): Promise<RelationEdge[]> {
   const typeClause = relType ? "AND rel_type = ?" : "";
   const edges: RelationEdge[] = [];
@@ -457,14 +467,16 @@ export async function relatedLaws(
       .all<RelationRow>()).results;
     edges.push(...rows.map((r) => ({ ...r, direction: "in" as const, other_id: r.from_law_id, other_name: null })));
   }
-  // noms des extrémités présentes au corpus
+  // Noms des extrémités présentes au corpus, DANS LA LANGUE DEMANDÉE. `name_en` est
+  // NOT NULL (schema.sql) ; le repli sur le français ne sert donc qu'en cas de ligne
+  // anormale, mais il évite de rendre un nom vide si la base diverge du schéma.
   const ids = [...new Set(edges.filter((e) => e.in_corpus).map((e) => e.other_id))];
   if (ids.length) {
     const rows = (await db
-      .prepare(`SELECT id, name_fr FROM laws WHERE id IN (${ids.map(() => "?").join(",")})`)
+      .prepare(`SELECT id, name_fr, name_en FROM laws WHERE id IN (${ids.map(() => "?").join(",")})`)
       .bind(...ids)
-      .all<{ id: string; name_fr: string }>()).results;
-    const byId = new Map(rows.map((r) => [r.id, r.name_fr]));
+      .all<{ id: string; name_fr: string; name_en: string | null }>()).results;
+    const byId = new Map(rows.map((r) => [r.id, (lang === "en" ? r.name_en : r.name_fr) || r.name_fr]));
     for (const e of edges) e.other_name = byId.get(e.other_id) ?? null;
   }
   // les plus significatives d'abord : curées, puis poids décroissant

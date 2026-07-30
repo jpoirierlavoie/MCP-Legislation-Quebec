@@ -246,6 +246,38 @@ async function smokeTests() {
   add("related_laws : erreur actionnable si loi inconnue",
     bad.isError === true && /Lois disponibles/.test(bad.content?.[0]?.text ?? ""));
 
+  // L'outil DÉCLARAIT `lang` sans jamais le lire : un client demandant l'anglais recevait
+  // noms de lois ET notes curées en français, sans étiquette — « faux, servi, silencieux ».
+  const relEn = await callTool("qclaw_related_laws", { law: "c-27.1", lang: "en" });
+  const relsEn = relEn.structuredContent?.relations ?? [];
+  const c19 = relsEn.find((r) => r.other_id === "c-19");
+  add("related_laws (lang=en) : nom de loi en ANGLAIS",
+    c19?.other_name === "Cities and Towns Act", `other_name=${c19?.other_name}`);
+  // Les notes curées n'existent qu'en français (pas de colonne note_en) : elles doivent être
+  // MARQUÉES, pas maquillées. L'étiquette voyage aussi dans la charge utile (R4/décision 001).
+  add("related_laws (lang=en) : note curée marquée [fr] en prose ET en données",
+    /\[fr\]/.test(relEn.content?.[0]?.text ?? "") && c19?.note_lang === "fr",
+    `note_lang=${c19?.note_lang}`);
+  add("related_laws (lang=en) : ossature de la réponse en anglais",
+    /relation\(s\) for/.test(relEn.content?.[0]?.text ?? ""),
+    (relEn.content?.[0]?.text ?? "").slice(0, 60));
+  const relFr = await callTool("qclaw_related_laws", { law: "c-27.1" });
+  add("related_laws (défaut fr) : nom de loi en français, aucune marque [fr]",
+    (relFr.structuredContent?.relations ?? []).find((r) => r.other_id === "c-19")?.other_name
+      === "Loi sur les cités et villes" && !/\[fr\]/.test(relFr.content?.[0]?.text ?? ""));
+
+  // list_laws rendait les libellés de MATIÈRES toujours en français, même sous lang='en',
+  // alors que label_en est peuplé sur les 34 matières. Contrôler les ENTRÉES, pas l'en-tête :
+  // c'est la leçon déjà tirée pour list_subjects et jamais reportée ici.
+  const lawsEn = await callTool("qclaw_list_laws", { lang: "en", structure: false });
+  const cmEn = lawsEn.structuredContent?.laws?.find((l) => l.id === "c-27.1");
+  add("list_laws (lang=en) : libellés de matières en ANGLAIS",
+    (cmEn?.subjects ?? []).includes("Municipal Law"), `subjects=${JSON.stringify(cmEn?.subjects)}`);
+  const lawsFr = await callTool("qclaw_list_laws", { lang: "fr", structure: false });
+  add("list_laws (lang=fr) : libellés de matières en français",
+    (lawsFr.structuredContent?.laws?.find((l) => l.id === "c-27.1")?.subjects ?? [])
+      .includes("Droit municipal"));
+
   // --- extraction : garde-fous contre les régressions trouvées en phase E ---
 
   // Le mode plage (from/to) dépend de l'échelle de articles.sort_key. Une divergence entre

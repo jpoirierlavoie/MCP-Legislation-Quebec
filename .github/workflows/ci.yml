@@ -26,3 +26,19 @@ jobs:
       - run: npx tsc --noEmit
       - run: node --test scripts/check-consolidation.test.mjs
       - run: node --test tests/catalogue.test.mjs # garde anti-dérive de la documentation (R10)
+
+      # Reconstructibilité : schema.sql décrit l'ÉTAT INITIAL, les migrations s'appliquent
+      # PAR-DESSUS. Sans ce garde, un DROP COLUMN sans garde dans une migration casse le
+      # bootstrap d'une base neuve sans que rien ne le signale — c'est arrivé avec 0002,
+      # découvert seulement à l'audit. Le harnais d'éval ne teste que contre une base déjà
+      # peuplée ; ceci est le seul contrôle qui parte du vide. Local, sans réseau ni secret.
+      - name: Bootstrap d'une D1 vierge (schema.sql + migrations)
+        run: |
+          set -euo pipefail
+          T=$(mktemp -d)
+          npx wrangler d1 execute qclaw --local --persist-to "$T" --file=./schema.sql -y
+          npx wrangler d1 migrations apply qclaw --local --persist-to "$T"
+          npx wrangler d1 execute qclaw --local --persist-to "$T" --json \
+            --command "SELECT COUNT(*) AS n FROM pragma_table_info('search_log')" \
+            | grep -q '"n": *[1-9]' || { echo "search_log absente après migrations"; exit 1; }
+          rm -rf "$T"

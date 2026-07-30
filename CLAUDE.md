@@ -258,6 +258,24 @@ rouvert, le connecteur s'est réparé tout seul au retry suivant. Retenir : une 
 404, même de quelques minutes, peut détruire un connecteur de façon irréversible côté
 client.
 
+**Reconstruire une base à partir de rien** (nouvel environnement, D1 de CI, dev local
+vierge). `schema.sql` décrit l'ÉTAT INITIAL et les migrations s'appliquent PAR-DESSUS :
+c'est pourquoi il porte encore `articles.consol_date` (retirée par 0002) et PAS
+`search_log` (créée par 0001). Ne jamais éditer `schema.sql` comme s'il décrivait l'état
+COURANT : SQLite n'a pas de « DROP COLUMN IF EXISTS », donc une colonne retirée des DEUX
+côtés rend la migration injouable sur une base neuve (arrivé avec 0002, vu à l'audit).
+
+```bash
+npx wrangler d1 execute qclaw --local --file=./schema.sql   # 1. état initial
+PYTHONUTF8=1 ./.venv/Scripts/python.exe -m pipeline.discovery.migrate --target local
+npx wrangler d1 migrations apply qclaw --local              # 3. 0001, 0002, …
+PYTHONUTF8=1 ./.venv/Scripts/python.exe -m pipeline.ingest --all --apply-local
+PYTHONUTF8=1 ./.venv/Scripts/python.exe -m pipeline.discovery.load --target local
+```
+
+Épinglé en CI (étapes 1 et 3, sur une base jetable) : c'est le SEUL contrôle qui parte du
+vide — le harnais d'éval ne teste que contre une base déjà peuplée.
+
 **Ajouter une loi** : (1) ajouter EN FIN de `laws.config.json` (+ `ORDRE_ATTENDU` du
 test) ; (2) dry-run de reconnaissance (`pipeline/discovery/recon.py`) — arrêt revue si
 balisage inconnu ; (3) `ingest --law X` local puis remote (staging→bascule, invariants de

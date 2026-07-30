@@ -41,9 +41,13 @@ CREATE TABLE articles (
   text          TEXT NOT NULL,              -- verbatim (numéro, historique et notes A.M. EXCLUS)
   html          TEXT,                       -- HTML nettoyé (integrity:* retirés, liens en absolu)
   history       TEXT,                       -- ligne d'historique : '1991, c. 64, a. 1457; ...'
-  repealed      INTEGER NOT NULL DEFAULT 0  -- 1 si '(Abrogé).' (68 cas)
-  -- consol_date : retirée (migration 0002) — constante par (law_id, lang) par
-  -- construction, jamais lue ; la date authentique vit dans laws.consol_date_fr/en.
+  repealed      INTEGER NOT NULL DEFAULT 0, -- 1 si '(Abrogé).' (68 cas)
+  -- RETIRÉE par migrations/0002 — conservée ici parce que ce fichier décrit l'ÉTAT INITIAL,
+  -- pas l'état courant : les migrations s'appliquent PAR-DESSUS lui (même raison pour
+  -- laquelle `search_log`, créée par 0001, n'y figure pas). La retirer d'ici cassait le
+  -- bootstrap d'une base neuve : 0002 fait un DROP COLUMN sans garde, et SQLite n'a pas
+  -- de « DROP COLUMN IF EXISTS ».
+  consol_date   TEXT
 );
 
 CREATE INDEX idx_art_lookup   ON articles(law_id, lang, number);
