@@ -42,6 +42,13 @@ export class QclawMCP extends McpAgent {
  * chaque variante d'URL croisée par un robot. Le corpus ne bouge que deux fois l'an ;
  * le cache n'est pas un confort mais la protection du coût de lecture (le décompte
  * d'articles balaie toute la table).
+ *
+ * EN DÉVELOPPEMENT LOCAL, C'EST UN PIÈGE : miniflare persiste `caches.default` dans
+ * `.wrangler/state/v3/cache`, et la clé étant fixe, une page mise en cache SURVIT aux
+ * rechargements à chaud ET aux redémarrages de `wrangler dev`. On modifie src/site.ts,
+ * le serveur recharge, et la page servie reste l'ancienne — sans aucun signal. Pour
+ * itérer sur la page : arrêter `wrangler dev`, supprimer `.wrangler/state/v3/cache`
+ * (JAMAIS `.../d1`, qui porte le corpus local), redémarrer.
  */
 const CACHE_KEY = "https://legislation.poirierlavoie.ca/__page";
 

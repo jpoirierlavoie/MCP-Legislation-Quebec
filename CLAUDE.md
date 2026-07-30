@@ -89,6 +89,7 @@ npm run eval                                       # harnais d'éval : 20 cas, r
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m unittest discover -s pipeline/tests -q   # 23 tests
 node --test scripts/check-consolidation.test.mjs   # 13 contrôles du détecteur de veille (sans réseau, en CI)
 node --test tests/catalogue.test.mjs               # garde anti-dérive doc (R10 ; sans réseau, en CI)
+node --test tests/page-client.test.mjs             # JS client de la page (sans réseau ni navigateur, en CI)
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m pipeline.ingest --law X --lang fr --apply-local
 npx wrangler d1 migrations apply qclaw --local|--remote   # bookmark Time Travel AVANT --remote
 npx wrangler deploy                                # jeton requis (voir Secrets)

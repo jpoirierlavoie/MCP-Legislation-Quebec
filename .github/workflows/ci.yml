@@ -1,8 +1,9 @@
 name: ci
 
 # Vérifications sans réseau ni secret : type-check du Worker, tests unitaires du
-# détecteur de veille, garde anti-dérive de la documentation, ordre de laws.config.json
-# (invariant 1) et reconstructibilité d'une D1 vierge.
+# détecteur de veille, garde anti-dérive de la documentation, comportement du JS client
+# de la page publique, ordre de laws.config.json (invariant 1) et reconstructibilité
+# d'une D1 vierge.
 #
 # Les tests Python du PARSEUR (test_ccq_fr, test_corpus) téléchargent les EPUB : ils
 # tournent en local, pas ici. Mais test_config.py, lui, ne fait AUCUN appel réseau — il
@@ -31,6 +32,7 @@ jobs:
       - run: npx tsc --noEmit
       - run: node --test scripts/check-consolidation.test.mjs
       - run: node --test tests/catalogue.test.mjs # garde anti-dérive de la documentation (R10)
+      - run: node --test tests/page-client.test.mjs # comportement du JS client de la page
 
       # INVARIANT 1 : l'ordre de laws.config.json porte les plages d'id. Le réordonner
       # fait écraser les articles d'autres lois à la prochaine ingestion, EN SILENCE.
