@@ -19,20 +19,7 @@
       },
       "fonction": "loi",
       "numbering": "decimal",
-      "kind_epub": "cs",
-      "phase0_verification": {
-        "checked_on": "2026-07-19",
-        "fr": {
-          "http_status": 200,
-          "content_length": 1058652,
-          "last_modified": "2026-07-16"
-        },
-        "en": {
-          "http_status": 200,
-          "content_length": 1046233
-        },
-        "note": "La date « à jour au » n'est pas dans l'EPUB : la capturer sur la page HTML de la loi au téléchargement (User-Agent navigateur requis). Voir docs/phase0-structure-epub.md."
-      }
+      "kind_epub": "cs"
     },
     {
       "id": "cpc",

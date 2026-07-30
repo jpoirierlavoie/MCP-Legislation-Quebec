@@ -13,7 +13,6 @@ from __future__ import annotations
 import argparse
 import re
 import zipfile
-from collections import Counter
 
 from .. import config
 from ..d1_api import make_client, q

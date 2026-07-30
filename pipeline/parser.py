@@ -36,7 +36,6 @@ warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 # --- motifs de structure (constatés en phase 0) -----------------------------
 
-_G_PREFIXES = ("ga", "gb", "gc", "gd", "ge", "gf", "gg", "gh", "gi")
 _KIND_BY_PREFIX = {
     "ga": "livre", "gb": "titre", "gc": "chapitre", "gd": "section",
     "ge": "sous-section", "gf": "niveau6", "gg": "niveau7", "gi": "niveau8",
@@ -56,7 +55,6 @@ _LANG = {
         "finales": "FINAL PROVISIONS",
     },
 }
-_ANNEXE_RE = re.compile(r"\b(?:ANNEXE|SCHEDULE)\b", re.I)
 # Abrogation, FR « (Abrogé) » et EN « (Repealed) ».
 _REPEALED_RE = re.compile(r"\(?(?:Abrog|Repea)")
 

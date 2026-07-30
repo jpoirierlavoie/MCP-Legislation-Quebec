@@ -1,7 +1,7 @@
 """Modèle de données du pipeline — reflète le schéma D1 (PLAN.md §2 révisé)."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
