@@ -974,6 +974,32 @@ export interface SearchHit {
   semantic?: boolean;
 }
 
+/**
+ * CE QUE FTS5 FAIT RÉELLEMENT SUR D1 — sondes exécutées contre la base DISTANTE le
+ * 2026-07-20. Ce sont des faits sur la PLATEFORME, pas sur le corpus : ils ne vieillissent
+ * pas quand le corpus grandit, contrairement à tout décompte. Les refaire coûte une
+ * campagne de sondes en production, d'où leur place ici plutôt que dans un document daté.
+ *
+ * - **Tokenizer par défaut (`unicode61`), `remove_diacritics` ACTIF** : `MATCH 'extranéité'`
+ *   ≡ `MATCH 'extraneite'` (3 = 3). Inutile donc de replier les accents avant d'interroger.
+ * - **Aucun stemming français** : *signification* ≠ *signifiée* (94 vs 74 documents
+ *   distincts au vocabulaire). C'est la raison d'être de l'appariement par préfixe borné de
+ *   `src/relevance.ts` — FTS5 ne rapprochera jamais deux flexions tout seul.
+ * - Disponibles et vérifiés : `bm25()`, `snippet()` (~30 tokens rendus correctement),
+ *   `highlight()`, et `fts5vocab` (table sonde acceptée puis supprimée, 0 trace).
+ * - **Une seule colonne indexée (`text`)** — cf. `schema.sql`. Une colonne headnotes
+ *   pondérée exigerait de RECRÉER la table FTS : c'est une migration, pas un ALTER.
+ *
+ * CAS FONDATEUR, art. 490 C.p.c. — mesuré, et à l'origine de toute l'échelle de recherche :
+ * | `signification hors du Québec délai`        | **0 résultat** — « hors » est absent du texte et tue le ET |
+ * | `signification Québec délai` (leave-one-out) | cpc 490 en 1re position |
+ * | `extranéité` (corpus entier)                 | ccq 3111, cpc 490, cpc 622 |
+ *
+ * Le Livre V du C.p.c. s'intitule « LES RÈGLES APPLICABLES À CERTAINES MATIÈRES CIVILES »
+ * (aucun signal) ; le signal est au Titre IV, « LES DEMANDES INTÉRESSANT LE DROIT
+ * INTERNATIONAL PRIVÉ » — d'où l'indexation des divisions en profondeur 2.
+ */
+
 /** Tokens FTS d'une requête (même découpage que toFtsQuery — un seul point de vérité). */
 export function ftsTokens(query: string): string[] {
   return query.match(/[\p{L}\p{N}][\p{L}\p{N}'’.-]*/gu) ?? [];
@@ -981,7 +1007,13 @@ export function ftsTokens(query: string): string[] {
 
 const quoteTok = (t: string) => `"${t.replace(/"/g, '""')}"`;
 
-/** Tokenise en requête FTS5 sûre : chaque mot en littéral quoté, combinés en ET. */
+/**
+ * Tokenise en requête FTS5 sûre : chaque mot en littéral quoté, combinés en ET.
+ *
+ * Cet ET implicite est la CAUSE Nº 1 de l'échec fondateur ci-dessus : un seul mot absent du
+ * texte suffit à vider le résultat. Il est conservé — il donne des résultats justes quand
+ * il en donne — et c'est l'échelle de relaxation qui le rattrape, en le DISANT (R7).
+ */
 export function toFtsQuery(query: string): string {
   return ftsTokens(query).map(quoteTok).join(" ");
 }

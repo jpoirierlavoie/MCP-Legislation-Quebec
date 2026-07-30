@@ -13,6 +13,11 @@ pipeline/out/
 # Rapport régénéré par la veille de consolidation (scripts/check-consolidation.mjs)
 consolidation-report.md
 
+# Rapport de dry-run régénéré par pipeline/discovery/recon.py à chaque lot d'extension.
+# Non versionné pour la même raison que les deux artefacts ci-dessus : il est reproductible,
+# il est daté, et versionné il finirait par se lire comme un document de référence.
+docs/reconnaissance-courante.md
+
 # Node / Worker
 node_modules/
 .wrangler/

@@ -22,8 +22,10 @@ from ..parser import (harvest_renvois, is_division_id, opf_metadata, parse_epub,
                       _ART_ID, _KIND_BY_PREFIX, _SEG_SPLIT)
 
 UA = {"User-Agent": config.USER_AGENT}
-# Artefact de dry-run daté : chaque lot d'extension produit le sien (les précédents
-# vivent dans docs/archive/).
+# Artefact de dry-run daté et REPRODUCTIBLE : chaque lot d'extension produit le sien.
+# Gitignoré depuis le 2026-07-30 — versionné, il finissait par se lire comme un document
+# de référence alors que ce n'est qu'une sortie de programme (les vidages des lots
+# précédents ont été retirés de docs/archive/ ; git log les a).
 REPORT = config.REPO_ROOT / "docs" / "reconnaissance-courante.md"
 # ids connus (hors motif de division/article) — le reste est une anomalie à signaler.
 _KNOWN_HEAD = re.compile(r"^(?:se|sc|page\d+|d\d+e\d+|header|HFContainer)$")

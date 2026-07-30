@@ -322,11 +322,21 @@ adversariale (2026-07-21) et corrigés avant le premier commit.
 
 ## Où trouver quoi
 
-- `docs/ARCHITECTURE-NOTES.md` — **instantané daté du 2026-07-20**, ne fait PLUS foi sur
-  l'état courant ; conservé pour ses mesures (DDL de `articles_fts`, sondes FTS5,
-  procédure Time Travel).
-- `docs/reports/phase-{0,1,2}.md` — mesures, décisions, coûts réels de Discovery v2.
-- `docs/phase0-structure-epub.md` — format EPUB Irosoft (référence du parseur).
+- **Sondes FTS5** (tokenizer `unicode61`, `remove_diacritics` ACTIF, AUCUN stemming
+  français, `bm25`/`snippet`/`highlight`/`fts5vocab` disponibles) et **cas fondateur de
+  l'art. 490 C.p.c.** — dans `src/lib.ts`, au-dessus de `toFtsQuery`. Mesurés en production
+  le 2026-07-20 ; ce sont des faits sur la PLATEFORME, donc ils ne vieillissent pas quand le
+  corpus grandit. Ils vivent dans le code parce qu'on en a besoin en touchant à la requête.
+- `docs/ARCHITECTURE-NOTES.md` — **relevé daté du 2026-07-20**, ne fait PAS foi sur l'état
+  courant ; réduit le 2026-07-30 à ce qu'il est seul à porter : les volumes de la base à
+  38 lois et les écarts entre le plan Discovery v2 et la réalité, qui expliquent pourquoi
+  les invariants 4, 6 et 10 existent.
+- `docs/reports/phase-{0,1,2}.md` — mesures, décisions, coûts réels de Discovery v2, et les
+  **bookmarks Time Travel** consignés avant chaque migration.
+- `docs/phase0-structure-epub.md` — format EPUB Irosoft. **Référence vivante du parseur** :
+  citée par `pipeline/__init__.py`, `parser.py` et `validate.py`, dont les valeurs témoins
+  en viennent. C'est le seul document de `docs/` que du code appelle.
 - `docs/archive/` — plans exécutés (la **phase 3 v2 — curation ⛔ — y reste à faire** :
-  `qclaw-discovery-v2-implementation-plan.md`).
+  `qclaw-discovery-v2-implementation-plan.md`). Les vidages de reconnaissance en ont été
+  retirés le 2026-07-30 : sorties reproductibles de `recon.py`, pas des décisions.
 - `eval/baselines/*.json` — trajectoire mesurée : recall@10 40 % → 88 % → 98 %.
