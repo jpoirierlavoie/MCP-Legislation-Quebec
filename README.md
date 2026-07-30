@@ -105,5 +105,13 @@ docs/           Notes d'architecture, rapports de phase, format EPUB ; archive d
 Démarrage : `npm install`, `npx wrangler dev`, puis `npm run evals` contre
 `http://127.0.0.1:8787/mcp`. **Avant toute modification, lire [CLAUDE.md](CLAUDE.md)** —
 les invariants critiques du dépôt y sont consignés (ordre de la config, miroirs de clés
-de tri, limites D1/Vectorize, échelle de recherche). Trajectoire mesurée du repérage :
-recall@10 **40 % → 88 % → 98 %** (`docs/reports/`).
+de tri, limites D1/Vectorize, échelle de recherche).
+
+**Toute modification doit évaluer son impact sur CINQ surfaces** — outils MCP,
+descriptions, schéma, ce README et la [page publique](https://legislation.poirierlavoie.ca/)
+(`catalogue.json`) — et inclure les mises à jour requises dans le même commit. C'est une
+condition de fin de tâche, pas une recommandation : voir l'obligation préalable en tête de
+[CLAUDE.md](CLAUDE.md) et la règle R10. Garde en CI :
+`node --test tests/catalogue.test.mjs`.
+
+Trajectoire mesurée du repérage : recall@10 **40 % → 88 % → 98 %** (`docs/reports/`).

@@ -6,6 +6,46 @@ Serveur MCP **en production** servant le texte officiel de 79 lois et règlement
 LégisQuébec. **C'est un outil juridique : un résultat faux rendu en silence est le pire
 défaut possible — refuser vaut toujours mieux que deviner.**
 
+## ⛔ OBLIGATION PRÉALABLE À TOUTE MODIFICATION (aucune exception)
+
+**Avant de terminer QUELLE QUE SOIT une tâche touchant ce dépôt, évaluer explicitement son
+impact sur les CINQ surfaces ci-dessous, et inclure les mises à jour requises DANS LE MÊME
+COMMIT.** Ce n'est pas une bonne pratique, c'est une condition de fin de tâche : une tâche
+qui laisse une surface en retard n'est pas terminée, elle est en dette.
+
+**Le coût en tokens n'est JAMAIS une raison de sauter cette évaluation** — consigne
+explicite de Jason. Lire les cinq fichiers, comparer, et rendre compte coûte moins cher
+qu'une seule ligne fausse servie à un modèle dans un outil juridique.
+
+| # | Surface | Où | Ce qui la fait bouger |
+|---|---|---|---|
+| 1 | **Outils MCP** | `src/tools.ts` | nom, ajout/retrait (R2), paramètres, comportement, message d'erreur servi |
+| 2 | **Descriptions** | `src/tools.ts` (`description`, `title`), `catalogue.json` | toute reformulation ; R3 borne le delta et exige de consigner le coût en tokens |
+| 3 | **Schéma** | `schema.sql`, `schema-decouverte.sql`, `migrations/`, `inputSchema` des outils, forme de `structuredContent` | colonne ajoutée/retirée, champ de sortie ajouté/retiré/renommé |
+| 4 | **README.md** | racine | tout ce qui change ce que le dépôt *annonce* faire |
+| 5 | **Page publique** | `catalogue.json` + `src/site.ts` | tout ce qui change ce que le public *lit* |
+
+**Procédure, à exécuter et à RAPPORTER — pas à supposer :**
+
+1. Pour chacune des cinq surfaces : dire si elle est touchée, et pourquoi (« non touchée »
+   est une réponse valable, mais elle doit être ÉNONCÉE, jamais passée sous silence).
+2. `node --test tests/catalogue.test.mjs` — garde de parité, hors réseau. Il attrape les
+   ruptures structurelles ; il n'attrape PAS un sens qui a changé.
+3. Si une surface bouge : `npx tsc --noEmit`, puis `npm run evals` contre la cible.
+4. Si le schéma bouge : migration numérotée + bookmark Time Travel AVANT `--remote`
+   (invariant 6), et vérifier que `structuredContent` n'a pas rétréci en silence
+   (corollaire structuré de R4, décision 001).
+
+**Pourquoi cette obligation existe.** La dérive n'est pas hypothétique ici, elle est
+documentée : `qclaw_resolve_reference` a servi aux modèles « Voir les 38 textes
+disponibles » pendant que le corpus en comptait 79 ; le README annonçait 3 tarifs sur 4,
+~46 000 articles sur 49 255, 57 contrôles sur 62, et publiait une configuration de
+connexion qui renvoyait 404 ; `docs/ARCHITECTURE-NOTES.md` est resté à 38 lois / 28 matières.
+**Aucun test n'a échoué dans aucun de ces cas.** C'est exactement le mode de défaut que ce
+dépôt refuse : faux, servi, silencieux.
+
+Détail des mécanismes et de ce qu'ils n'attrapent pas : **R10**, plus bas.
+
 ## Architecture (3 morceaux)
 
 1. **Worker Cloudflare** (`src/`, TypeScript) — McpAgent (Durable Object) + 10 outils
@@ -141,11 +181,13 @@ npx wrangler deploy                                # jeton requis (voir Secrets)
   service. `outputSchema` reste ABSENT à dessein (coût récurrent de tools/list + un schéma
   qui dérive des gabarits est un contrat menti) ; ne le revisiter que pour un consommateur
   nommé qui VALIDE.
-- **R10 — TROIS SURFACES, UNE VÉRITÉ (dérive de documentation).** Un outil ou une aide au
-  repérage vit à trois endroits : `src/tools.ts` (ce que le modèle reçoit), `catalogue.json`
-  (ce que le public lit sur la page) et `README.md`. Tout changement de nom, de titre, de
-  sémantique, de signal, de barreau de repli ou de constante de calibration se répercute
-  sur les TROIS, dans le même commit.
+- **R10 — UNE VÉRITÉ, CINQ SURFACES (dérive de documentation).** Mise en œuvre de
+  l'**obligation préalable** en tête de ce fichier : outils, descriptions, schéma,
+  `README.md`, page publique. Un outil ou une aide au repérage vit dans `src/tools.ts` (ce
+  que le modèle reçoit), `catalogue.json` (ce que le public lit) et `README.md` (ce que le
+  dépôt annonce) ; tout changement de nom, de titre, de sémantique, de signal, de barreau de
+  repli ou de constante de calibration se répercute sur TOUTES les surfaces concernées, dans
+  le même commit. **Le coût en tokens n'exempte de rien.**
   **Aucun fait vivant écrit à la main** : un décompte (lois, matières, articles, contrôles)
   se CALCULE (D1, JSON versionné) ou s'IMPORTE (`WEIGHTS`, `SEMANTIC_MIN_SCORE`) — jamais
   recopié dans de la prose. Un fait *historique daté* reste licite AVEC sa date

@@ -127,6 +127,24 @@ test("README : les décomptes dérivables des JSON versionnés sont exacts", () 
   }
 });
 
+test("l'obligation des cinq surfaces est toujours inscrite (CLAUDE.md + README)", () => {
+  // Une règle qui gouverne CHAQUE modification doit être elle-même protégée : sans ce
+  // contrôle, elle pourrait disparaître d'un commit de nettoyage sans que rien ne bronche.
+  const claude = lire("CLAUDE.md");
+  assert.ok(/OBLIGATION PRÉALABLE À TOUTE MODIFICATION/.test(claude),
+    "l'obligation préalable a disparu de CLAUDE.md — c'est la règle qui gouverne toute " +
+    "modification du dépôt, elle ne se retire pas sans décision explicite de Jason.");
+  for (const surface of ["Outils MCP", "Descriptions", "Schéma", "README.md", "Page publique"]) {
+    assert.ok(claude.includes(surface),
+      `la surface « ${surface} » a disparu du tableau des cinq surfaces (CLAUDE.md).`);
+  }
+  assert.ok(/tokens n['’]est JAMAIS une raison|tokens n['’]exempte de rien/.test(claude),
+    "la mention « le coût en tokens n'exempte de rien » a disparu — c'est une consigne " +
+    "explicite de Jason, elle est le cœur de la règle.");
+  assert.ok(/CINQ surfaces/.test(readme),
+    "README.md ne rappelle plus l'obligation des cinq surfaces (section « Pour les développeurs »).");
+});
+
 test("README : aucun décompte qui ne vit qu'en D1", () => {
   // Les comptes d'articles ne sont pas dérivables du dépôt : le README n'a pas le droit de
   // les énoncer (c'est ainsi qu'il a annoncé « ~46 000 articles » alors qu'il y en a 49 255).
