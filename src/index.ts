@@ -43,6 +43,12 @@ export class QclawMCP extends McpAgent {
  * le cache n'est pas un confort mais la protection du coût de lecture (le décompte
  * d'articles balaie toute la table).
  *
+ * EN PRODUCTION, UN DÉPLOIEMENT NE RAFRAÎCHIT PAS LA PAGE : l'entrée d'arête vit sa
+ * `s-maxage` (900 s) jusqu'au bout. Et `cf.token` n'a PAS le droit « Cache Purge »
+ * (mesuré : l'API répond 10000 Authentication error), donc il n'existe aucun moyen de
+ * forcer la main — on attend, c'est tout. Ne jamais conclure à un déploiement raté sur
+ * une page inchangée : lire l'en-tête `Age:`, il dit exactement combien il reste.
+ *
  * EN DÉVELOPPEMENT LOCAL, C'EST UN PIÈGE : miniflare persiste `caches.default` dans
  * `.wrangler/state/v3/cache`, et la clé étant fixe, une page mise en cache SURVIT aux
  * rechargements à chaud ET aux redémarrages de `wrangler dev`. On modifie src/site.ts,
