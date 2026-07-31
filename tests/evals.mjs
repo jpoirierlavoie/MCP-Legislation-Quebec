@@ -293,6 +293,52 @@ async function smokeTests() {
   add("get_articles : mode plage opérant sur les 79 lois", cassees.length === 0,
     cassees.length ? `échec sur ${cassees.length} : ${cassees.slice(0, 6).join(", ")}…` : "");
 
+  // Le contrôle ci-dessus ne regarde que `isError`. Il resterait VERT si une colonne
+  // disparaissait de la projection SQL : `structuredContent.articles[].text` vaudrait
+  // `undefined`, et la prose rendrait « undefined » À LA PLACE DU TEXTE OFFICIEL. `tsc` ne
+  // peut rien y voir — la signature D1 `all<T>()` est une ASSERTION, pas une vérification :
+  // le compilateur ne lit pas le SQL. D'où ces contrôles sur la FORME de la sortie.
+  {
+    const r = await callTool("qclaw_get_articles", { law: "ccq", from: "1", to: "5" });
+    const a = r.structuredContent?.articles?.[0];
+    add("get_articles : chaque article porte number, text, division_path, repealed",
+      !!a && typeof a.number === "string" && a.number.length > 0 &&
+      typeof a.text === "string" && a.text.length > 0 &&
+      typeof a.division_path === "string" && a.division_path.length > 0 &&
+      typeof a.repealed === "boolean",
+      `number=${typeof a?.number} text=${typeof a?.text}(${a?.text?.length ?? 0}) ` +
+      `path=${typeof a?.division_path} repealed=${typeof a?.repealed}`);
+  }
+
+  // Un article ABROGÉ rendu comme en vigueur est le pire défaut possible ici, et il serait
+  // parfaitement silencieux : `!!undefined === false`, donc une colonne `repealed` perdue
+  // ferait disparaître la mention sans erreur. On l'exerce sur un article réellement abrogé.
+  // Fixture ÉPINGLÉE, et pas une sonde : une première version cherchait un article abrogé
+  // par recherche plein texte sur « abrogé » dans le C.c.Q. — qui n'en contient AUCUN. Le
+  // contrôle passait au vert sans jamais s'exercer, ce qui est pire que pas de contrôle.
+  // a-2.1 art. 26 est abrogé en base (22 articles abrogés dans cette loi). Si ce n'est plus
+  // vrai après une réingestion, ce contrôle DOIT rougir : c'est un fait de corpus qui change.
+  {
+    const one = await callTool("qclaw_get_article", { law: "a-2.1", article: "26" });
+    add("get_article : un article abrogé est marqué abrogé, en données ET en prose",
+      one.structuredContent?.repealed === true && /abrog/i.test(one.content?.[0]?.text ?? ""),
+      `a-2.1 art. 26 : repealed=${one.structuredContent?.repealed} ` +
+      `prose=${/abrog/i.test(one.content?.[0]?.text ?? "")}`);
+  }
+
+  // getStructure sans parent_id APLATIT l'arbre : toutes les divisions deviennent racines.
+  // Le contrôle voisin ne teste que l'absence d'erreur — il passerait.
+  {
+    const st = await callTool("qclaw_get_structure", { law: "ccq" });
+    const tree = st.structuredContent?.tree;
+    const profondeur = (ns, d = 1) => ns.reduce(
+      (m, n) => Math.max(m, n.children?.length ? profondeur(n.children, d + 1) : d), 0);
+    const ok2 = Array.isArray(tree) && tree.length > 0 && profondeur(tree) > 1;
+    add("get_structure : l'arbre a plus d'un niveau (parent_id non perdu)", ok2,
+      `racines=${Array.isArray(tree) ? tree.length : "?"} profondeur=${
+        Array.isArray(tree) ? profondeur(tree) : "?"}`);
+  }
+
   // D1 plafonne la complexité des motifs LIKE/GLOB : les chemins profonds du C.c.Q. le
   // dépassaient et faisaient échouer get_division / get_structure(root_path).
   const profond = "ga:l_cinquieme-gb:l_premier-gc:l_troisieme-gd:l_i-ge:l_1";

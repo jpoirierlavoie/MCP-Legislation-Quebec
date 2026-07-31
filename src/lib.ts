@@ -38,16 +38,21 @@ export interface DivisionRow {
   sort_order: number;
 }
 
+/**
+ * Ce que le Worker LIT d'un article — pas ce que la table contient.
+ *
+ * `html` et `sort_key` existent en base mais ne sont projetées par AUCUNE requête d'ici
+ * (voir ARTICLE_COLS) : les déclarer ferait mentir le type, car `all<T>()` est une
+ * assertion que rien ne vérifie. `html` reste écrite par le pipeline ; `sort_key` sert aux
+ * `ORDER BY` et aux bornes de plage, jamais à la sortie.
+ */
 export interface ArticleRow {
   id: number;
   law_id: string;
   lang: string;
   number: string;
-  sort_key: number;
-  division_id: number | null;
   division_path: string;
   text: string;
-  html: string | null;
   history: string | null;
   repealed: number;
 }
@@ -498,7 +503,11 @@ export async function getArticle(
 ): Promise<ArticleJoined | null> {
   return db
     .prepare(
-      `SELECT a.*, d.kind AS d_kind, d.number AS d_number, d.heading AS d_heading, l.rlrq_cite
+      // Colonnes NOMMÉES, pas `a.*` : ce dernier ramenait `articles.html` — 651 o par
+      // article en moyenne, 56 % du poids de la table — que le Worker ne lit nulle part.
+      // Voir ARTICLE_COLS pour la liste et le piège.
+      `SELECT ${ARTICLE_COLS.split(", ").map((c) => `a.${c}`).join(", ")},
+              d.kind AS d_kind, d.number AS d_number, d.heading AS d_heading, l.rlrq_cite
        FROM articles a
        LEFT JOIN divisions d ON a.division_id = d.id
        JOIN laws l ON a.law_id = l.id
@@ -538,6 +547,24 @@ export async function boundKey(
   return row ? row.sort_key : sortKeyOf(number);
 }
 
+/**
+ * Colonnes d'`articles` que le Worker lit VRAIMENT. `html` n'y est PAS.
+ *
+ * Pourquoi ça vaut la peine : mesuré sur 48 673 lignes (98,8 % du corpus), `html` pèse
+ * **651 o par article en moyenne, soit 56 % de la table** et 1,64 × `text` — et il n'est lu
+ * nulle part (0 occurrence dans tools.ts, relevance.ts, site.ts ; backfill.ts vectorise sur
+ * `text`). Un `SELECT *` sur `get_articles` à la borne de 200 articles déplaçait ~226 Kio
+ * pour ~91 Kio utiles. Le pipeline continue de l'écrire ; la colonne reste en base.
+ *
+ * ⚠️ AUCUN FILET DE TYPAGE ICI. `D1PreparedStatement.all<T>()` est une ASSERTION, pas une
+ * vérification : le compilateur ne lit pas le SQL. Retirer une colonne de cette liste
+ * compile parfaitement et produit `undefined` à l'exécution — `text` manquant ferait rendre
+ * « undefined » À LA PLACE DU TEXTE OFFICIEL, et `repealed` manquant ferait passer un
+ * article ABROGÉ pour en vigueur (`!!undefined === false`). Le seul garde réel est du côté
+ * des évals : trois contrôles de tests/evals.mjs inspectent la FORME de la sortie.
+ */
+const ARTICLE_COLS = "id, law_id, lang, number, division_path, text, history, repealed";
+
 export async function articlesByRange(
   db: D1Database, lawId: string, lang: Lang, fromKey: number, toKey: number, page: Page,
 ): Promise<{ rows: ArticleRow[]; total: number }> {
@@ -548,7 +575,9 @@ export async function articlesByRange(
     .first<{ n: number }>())!.n;
   const rows = (await db
     .prepare(
-      `SELECT * FROM articles WHERE law_id=? AND lang=? AND sort_key BETWEEN ? AND ?
+      // `sort_key` n'est PAS projetée : SQLite trie sur une colonne non projetée sans
+      // difficulté (même patron que articlesInDivision, plus bas).
+      `SELECT ${ARTICLE_COLS} FROM articles WHERE law_id=? AND lang=? AND sort_key BETWEEN ? AND ?
        ORDER BY sort_key LIMIT ? OFFSET ?`,
     )
     .bind(lawId, lang, lo, hi, page.limit, page.offset)
@@ -563,7 +592,7 @@ export async function articlesByNumbers(
   const placeholders = numbers.map(() => "?").join(",");
   const rows = (await db
     .prepare(
-      `SELECT * FROM articles WHERE law_id=? AND lang=? AND number IN (${placeholders})
+      `SELECT ${ARTICLE_COLS} FROM articles WHERE law_id=? AND lang=? AND number IN (${placeholders})
        ORDER BY sort_key`,
     )
     .bind(lawId, lang, ...numbers)
@@ -627,17 +656,24 @@ export interface StructureNode {
 export async function getStructure(
   db: D1Database, lawId: string, lang: Lang, rootPath?: string, depth?: number,
 ): Promise<StructureNode[]> {
+  // Les sept colonnes que l'arbre consomme, sur les douze de la table. `getStructure('ccq')`
+  // sans root_path lit 802 divisions : les cinq non lues (law_id, lang, history, sort_order
+  // et heading_norm — cette dernière n'étant même pas déclarée par DivisionRow) pèsent 38 %
+  // des octets. `sort_order` sert au tri sans être projetée. PERDRE `parent_id` APLATIRAIT
+  // L'ARBRE en silence — toutes les divisions deviendraient racines ; c'est ce que le
+  // contrôle « l'arbre a plus d'un niveau » de tests/evals.mjs surveille.
+  const COLS = "id, law_id, lang, path, kind, number, heading, repealed, parent_id";
   let rows: DivisionRow[];
   if (rootPath) {
     rows = (await db
       .prepare(
-        `SELECT * FROM divisions WHERE law_id=? AND lang=? AND ${subtreeClause("path")} ORDER BY sort_order`,
+        `SELECT ${COLS} FROM divisions WHERE law_id=? AND lang=? AND ${subtreeClause("path")} ORDER BY sort_order`,
       )
       .bind(lawId, lang, ...subtreeBinds(rootPath))
       .all<DivisionRow>()).results;
   } else {
     rows = (await db
-      .prepare("SELECT * FROM divisions WHERE law_id=? AND lang=? ORDER BY sort_order")
+      .prepare(`SELECT ${COLS} FROM divisions WHERE law_id=? AND lang=? ORDER BY sort_order`)
       .bind(lawId, lang)
       .all<DivisionRow>()).results;
   }
@@ -944,9 +980,21 @@ export interface SearchLogEntry {
 }
 
 /**
- * Journalise CHAQUE appel de recherche/orientation (pas seulement les échecs :
- * result_count permet de filtrer). Échec d'insertion SILENCIEUX — un journal ne doit
- * jamais casser une recherche.
+ * Journalise CHAQUE appel de recherche/orientation. Échec d'insertion SILENCIEUX — un
+ * journal ne doit jamais casser une recherche.
+ *
+ * ⚠️ `result_count = 0` NE MESURE PAS L'ÉCHEC — mesuré, pas supposé. La migration 0001 a
+ * posé `idx_search_log_misses ON search_log(result_count, ts)` en pariant sur le zéro. Mais
+ * la conception fait *fail open* (R7) : l'échelle de relaxation garantit qu'on ne rend
+ * quasiment jamais zéro. Dépouillement du 2026-07-30 sur 1 887 lignes : les 109 zéros
+ * venaient INTÉGRALEMENT des trois requêtes-charabia d'éval (45 + 46 + 18). Sur les
+ * 99 appels réels, ZÉRO recherche vide — et pourtant 43 % avaient eu besoin d'un barreau,
+ * et une chaîne de cinq reformulations sur la même question montrait un échec de repérage
+ * caractérisé.
+ *
+ * Les deux signaux qui, eux, disent quelque chose : la PROFONDEUR DU REPLI (`fallback` —
+ * `or_relax` veut dire que le ET lexical a complètement échoué) et la REFORMULATION
+ * RAPPROCHÉE (mêmes minutes, requêtes voisines). `scripts/journal.mjs` les calcule.
  */
 export async function logSearch(db: D1Database, e: SearchLogEntry): Promise<void> {
   try {

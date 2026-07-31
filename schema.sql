@@ -45,7 +45,12 @@ CREATE TABLE articles (
   division_id   INTEGER REFERENCES divisions(id),
   division_path TEXT NOT NULL,              -- id Irosoft de la division feuille (dénormalisé)
   text          TEXT NOT NULL,              -- verbatim (numéro, historique et notes A.M. EXCLUS)
-  html          TEXT,                       -- HTML nettoyé (integrity:* retirés, liens en absolu)
+  -- HTML nettoyé (integrity:* retirés, liens en absolu). ÉCRITE par le pipeline, LUE par
+  -- AUCUNE requête du Worker : depuis le 2026-07-30, plus aucune projection de src/lib.ts
+  -- ne la ramène (elle pesait 651 o par article en moyenne, 56 % de cette table, pour être
+  -- jetée à l'arrivée). Conservée en base comme réserve — la sortir demanderait une
+  -- migration, et les évals ne rendent que `text`.
+  html          TEXT,
   history       TEXT,                       -- ligne d'historique : '1991, c. 64, a. 1457; ...'
   repealed      INTEGER NOT NULL DEFAULT 0, -- 1 si '(Abrogé).' (68 cas)
   -- RETIRÉE par migrations/0002 — conservée ici parce que ce fichier décrit l'ÉTAT INITIAL,

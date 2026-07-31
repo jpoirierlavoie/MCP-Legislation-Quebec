@@ -86,6 +86,8 @@ npx wrangler dev                                   # dev local (D1 local ; PAS V
 npx tsc --noEmit                                   # type-check (toujours avant commit)
 npm run evals                                      # contrôles bout-en-bout (le harnais imprime son total ; MCP_URL=… pour cibler)
 npm run eval                                       # harnais d'éval : 20 cas, recall@10/MRR (production)
+node eval/run.mjs --refresh-paths                  # revalide eval/cases.resolved.json et SORT — diff à VIDER avant de mesurer
+node scripts/journal.mjs [--local|--jours N|--tout] # dépouille search_log (lecture seule) : replis et reformulations
 PYTHONUTF8=1 ./.venv/Scripts/python.exe -m unittest discover -s pipeline/tests -q   # 23 tests
 node --test scripts/check-consolidation.test.mjs   # 13 contrôles du détecteur de veille (sans réseau, en CI)
 node --test tests/catalogue.test.mjs               # garde anti-dérive doc (R10 ; sans réseau, en CI)
@@ -340,3 +342,11 @@ adversariale (2026-07-21) et corrigés avant le premier commit.
   `qclaw-discovery-v2-implementation-plan.md`). Les vidages de reconnaissance en ont été
   retirés le 2026-07-30 : sorties reproductibles de `recon.py`, pas des décisions.
 - `eval/baselines/*.json` — trajectoire mesurée : recall@10 40 % → 88 % → 98 %.
+- `eval/cases.resolved.json` — cache des `division_path` de la vérité terrain, DÉRIVÉ
+  (régénérable), pas ⛔ contrairement à `cases.json`. Il ne portait aucune revalidation :
+  une clé périmée faisait chuter FR-couv **sans un mot**, et un ancien chemin PRÉFIXE du
+  nouveau faisait au contraire SUR-estimer la couverture. `--refresh-paths` le revalide et
+  sort sans mesurer — régénérer et mesurer d'un même geste invaliderait la comparaison aux
+  baselines. Seule une réingestion du C.c.Q. ou du C.p.c. peut l'invalider.
+- `docs/propositions-journal-2026-07-30.md` — premier dépouillement de `search_log` :
+  cas d'éval et entrées de gazetteer **proposés** (⛔, rien d'appliqué).

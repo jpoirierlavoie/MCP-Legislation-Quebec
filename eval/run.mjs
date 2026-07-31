@@ -2,6 +2,7 @@
 //
 //   node eval/run.mjs                          # tableau seulement (endpoint de production)
 //   node eval/run.mjs --out eval/baselines/2026-07-20.json
+//   node eval/run.mjs --refresh-paths          # revalide le cache de chemins et SORT (ne mesure rien)
 //   MCP_URL=http://127.0.0.1:8787/mcp node eval/run.mjs   # contre wrangler dev
 //
 // Pour chaque cas de eval/cases.json (vérité terrain — Appendice A, ⛔ modification par
@@ -25,14 +26,29 @@ const RESOLVED_PATH = join(HERE, "cases.resolved.json");
 
 const outIdx = process.argv.indexOf("--out");
 const OUT = outIdx > -1 ? process.argv[outIdx + 1] : null;
+const REFRESH = process.argv.includes("--refresh-paths");
 
 const { cases } = JSON.parse(readFileSync(join(HERE, "cases.json"), "utf-8"));
 const { connect, callTool } = createMcpClient(MCP_URL);
 
 const keyOf = (a) => `${a.law}|${a.article}`;
 
-/** division_path de chaque article de la vérité terrain (résolu une fois, mis en cache). */
-async function resolvePaths() {
+/**
+ * division_path de chaque article de la vérité terrain (résolu une fois, mis en cache).
+ *
+ * ⚠️ CE CACHE PEUT MENTIR EN SILENCE. Une clé absente est résolue en direct — bon
+ * comportement. Mais une clé PRÉSENTE n'était jamais revérifiée : si le division_path d'un
+ * article change en base, `covers()` compare un chemin périmé à un chemin courant et la
+ * métrique FR-couv chute sans une seule erreur — on imputerait la chute à une régression de
+ * calibration. Pire encore : si l'ancien chemin est un PRÉFIXE du nouveau, `covers()` rend
+ * `true` à tort et la couverture est SUR-ESTIMÉE.
+ *
+ * Seule une réingestion du C.c.Q. ou du C.p.c. peut l'invalider (les 38 clés ne portent que
+ * sur ces deux textes) — donc le rafraîchissement semestriel, pas la croissance du corpus.
+ * `--refresh-paths` revalide les 38 et SORT sans mesurer : régénérer et mesurer d'un même
+ * geste rendrait toute comparaison avec eval/baselines/*.json invalide.
+ */
+async function resolvePaths({ refresh = false } = {}) {
   const cache = existsSync(RESOLVED_PATH)
     ? JSON.parse(readFileSync(RESOLVED_PATH, "utf-8"))
     : {};
@@ -41,13 +57,35 @@ async function resolvePaths() {
     for (const a of [...c.must_include, ...(c.nice_to_have ?? [])]) wanted.set(keyOf(a), a);
   }
   let added = 0;
+  const changed = [];
   for (const [k, a] of wanted) {
-    if (cache[k]) continue;
+    if (cache[k] && !refresh) continue;
     const res = await callTool("qclaw_get_article", { law: a.law, article: a.article });
     if (res.isError) throw new Error(`vérité terrain irrésoluble : ${k} — ${res.content?.[0]?.text}`);
-    cache[k] = res.structuredContent.division_path;
-    added++;
+    const path = res.structuredContent.division_path;
+    if (cache[k] === undefined) added++;
+    else if (cache[k] !== path) changed.push({ k, avant: cache[k], apres: path });
+    cache[k] = path;
   }
+  // Clés devenues orphelines : la vérité terrain ne les demande plus.
+  const orphelines = Object.keys(cache).filter((k) => !wanted.has(k));
+
+  if (refresh) {
+    console.log(`Cache de chemins : ${wanted.size} clés attendues, ${added} ajoutée(s), ` +
+      `${changed.length} modifiée(s), ${orphelines.length} orpheline(s).`);
+    for (const c of changed) console.log(`  ⚠ ${c.k}\n      avant : ${c.avant}\n      après : ${c.apres}`);
+    for (const k of orphelines) console.log(`  · orpheline (non retirée) : ${k}`);
+    if (added || changed.length) {
+      writeFileSync(RESOLVED_PATH, JSON.stringify(cache, null, 2) + "\n");
+      console.log(`\nÉcrit : ${RESOLVED_PATH}`);
+      console.log("Le diff n'est PAS vide : mesurer maintenant rendrait la comparaison avec " +
+        "eval/baselines/*.json invalide. Commiter ce cache d'abord, puis mesurer.");
+    } else {
+      console.log("\nDiff vide — le cache est conforme à la base. Mesure possible.");
+    }
+    return null;
+  }
+
   if (added) writeFileSync(RESOLVED_PATH, JSON.stringify(cache, null, 2) + "\n");
   return cache;
 }
@@ -114,7 +152,8 @@ function fmtPct(x) {
 async function main() {
   console.log(`MCP : ${MCP_URL}\n`);
   await connect();
-  const paths = await resolvePaths();
+  const paths = await resolvePaths({ refresh: REFRESH });
+  if (paths === null) return; // --refresh-paths : on revalide, on ne mesure pas.
 
   const rows = [];
   for (const c of cases) rows.push(await runCase(c, paths));

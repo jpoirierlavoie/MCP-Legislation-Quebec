@@ -213,7 +213,12 @@ export function registerTools(server: McpServer, env: Env): void {
           langs: l.langs, consol_date_fr: l.consol_date_fr, consol_date_en: l.consol_date_en,
           article_count: l.article_count,
           fonction: l.fonction, forum: l.forum,
-          scope: l.scope_fr ?? l.name_fr, parent_law_id: l.parent_law_id,
+          // PAS de repli sur name_fr : la portée éditoriale n'a jamais été rédigée (79 lois
+          // sur 79 à NULL), et substituer le titre servait au client un champ VIDE AYANT
+          // L'AIR PLEIN — sans rien qui dise que c'en était un repli. La sortie texte, elle,
+          // omettait honnêtement la ligne (voir renderLaw) : les deux surfaces du même outil
+          // se contredisaient. Corollaire structuré de R4, décision 001.
+          scope: l.scope_fr, parent_law_id: l.parent_law_id,
           subjects: l.subjects, mapped_divisions: l.mapped_divisions,
           structure: outlines.get(l.id) ?? null,
         })),
