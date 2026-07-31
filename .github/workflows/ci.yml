@@ -47,6 +47,12 @@ jobs:
       - run: pip install "beautifulsoup4>=4.13"
       - run: python -m unittest pipeline.tests.test_config -v
 
+      # Le validateur de la couche de curation (phase 3) : il REFUSE de charger un lien ou
+      # un concept dont la cible ne résout pas. `pipeline/discovery/` n'avait aucun test —
+      # la porte anti-données-fausses n'était elle-même gardée par rien. Fausse base en
+      # mémoire : ni réseau, ni wrangler, ni D1.
+      - run: python -m unittest pipeline.tests.test_curation -v
+
       # Reconstructibilité : schema.sql décrit l'ÉTAT INITIAL, les migrations s'appliquent
       # PAR-DESSUS. Sans ce garde, un DROP COLUMN sans garde dans une migration casse le
       # bootstrap d'une base neuve sans que rien ne le signale — c'est arrivé avec 0002,
