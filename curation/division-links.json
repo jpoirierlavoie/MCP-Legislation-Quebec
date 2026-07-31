@@ -1,0 +1,86 @@
+{
+  "_comment": "BROUILLON ⛔ — liens entre divisions (phase 3 v2, §3.1). Rien ici n'influence une réponse tant que `validated` n'est pas `true`. Un lien produit au plus 2 lignes « Voir aussi » sous le texte officiel de get_article / get_division, visiblement étiquetées non officielles (R4). Les chemins sont EN FRANÇAIS : les identifiants Irosoft sont propres à la langue (invariant 4), la lecture en anglais passe par le pont des numéros d'articles. Le chargeur vérifie que chaque chemin résout en base.",
+
+  "links": [
+    {
+      "law_a": "ccq", "path_a": "ga:l_dixieme",
+      "law_b": "cpc", "path_b": "ga:l_v-gb:l_iv",
+      "rel_type": "compagnon", "lang": "fr",
+      "note": "Le siège procédural des demandes intéressant le droit international privé.",
+      "validated": false,
+      "justification": "Exigé nommément par le plan §3.1. C'EST le cas fondateur : un agent lisant le Livre X du C.c.Q. n'avait aucun moyen de découvrir le Titre IV du Livre V du C.p.c., dont l'intitulé parent ne porte aucun signal."
+    },
+    {
+      "law_a": "cpc", "path_a": "ga:l_v-gb:l_iv",
+      "law_b": "ccq", "path_b": "ga:l_dixieme",
+      "rel_type": "compagnon", "lang": "fr",
+      "note": "Le siège substantiel : conflits de lois et compétence internationale des autorités du Québec.",
+      "validated": false,
+      "justification": "Réciproque du précédent. Les liens ne sont PAS symétriques automatiquement — le chargeur ne les déduit pas, et une seule direction laisserait la moitié des lecteurs sans renvoi."
+    },
+    {
+      "law_a": "ccq", "path_a": "ga:l_huitieme",
+      "law_b": "cpc", "path_b": "ga:l_i-gb:l_v",
+      "rel_type": "voir_aussi", "lang": "fr",
+      "note": "Computation des délais et procédure applicable à toutes les demandes en justice.",
+      "validated": false,
+      "justification": "Exigé par le plan §3.1 (« prescription ↔ dispositions C.p.c. sur les délais »). Le plan ne nommait pas de division précise ; j'ai retenu le Titre V du Livre I, VÉRIFIÉ en base : « LA PROCÉDURE APPLICABLE À TOUTES LES DEMANDES EN JUSTICE »."
+    },
+    {
+      "law_a": "ccq", "path_a": "ga:l_cinquieme-gb:l_deuxieme-gc:l_premier",
+      "law_b": "ccq", "path_b": "ga:l_cinquieme-gb:l_deuxieme-gc:l_huitieme",
+      "rel_type": "voir_aussi", "lang": "fr",
+      "note": "La garantie de qualité du vendeur et la responsabilité de l'entrepreneur pour la perte de l'ouvrage se recoupent en matière immobilière.",
+      "validated": false,
+      "justification": "Exigé par le plan §3.1 (« vices cachés ccq 1726 ss. ↔ ouvrage/entrepreneur ccq 2118 ss. »). Le plan raisonne en numéros d'articles, pas en divisions. Chemins VÉRIFIÉS en base : « DE LA VENTE » (art. 1726 ss.) et « DU CONTRAT D'ENTREPRISE OU DE SERVICE » (art. 2118 ss.)."
+    },
+    {
+      "law_a": "ccq", "path_a": "ga:l_deuxieme",
+      "law_b": "cpc", "path_b": "ga:l_v-gb:l_ii",
+      "rel_type": "compagnon", "lang": "fr",
+      "note": "Les demandes en matière familiale.",
+      "validated": false,
+      "justification": "Même patron que le cas fondateur, appliqué au droit de la famille : Livre substantiel du C.c.Q. contre Titre procédural du C.p.c."
+    },
+    {
+      "law_a": "cpc", "path_a": "ga:l_v-gb:l_ii",
+      "law_b": "ccq", "path_b": "ga:l_deuxieme",
+      "rel_type": "compagnon", "lang": "fr",
+      "note": "Le droit substantiel de la famille : mariage, union civile, union parentale, filiation, obligation alimentaire, autorité parentale.",
+      "validated": false,
+      "justification": "Réciproque."
+    },
+    {
+      "law_a": "ccq", "path_a": "ga:l_premier",
+      "law_b": "cpc", "path_b": "ga:l_v-gb:l_i",
+      "rel_type": "compagnon", "lang": "fr",
+      "note": "Les demandes en matière de droit des personnes.",
+      "validated": false,
+      "justification": "Même patron. Couvre notamment les régimes de protection et les demandes relatives à l'intégrité."
+    },
+    {
+      "law_a": "cpc", "path_a": "ga:l_v-gb:l_i",
+      "law_b": "ccq", "path_b": "ga:l_premier",
+      "rel_type": "compagnon", "lang": "fr",
+      "note": "Le droit substantiel des personnes : jouissance et exercice des droits civils, capacité, personnes morales.",
+      "validated": false,
+      "justification": "Réciproque."
+    },
+    {
+      "law_a": "ccq", "path_a": "ga:l_sixieme",
+      "law_b": "cpc", "path_b": "ga:l_viii",
+      "rel_type": "voir_aussi", "lang": "fr",
+      "note": "L'exécution des jugements : saisie, vente sous contrôle de justice, distribution du produit.",
+      "validated": false,
+      "justification": "Les sûretés ne valent que par leur réalisation. ⚠️ À PESER : le cas d'éval 16 (« vente sous contrôle de justice garantie ») est déjà sensible à la collision entre le C.c.Q. et les textes procéduraux — ce lien pourrait l'aider comme le desservir. À mesurer à l'éval, pas au jugé."
+    },
+    {
+      "law_a": "ccq", "path_a": "ga:l_neuvieme",
+      "law_b": "ccq", "path_b": "ga:l_sixieme",
+      "rel_type": "voir_aussi", "lang": "fr",
+      "note": "Une hypothèque n'est opposable aux tiers que par sa publication.",
+      "validated": false,
+      "justification": "Lien intra-code : publicité des droits et sûretés sont indissociables en pratique, mais leurs Livres sont éloignés dans le plan du Code."
+    }
+  ]
+}

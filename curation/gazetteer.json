@@ -1,0 +1,120 @@
+{
+  "_comment": "BROUILLON ⛔ — gazetteer de concepts (phase 3 v2, §3.2). Rien ici n'influence une réponse tant que `validated` n'est pas `true`. Semence : Appendice B du plan v2, plus deux concepts tirés du dépouillement de search_log (2026-07-30). Les `variantes` sont une SURFACE D'APPARIEMENT (invariant 13) : n'y mettre que le vocabulaire qu'on VEUT voir matcher, jamais de prose ni de mention contrastive. Elles sont en minuscules mais GARDENT leurs accents — le tokenizer FTS5 de D1 a remove_diacritics ACTIF (mesuré). Les `cibles` sont vérifiées en base par le chargeur : une division ou un article qui ne résout pas fait ÉCHOUER le chargement.",
+
+  "concepts": [
+    {
+      "concept": "extranéité",
+      "variantes": ["extranéité", "hors du québec", "à l'extérieur du québec", "défendeur étranger", "élément d'extranéité", "international privé"],
+      "cibles": [
+        { "law": "ccq", "path": "ga:l_dixieme" },
+        { "law": "cpc", "path": "ga:l_v-gb:l_iv" }
+      ],
+      "note": "Le cas fondateur du plan v2 (art. 490 C.p.c.). Les deux sièges : substantiel au C.c.Q., procédural au C.p.c.",
+      "lang": "fr",
+      "validated": false,
+      "justification": "Appendice B. L'intitulé du Livre V C.p.c. (« certaines matières civiles ») ne porte aucun signal — le signal est au Titre IV, d'où la cible à ce niveau."
+    },
+    {
+      "concept": "vice caché",
+      "variantes": ["vice caché", "vices cachés", "défaut caché", "garantie de qualité", "maison défectueuse", "dénonciation du vice"],
+      "cibles": [
+        { "law": "ccq", "articles": ["1726", "1727", "1728", "1729", "1730", "1731", "1739"] },
+        { "law": "ccq", "articles": ["2118", "2119", "2120", "2121"] }
+      ],
+      "note": "Garantie de qualité du vendeur, et son pendant en matière d'ouvrage immobilier.",
+      "lang": "fr",
+      "validated": false,
+      "justification": "Appendice B. CIBLE MESURABLE : le cas d'éval 6 attend ccq 1726 ET 1739 ; 1739 (délai de dénonciation) est le seul must_include encore absent du top 10 après la phase 2."
+    },
+    {
+      "concept": "fin d'emploi",
+      "variantes": ["congédiement", "renvoi", "licenciement", "fin d'emploi", "délai de congé", "préavis de congé", "clause de non-concurrence"],
+      "cibles": [{ "law": "ccq", "path": "ga:l_cinquieme-gb:l_deuxieme-gc:l_septieme" }],
+      "note": "Chapitre du contrat de travail du C.c.Q.",
+      "lang": "fr",
+      "validated": false,
+      "justification": "Appendice B. Cible exprimée par CHEMIN plutôt que par plage d'articles : le chapitre est déjà mappé à la matière travail-emploi, la cible reste donc stable si la numérotation bouge."
+    },
+    {
+      "concept": "récusation",
+      "variantes": ["récusation", "récuser", "impartialité du juge", "juge partial", "conflit d'intérêts du juge"],
+      "cibles": [{ "law": "cpc", "articles": ["201", "202", "203", "204", "205"] }],
+      "lang": "fr",
+      "validated": false,
+      "justification": "Appendice B. L'invariant 12 signale que « récusation » a déjà franchi un seuil de spécificité en passant de 47 à 78 lois : un concept explicite le rend insensible à la taille du corpus."
+    },
+    {
+      "concept": "désaveu",
+      "variantes": ["désaveu", "désavouer", "répudiation du mandat", "avocat non autorisé"],
+      "cibles": [{ "law": "cpc", "articles": ["191"] }],
+      "lang": "fr",
+      "validated": false,
+      "justification": "Appendice B. Terme technique sans synonyme courant : c'est exactement ce qu'un gazetteer rattrape."
+    },
+    {
+      "concept": "prescription",
+      "variantes": ["prescription", "délai pour poursuivre", "forclusion", "hors délai", "action prescrite", "trois ans"],
+      "cibles": [{ "law": "ccq", "path": "ga:l_huitieme" }],
+      "lang": "fr",
+      "validated": false,
+      "justification": "Appendice B."
+    },
+    {
+      "concept": "mise en demeure",
+      "variantes": ["mise en demeure", "demeure", "mettre en demeure", "défaut du débiteur"],
+      "cibles": [{ "law": "ccq", "articles": ["1594", "1595", "1596", "1597", "1598", "1599", "1600"] }],
+      "lang": "fr",
+      "validated": false,
+      "justification": "Appendice B."
+    },
+    {
+      "concept": "notification internationale",
+      "variantes": ["notification internationale", "convention de la haye", "signifier à l'étranger", "notification hors du québec"],
+      "cibles": [{ "law": "cpc", "articles": ["494", "495", "496"] }],
+      "lang": "fr",
+      "validated": false,
+      "justification": "Appendice B, restreint à la notification INTERNATIONALE : l'Appendice visait aussi cpc 109-140 (notification en général), mais 32 articles noieraient le concept sans rien préciser."
+    },
+    {
+      "concept": "cautionnement pour frais",
+      "variantes": ["cautionnement pour frais", "sûreté des frais", "cautionnement du demandeur étranger", "security for costs"],
+      "cibles": [{ "law": "cpc", "articles": ["492"] }],
+      "lang": "fr",
+      "validated": false,
+      "justification": "Appendice B. La variante anglaise est délibérée : c'est le terme que les praticiens emploient même en français."
+    },
+    {
+      "concept": "responsabilité civile",
+      "variantes": ["responsabilité civile", "responsabilité extracontractuelle", "faute", "préjudice", "dommages-intérêts", "1457"],
+      "cibles": [{ "law": "ccq", "path": "ga:l_cinquieme-gb:l_premier-gc:l_troisieme" }],
+      "lang": "fr",
+      "validated": false,
+      "justification": "Appendice B. Cible par chemin : le chapitre est déjà mappé à la matière responsabilite-civile."
+    },
+
+    {
+      "concept": "présentation matérielle des actes de procédure",
+      "variantes": ["présentation matérielle", "police de caractères", "taille des caractères", "interligne", "format papier", "acte de procédure lisible", "mise en page"],
+      "cibles": [
+        { "law": "c-25.01-r.0.2.01", "articles": ["24", "54"] },
+        { "law": "cpc", "articles": ["99", "104"] }
+      ],
+      "note": "Forme des actes : support, lisibilité, pagination.",
+      "lang": "fr",
+      "validated": false,
+      "justification": "PAS de l'Appendice B — tiré du journal (2026-07-21 00:53) : cinq reformulations successives de la même question, avec des résultats à chaque fois, dont deux `or_relax` et trois `widened`. Échec de repérage caractérisé, invisible au result_count. Cibles trouvées par recherche sur le corpus, pas supposées."
+    },
+    {
+      "concept": "exercice en société et multidisciplinarité",
+      "variantes": ["exercice en société", "multidisciplinarité", "société de dépenses", "partage des frais", "cabinet", "société en nom collectif à responsabilité limitée", "s.e.n.c.r.l."],
+      "cibles": [
+        { "law": "b-1-r.3.1", "articles": ["3", "137"] },
+        { "law": "b-1", "articles": ["125", "131.2"] },
+        { "law": "c-26", "articles": ["187.14"] }
+      ],
+      "lang": "fr",
+      "validated": false,
+      "justification": "PAS de l'Appendice B — tiré du journal : quatre requêtes distinctes en `or_relax` sur le même sujet le 2026-07-21. Illustre la limite de l'Appendice B, qui ne couvre que le C.c.Q. et le C.p.c. alors que le corpus compte 79 lois et que le trafic réel porte largement ailleurs."
+    }
+  ]
+}

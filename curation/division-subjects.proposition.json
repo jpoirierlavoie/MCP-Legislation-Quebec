@@ -1,0 +1,76 @@
+{
+  "_comment": "PROPOSITION ⛔ — mappages matière → division. AUCUN CHARGEUR NE LIT CE FICHIER. C'est délibéré : `subject_map` n'a pas de colonne `validated`, et elle est lue par cinq chemins dont `src/site.ts`, la page publique, entièrement hors MCP. Y ajouter un drapeau exigerait cinq `WHERE validated = 1` dont un seul oubli servirait du contenu non relu, sur une surface qu'aucune éval MCP ne couvre. La porte reste donc celle de la v1 : la revue de commit. Une fois ces entrées approuvées, elles migrent dans `mappings` de `taxonomy.json` et sont chargées par `pipeline/discovery/load.py`.",
+
+  "_ecart_assume": "Vous aviez retenu la profondeur ≤ 2, soit 97 divisions. J'en propose 8. L'INVARIANT 15 s'y oppose : « une matière est UNE preuve, pas N candidats » — S1 injecte un candidat par entité mappée, tous au même score, et toute matière dépassant ~5 entités mappées est un candidat au défaut qui a déjà fait disparaître le C.c.Q. du top 8. Mapper les 46 Titres du C.c.Q. sous des Livres DÉJÀ mappés à la même matière ne préciserait rien et diluerait tout : `personnes` passerait de 1 à 6 entités, dont 5 redondantes. Les 97 ont été examinées ; le tableau `_examen` ci-dessous dit ce qui a été écarté et pourquoi. Si vous voulez la couverture large malgré tout, dites-le et je la produis — mais alors il faut re-mesurer à l'éval avant de charger.",
+
+  "_examen": {
+    "ccq_livres_deja_mappes": "11 Livres portent déjà leur matière (personnes, famille, successions, biens, obligations-contrats, suretes, preuve, prescription, publicite-droits, droit-international-prive). Leurs 46 Titres relèvent de la MÊME matière : les ajouter n'apporterait aucun signal neuf et coûterait 46 candidats concurrents.",
+    "ccq_titres_retenus": "Aucun. Les quatre mappages fins déjà en place (responsabilité civile, louage résidentiel, travail-emploi, sociétés, assurances) sont au niveau CHAPITRE, pas Titre — la v1 avait déjà choisi le bon grain.",
+    "cpc_le_vrai_manque": "Le C.p.c. n'a AUCUN mappage au niveau division : ses 8 Livres et 32 Titres sont invisibles à S1, qui ne connaît que la loi entière. C'est là que se trouve tout le gain — et c'est le siège du cas fondateur.",
+    "ecartes_hors_plan": "4 des 97 ne sont pas des Livres ou Titres et n'ont pas à porter de matière : disposition-preliminaire (×2), finales, annexe-i, et la DISPOSITION GÉNÉRALE du Livre IV du C.c.Q."
+  },
+
+  "mappings": [
+    {
+      "subject": "droit-international-prive", "law": "cpc", "division_path": "ga:l_v-gb:l_iv",
+      "heading": "LES DEMANDES INTÉRESSANT LE DROIT INTERNATIONAL PRIVÉ",
+      "justification": "★ LE CAS FONDATEUR. L'intitulé du Livre V (« Les règles applicables à certaines matières civiles ») ne porte aucun signal — le rapport de phase 0 le qualifie de piège. Le signal est ici, au Titre IV. Sans ce mappage, une requête sur l'extranéité ne peut atteindre le siège procédural que par le lexical."
+    },
+    {
+      "subject": "famille", "law": "cpc", "division_path": "ga:l_v-gb:l_ii",
+      "heading": "LES DEMANDES EN MATIÈRE FAMILIALE",
+      "justification": "Convergence voulue : `famille` pointerait alors le Livre II du C.c.Q. ET son siège procédural. Le plan v1 nomme explicitement ce type de convergence « précieux » — c'est ce que find_relevant doit faire remonter ensemble."
+    },
+    {
+      "subject": "personnes", "law": "cpc", "division_path": "ga:l_v-gb:l_i",
+      "heading": "LES DEMANDES EN MATIÈRE DE DROIT DES PERSONNES",
+      "justification": "Même convergence : régimes de protection, intégrité, état des personnes."
+    },
+    {
+      "subject": "successions", "law": "cpc", "division_path": "ga:l_v-gb:l_iii",
+      "heading": "LES DEMANDES CONCERNANT LES SUCCESSIONS, LES BIENS, LES SÛRETÉS",
+      "justification": "Ce Titre couvre trois matières à lui seul. Il est proposé sous les trois, ce qui est le comportement correct : un même texte peut relever de plusieurs matières (taxonomy.json le prévoit)."
+    },
+    {
+      "subject": "biens", "law": "cpc", "division_path": "ga:l_v-gb:l_iii",
+      "heading": "LES DEMANDES CONCERNANT LES SUCCESSIONS, LES BIENS, LES SÛRETÉS",
+      "justification": "Voir ci-dessus."
+    },
+    {
+      "subject": "suretes", "law": "cpc", "division_path": "ga:l_v-gb:l_iii",
+      "heading": "LES DEMANDES CONCERNANT LES SUCCESSIONS, LES BIENS, LES SÛRETÉS",
+      "justification": "Voir ci-dessus."
+    },
+    {
+      "subject": "administration-justice", "law": "cpc", "division_path": "ga:l_i-gb:l_iii",
+      "heading": "LA COMPÉTENCE DES TRIBUNAUX",
+      "justification": "La matière est aujourd'hui mappée au C.p.c. ENTIER : toute question de compétence rend la loi complète. Ce mappage donne une adresse."
+    },
+    {
+      "subject": "administration-justice", "law": "cpc", "division_path": "ga:l_iv-gb:l_ii",
+      "heading": "LES FRAIS DE JUSTICE",
+      "justification": "Les frais de justice sont une question récurrente en pratique et n'ont aucun siège repérable aujourd'hui. ⚠️ Porte `administration-justice` à 3 entités — la limite prudente de l'invariant 15. Ne rien y ajouter sans mesurer."
+    }
+  ],
+
+  "_apres_chargement": {
+    "personnes": 2, "famille": 2, "successions": 2, "biens": 2, "suretes": 2,
+    "droit-international-prive": 2, "administration-justice": 3, "procedure-civile": 1,
+    "_note": "Décompte des entités mappées par matière APRÈS ces ajouts, C.c.Q. et C.p.c. confondus. Aucune ne dépasse 3. C'est la contrainte de l'invariant 15, vérifiée avant chargement et non après."
+  },
+
+  "_ecarte_volontairement": [
+    {
+      "candidat": "cpc ga:l_viii-gb:l_iii — LA VENTE SOUS CONTRÔLE DE JUSTICE",
+      "raison": "Le cas d'éval 16 (« vente sous contrôle de justice garantie », qui attend ccq 1731) est DÉJÀ perturbé par cette division : c'est elle qui a fait chuter la couverture de find_relevant de 55 % à 50 % au chargement du Code municipal. Lui donner en plus un mappage de matière la ferait monter davantage et évincerait le C.c.Q. À ne tenter qu'avec une mesure avant/après."
+    },
+    {
+      "candidat": "cpc ga:l_vi-gb:l_ii — LE RECOUVREMENT DES PETITES CRÉANCES",
+      "raison": "Relèverait de `procedure-civile`, déjà mappée au C.p.c. entier : aucun signal neuf, un candidat de plus."
+    },
+    {
+      "candidat": "cpc ga:l_vii — LES MODES PRIVÉS DE PRÉVENTION ET DE RÈGLEMENT DES DIFFÉRENDS",
+      "raison": "Médiation et arbitrage mériteraient une matière PROPRE, qui n'existe pas dans la taxonomie. Créer une matière est une décision éditoriale distincte (⛔), pas un mappage."
+    }
+  ]
+}
