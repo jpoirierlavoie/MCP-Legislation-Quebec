@@ -58,7 +58,17 @@ jobs:
           T=$(mktemp -d)
           npx wrangler d1 execute qclaw --local --persist-to "$T" --file=./schema.sql -y
           npx wrangler d1 migrations apply qclaw --local --persist-to "$T"
-          npx wrangler d1 execute qclaw --local --persist-to "$T" --json \
-            --command "SELECT COUNT(*) AS n FROM pragma_table_info('search_log')" \
-            | grep -q '"n": *[1-9]' || { echo "search_log absente après migrations"; exit 1; }
+          for t in search_log division_links concept_gazetteer article_headnotes; do
+            npx wrangler d1 execute qclaw --local --persist-to "$T" --json \
+              --command "SELECT COUNT(*) AS n FROM pragma_table_info('$t')" \
+              | grep -q '"n": *[1-9]' || { echo "$t absente après migrations"; exit 1; }
+          done
+          # Le drapeau validated est la frontière entre du contenu proposé par un modèle et
+          # du droit relu par un avocat. Une colonne perdue ou renommée le ferait tomber en
+          # silence : les requêtes filtrent dessus, elles ne le déclarent pas.
+          for t in division_links concept_gazetteer article_headnotes; do
+            npx wrangler d1 execute qclaw --local --persist-to "$T" --json \
+              --command "SELECT COUNT(*) AS n FROM pragma_table_info('$t') WHERE name='validated'" \
+              | grep -q '"n": *1' || { echo "$t sans colonne validated"; exit 1; }
+          done
           rm -rf "$T"
